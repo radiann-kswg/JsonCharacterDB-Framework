@@ -1,0 +1,55 @@
+{
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "files.eol": "\n"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "files.eol": "\n"
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "chat.tools.urls.autoApprove": {
+    "https://code.visualstudio.com": true,
+    "https://github.com/microsoft/vscode/wiki/*": true,
+    "https://*.google.com": true,
+    "https://github.com/radiann-kswg/100beautieslab_creationsdb/tree/develop/data/works_numbertales/databases": true,
+    "https://github.com/radiann-kswg/100beautieslab_creationsdb/tree/develop/data/works_numbertales": true,
+    "https://github.com/radiann-kswg/100beautieslab_creationsdb/tree/develop/data": true,
+    "https://github.com/radiann-kswg/100beautieslab_creationsdb/tree/develop": true,
+    "https://github.com/radiann-kswg/100beautieslab_creationsdb/tree": true,
+    "https://github.com/radiann-kswg/100beautieslab_creationsdb": true,
+    "https://github.com/radiann-kswg": true,
+    "https://github.com": true,
+    "https://github.com/radiann-kswg/100beautieslab_creationsdb/tree/develop/data/works_numbertales/images": true,
+    "https://database.numbertales-radiann.net/api": true,
+    "https://database.numbertales-radiann.net": true,
+    "https://*.numbertales-radiann.net": true
+  },
+  "chat.tools.terminal.autoApprove": {
+    "approve": true,
+    "matchCommandLine": true,
+    "&": true,
+    "git init": true,
+    "git add": true,
+    "/^node --version$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "npm.cmd": true,
+    "ssh": true,
+    "ForEach-Object": true,
+    "Get-Member": true,
+    "/^npm --version$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "npx.cmd": true,
+    "ConvertFrom-Json": true,
+    "ConvertTo-Json": true
+  },
+  "js/ts.experimental.useTsgo": false
+}

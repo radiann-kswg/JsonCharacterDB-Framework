@@ -1,0 +1,35 @@
+name: 機能・改善提案
+description: サイト機能やデータベース構造（表示仕様・API・スキーマなど）の改善提案用フォームです。
+title: "[提案] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        機能・改善の提案、ありがとう！思いついた範囲でいいので教えてね。
+        ※ 未公開の設定・台詞・固有用語など「まだ公開していない創作内容」はここに書かないでね。
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 背景・困っていること
+      description: 今どんな場面で不便・不足を感じているか
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案内容
+      description: どう変わるとうれしいか、できるだけ具体的に
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案・補足（あれば）
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 確認事項
+      options:
+        - label: 未公開の創作内容（未発表の設定・台詞・固有用語など）を含まないことを確認しました
+          required: true

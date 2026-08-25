@@ -1,0 +1,37 @@
+{
+  "Dictionaries": {
+    "#Dict_Area": {
+      "DB_Label_JP": "地域(エリア)辞書",
+      "DB_Label_EN": "Area Dictionary",
+      "keyField": "Area",
+      "compatListKey": "#List_Area"
+    },
+    "#Dict_Faction": {
+      "DB_Label_JP": "陣営辞書",
+      "DB_Label_EN": "Faction Dictionary",
+      "keyField": "Faction",
+      "compatListKey": "#List_Faction"
+    },
+    "#Dict_RaceType": {
+      "DB_Label_JP": "種族辞書",
+      "DB_Label_EN": "Race Dictionary",
+      "langMode": "shared",
+      "keyField": "RaceType",
+      "compatListKey": "#List_RaceType"
+    },
+    "#Dict_GenderType": {
+      "DB_Label_JP": "性別辞書",
+      "DB_Label_EN": "Gender Dictionary",
+      "langMode": "shared",
+      "keyField": "GenderType",
+      "compatListKey": "#List_GenderType"
+    },
+    "#Dict_sec_DesignedBy": {
+      "DB_Label_JP": "デザイン担当辞書",
+      "DB_Label_EN": "Designed-By Dictionary",
+      "keyField": "DesignedBy",
+      "compatListKey": "#List_DesignedBy",
+      "DB_File": "dict_sec_DesignedBy.json"
+    }
+  }
+}

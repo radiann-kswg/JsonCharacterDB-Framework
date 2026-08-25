@@ -1,0 +1,48 @@
+[
+  {
+    "CharaId": "001",
+    "Progress": "released",
+    "Name_JP": "サンプル・アルファ",
+    "Name_EN": "Sample Alpha",
+    "Images": {
+      "concept_PNGName": "alpha",
+      "corefolder_PNGPath": [
+        "alpha"
+      ],
+      "arts_PNGPath": [
+        "alpha-1"
+      ]
+    },
+    "GenderType": "Neutral",
+    "Class": [
+      "サンプル"
+    ],
+    "Height_cm": [
+      {
+        "value": 160,
+        "about_JP": "設定値",
+        "about_EN": "Design value"
+      }
+    ],
+    "FirstPersonCalling_JP": "わたし",
+    "FirstPersonCalling_EN": "I",
+    "SecondPersonCalling_JP": "あなた",
+    "SecondPersonCalling_EN": "you",
+    "Character_JP": "フレームワークの動作確認用のサンプルキャラクターです。",
+    "Character_EN": "A sample character used to verify the framework works.",
+    "ColorPalette": [
+      {
+        "Role": "#ColorRole_Primary",
+        "Hex": "#4C8DF6",
+        "ColorName_JP": "主色",
+        "ColorName_EN": "Primary Color",
+        "AppliesTo": null,
+        "Formation": null,
+        "Note_JP": null,
+        "Note_EN": null
+      }
+    ],
+    "Summary_JP": "このレコードを複製して、あなたのキャラクターを追加してください。",
+    "Summary_EN": "Duplicate this record to add your own characters."
+  }
+]

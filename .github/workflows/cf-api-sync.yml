@@ -1,0 +1,126 @@
+name: Cloudflare API 自動更新
+
+# develop ブランチへの push で、変更パスに応じて R2/D1 同期 or Worker デプロイを実行する。
+# 手動実行（workflow_dispatch）でも強制的に再同期・再デプロイできる。
+# ⚠ フレームワークの配布時は手動実行のみに絞っています。
+#   自分のリポジトリで自動同期したい場合は、下の push トリガーのコメントを外し、
+#   Secrets（CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID 等）を設定してください。
+on:
+  # push:
+  #   branches:
+  #     - develop
+  #   paths:
+  #     - "data/**"
+  #     - "pkg/cloudflare/**"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "実行するジョブ（data を変更していなくても強制実行できる）"
+        type: choice
+        default: both
+        options:
+          - both
+          - sync-only
+          - deploy-only
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # 変更ファイル検出（後続ジョブの実行可否を決定）
+  # ──────────────────────────────────────────────────────────────────────────
+  changes:
+    name: 変更ファイル検出
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      data:    ${{ steps.filter.outputs.data }}
+      migrate: ${{ steps.filter.outputs.migrate }}
+      worker:  ${{ steps.filter.outputs.worker }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            data:
+              - "data/**"
+            migrate:
+              - "pkg/cloudflare/scripts/**"
+              - "pkg/cloudflare/schema/**"
+              # migrate.mjs は worker.js から applyCommons() / isPublicRecord() を import しており、
+              # これらの変更は D1 の is_private 列の算出結果を変える。worker.js の変更でも再同期が必要。
+              - "pkg/cloudflare/worker.js"
+            worker:
+              - "pkg/cloudflare/worker.js"
+              - "pkg/cloudflare/wrangler.toml"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # R2 + D1 データ同期（data/** が変更された場合のみ実行）
+  # ──────────────────────────────────────────────────────────────────────────
+  sync-r2-d1:
+    name: R2/D1 データ同期
+    needs: changes
+    # data/** の変更に加え、migration ロジック（scripts/ schema/ worker.js）の変更でも実行する。
+    # 例: migrate.mjs が is_private の算出方法を変えた場合、data/** は無変更でも D1 の再投入が必要。
+    # 手動実行（workflow_dispatch）では data の変更有無に関わらず強制実行できる。
+    if: >-
+      (github.event_name == 'workflow_dispatch' && contains(fromJSON('["both","sync-only"]'), inputs.target)) ||
+      (github.event_name == 'push' && (needs.changes.outputs.data == 'true' || needs.changes.outputs.migrate == 'true'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # develop / addon-ai-tag が近接 push すると同一 D1 (creationsdb-d1) への import が競合し
+    # "Currently processing a long-running import" エラーで失敗するため、ブランチ間で直列化する。
+    # cancel-in-progress: false … --clean で D1 を空にした直後にキャンセルされるとデータ欠損状態が
+    # 残るため、キャンセルではなくキューイングで待たせる。
+    concurrency:
+      group: cf-api-sync-d1-creationsdb
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # スキーマを idempotent 適用（CREATE TABLE IF NOT EXISTS なので既存 DB でも安全）
+      - name: D1 スキーマ適用
+        run: |
+          npx wrangler d1 execute creationsdb-d1 \
+            --config pkg/cloudflare/wrangler.toml \
+            --file="pkg/cloudflare/schema/d1-init.sql" --remote --yes
+        env:
+          CLOUDFLARE_API_TOKEN:   ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID:  ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # --clean で D1 既存データを全削除してから再投入（重複防止）
+      - name: R2 + D1 データ同期
+        run: node pkg/cloudflare/scripts/migrate.mjs --repo-root . --clean
+        env:
+          CLOUDFLARE_API_TOKEN:   ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID:  ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Worker デプロイ（pkg/cloudflare/** が変更された場合のみ実行）
+  # ──────────────────────────────────────────────────────────────────────────
+  deploy-worker:
+    name: Worker デプロイ
+    needs: changes
+    if: >-
+      (github.event_name == 'workflow_dispatch' && contains(fromJSON('["both","deploy-only"]'), inputs.target)) ||
+      (github.event_name == 'push' && needs.changes.outputs.worker == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Worker デプロイ
+        run: npx wrangler deploy --config pkg/cloudflare/wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN:   ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID:  ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

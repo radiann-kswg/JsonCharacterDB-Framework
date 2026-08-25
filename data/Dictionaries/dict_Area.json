@@ -1,0 +1,12 @@
+[
+  {
+    "Area": "サンプル地方",
+    "Area_EN": "Sample Region",
+    "isForSecondary": false
+  },
+  {
+    "Area": "隣接地方",
+    "Area_EN": "Neighboring Region",
+    "isForSecondary": false
+  }
+]

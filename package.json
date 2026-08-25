@@ -1,0 +1,52 @@
+{
+  "name": "jsoncharacterdb-framework",
+  "private": false,
+  "version": "0.1.0",
+  "description": "A dependency-free static-site framework for publishing JSON-based character databases (character sheets, relation graphs, pseudo API) on GitHub Pages.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dict:plan-enums": "node tools/extract-enum-lists-to-dictionaries.mjs",
+    "dict:export-enums": "node tools/extract-enum-lists-to-dictionaries.mjs --write",
+    "dict:export-enums:prune": "node tools/extract-enum-lists-to-dictionaries.mjs --write --prune",
+    "data:order:plan": "node tools/normalize-field-order.mjs",
+    "data:order:write": "node tools/normalize-field-order.mjs --write",
+    "data:order:check": "node tools/normalize-field-order.mjs --check",
+    "roleplay:plan": "node tools/build-roleplay-prompts.mjs",
+    "roleplay:write": "node tools/build-roleplay-prompts.mjs --write",
+    "roleplay:check": "node tools/build-roleplay-prompts.mjs --check",
+    "agents:plan": "node tools/build-agent-instructions.mjs",
+    "agents:build": "node tools/build-agent-instructions.mjs --write",
+    "agents:check": "node tools/build-agent-instructions.mjs --check",
+    "deepl:build-glossary": "node tools/deepl/build-glossary-source.mjs && node tools/deepl/build-copilot-quickref.mjs",
+    "deepl:build-glossary:only": "node tools/deepl/build-glossary-source.mjs",
+    "deepl:build-quickref": "node tools/deepl/build-copilot-quickref.mjs",
+    "deepl:sync-glossary": "npm run deepl:build-glossary && node tools/deepl/sync-glossary.mjs",
+    "deepl:eval": "node tools/deepl/evaluate-translations.mjs",
+    "deepl:draft": "node tools/deepl/draft-translate.mjs"
+  },
+  "devDependencies": {
+    "glob": "^11.1.0",
+    "jsdom": "^26.1.0",
+    "playwright": "^1.60.0",
+    "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "CC-BY-NC-4.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radiann-kswg/JsonCharacterDB-Framework.git"
+  },
+  "keywords": [
+    "character-database",
+    "json",
+    "github-pages",
+    "service-worker",
+    "static-site",
+    "worldbuilding",
+    "oc"
+  ]
+}

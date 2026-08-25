@@ -1,0 +1,14 @@
+[
+  {
+    "DesignedBy": "SampleAuthor",
+    "DesignedBy_JP": "サンプル作者",
+    "DesignedBy_EN": "Sample Author",
+    "isOwner": true
+  },
+  {
+    "DesignedBy": "Collaborator",
+    "DesignedBy_JP": "共同制作者",
+    "DesignedBy_EN": "Collaborator",
+    "isOwner": false
+  }
+]

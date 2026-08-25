@@ -1,0 +1,95 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  color: #e9f3ff;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(900px 520px at 80% -10%, rgba(58, 134, 224, 0.22), transparent 60%), radial-gradient(760px 480px at 6% 2%, rgba(95, 214, 255, 0.12), transparent 55%), linear-gradient(180deg, #070b16 0%, #05080f 100%);
+  background-attachment: fixed;
+}
+
+header, footer {
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(95, 214, 255, 0.08), rgba(255, 255, 255, 0));
+  border-bottom: 1px solid rgba(120, 190, 255, 0.18);
+}
+
+.lead {
+  color: #9fb6d6;
+}
+
+main {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(95, 214, 255, 0.04), rgba(15, 24, 48, 0) 42%), #0f1830;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(3, 9, 24, 0.4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+button {
+  background: rgba(8, 14, 30, 0.8);
+  color: #e9f3ff;
+  border: 1px solid rgba(120, 190, 255, 0.42);
+  border-radius: 9px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+button:hover {
+  background: rgba(95, 214, 255, 0.12);
+  border-color: #5fd6ff;
+  box-shadow: 0 0 0 3px rgba(95, 214, 255, 0.12);
+}
+
+.endpointInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.endpointInput input {
+  flex: 1;
+  min-width: 260px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  background: rgba(8, 14, 30, 0.8);
+  color: #e9f3ff;
+}
+.endpointInput input:focus {
+  outline: none;
+  border-color: #5fd6ff;
+  box-shadow: 0 0 0 3px rgba(95, 214, 255, 0.18);
+}
+
+.output {
+  margin-top: 12px;
+  padding: 12px;
+  background: #05080f;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 9px;
+  max-height: 60vh;
+  overflow: auto;
+  color: #d8eaff;
+}/*# sourceMappingURL=stylesheet.css.map */

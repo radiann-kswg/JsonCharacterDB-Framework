@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- APIテスト用スタイルシート（SASS から自動生成） -->
+	<link rel="stylesheet" href="stylesheet.css">
+	<title>100BeautiesLab.(百花繚乱研究所) Works/Creations DataBase API</title>
+	<meta name="description" content="自創作サークル『百花繚乱研究所』の創作データベースAPI">
+	<meta name="keywords" content="百花繚乱研究所, 100BeautiesLab, API">
+</head>
+
+<body>
+	<!-- APIページヘッダー：タイトルと概要説明 -->
+	<header>
+		<h1>100BeautiesLab Works/Creations DataBase API</h1>
+		<p class="lead">このページは GitHub Pages の静的環境で動作する「百花繚乱研究所」創作キャラクターデータベースの APIです。Service Worker が <code>/api/v1/*</code> へのアクセスをフックし、<code>/data/**</code> のJSONからAPI風レスポンスを返します。</p>
+	</header>
+
+	<main>
+		<!-- エンドポイント仕様セクション -->
+		<section class="card">
+			<h2>エンドポイント一覧</h2>
+				<!-- データベース本体エンドポイント -->
+				<h3>データベース本体</h3>
+				<ul>
+					<li><code>/api/v1/index</code> … API 情報と作品一覧</li>
+					<li><code>/api/v1/works</code> … 作品の一覧（キー、タイトル）</li>
+					<li><code>/api/v1/works/{work}</code> … 作品メタ（<code>db_meta.json</code>）</li>
+					<li><code>/api/v1/works/{work}/db</code> … 利用可能なDB（存在検出）</li>
+					<li><code>/api/v1/works/{work}/db/{dbName}</code> … 該当DBのレコード配列</li>
+					<li><code>/api/v1/search?works={work}&db={dbName}&hashTag={k}&key={v}</code> … DB内検索</li>
+				</ul>
+				<p class="note">work は <code>#Works_NumberTales</code> などの完全キー、または <code>NumberTales</code> などの短縮も使用可能です。</p>
+
+			<!-- 定義情報エンドポイント -->
+			<h3>定義（VarsDef / DefType）</h3>
+			<ul>
+				<li><code>/api/v1/varsdef</code> … グローバルと全作品の <code>General.$VarsDef</code> を俯瞰（<code>?merge=1</code> でグローバル+作品のマージビューも付与）</li>
+				<li><code>/api/v1/works/{work}/varsdef</code></li>
+				<code>/api/v1/deftype/global</code> もしくは <code>/works/{work}/typedef</code> … <code>$DefType</code> を俯瞰</li>
+			</ul>
+			<p class="note">定義情報（<code>General.$VarsDef</code> / <code>$DefType</code>）は上記の専用エンドポイントでのみ出力されます。<code>/works</code>、<code>/db</code>、<code>/search</code> では含まれません。</p>
+		</section>
+
+		<!-- API テストインターフェース -->
+		<section class="card">
+			<h2>クイックテスト</h2>
+			<!-- 基本エンドポイントテスト -->
+			<div class="grid">
+				<button id="btnInstallSW">Service Worker を再登録</button>
+				<button data-endpoint="/api/v1/index" class="btnFetch">/api/v1/index</button>
+				<button data-endpoint="/api/v1/works" class="btnFetch">/api/v1/works</button>
+			</div>
+			<!-- 作品固有エンドポイントテスト -->
+			<div class="grid">
+				<button data-endpoint="/api/v1/works/NumberTales" class="btnFetch">/api/v1/works/NumberTales</button>
+				<button data-endpoint="/api/v1/works/NumberTales/db" class="btnFetch">/api/v1/works/NumberTales/db</button>
+				<button data-endpoint="/api/v1/works/NumberTales/db/Primary" class="btnFetch">/api/v1/works/NumberTales/db/Primary</button>
+			</div>
+			<!-- VarsDef関連エンドポイントテスト -->
+			<div class="grid">
+				<button data-endpoint="/api/v1/varsdef" class="btnFetch">/api/v1/varsdef</button>
+				<button data-endpoint="/api/v1/varsdef?merge=1" class="btnFetch">/api/v1/varsdef?merge=1</button>
+				<button data-endpoint="/api/v1/works/Works_NumberTales/varsdef" class="btnFetch">/api/v1/works/Works_NumberTales/varsdef</button>
+			</div>
+			<!-- DefType関連エンドポイントテスト -->
+			<div class="grid">
+				<button data-endpoint="/api/v1/deftype/global" class="btnFetch">/api/v1/deftype/global</button>
+				<button data-endpoint="/api/v1/works/Works_NumberTales/typedef" class="btnFetch">/api/v1/works/Works_NumberTales/typedef</button>
+			</div>
+			<!-- カスタムエンドポイント入力 -->
+			<label class="endpointInput">
+				<span>任意エンドポイント:</span>
+				<input id="customEndpoint" type="text" placeholder="/api/v1/works/FLInvestigator78/db/Primary">
+				<button id="btnFetchCustom">Fetch</button>
+			</label>
+			<p class="note">セキュリティ上、任意入力は同一オリジンの <code>/api/v1/*</code> のみ実行できます。</p>
+			<!-- レスポンス出力エリア -->
+			<pre id="output" class="output" aria-live="polite"></pre>
+		</section>
+	</main>
+
+	<!-- フッター：著作権表示 -->
+	<footer>
+		<small>©ラジアン(柏木主税) 2020-2025 / ©RadianN_kswg 2020-2025</small><br />
+		<small>百花繚乱研究所（©ラジアン(柏木主税) 2021-2025） / 100BeautiesLab.(©RadianN_kswg 2021-2025)</small>
+	</footer>
+
+	<!-- APIテスト機能スクリプト -->
+	<script src="api.js" defer></script>
+</body>
+</html>

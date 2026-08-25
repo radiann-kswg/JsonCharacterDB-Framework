@@ -1,0 +1,54 @@
+{
+  "$IndexDef": {
+    "hashTag": "CharaId",
+    "IndexLabel_JP": "キャラクターID",
+    "IndexLabel_EN": "Character ID"
+  },
+  "$DefType": [
+    {
+      "hashTag": "CharaId",
+      "$type": "#Index",
+      "hashTag_JP": "キャラクターID",
+      "hashTag_EN": "Character ID"
+    },
+    {
+      "hashTag": "Images",
+      "$type": [
+        {
+          "hashTag": "concept_PNGName",
+          "$type": "#PNGFileName",
+          "$palette": {
+            "source": "swatch"
+          },
+          "hashTag_JP": "設定原画",
+          "hashTag_EN": "Concept Art"
+        },
+        {
+          "hashTag": "corefolder_PNGPath",
+          "$type": "#PNGFilePath[]",
+          "$palette": {
+            "source": "artwork"
+          },
+          "hashTag_JP": "立ち絵",
+          "hashTag_EN": "Standing Images"
+        },
+        {
+          "hashTag": "arts_PNGPath",
+          "$type": "#PNGFilePath[]",
+          "$palette": {
+            "source": "illustration"
+          },
+          "hashTag_JP": "イラスト作品",
+          "hashTag_EN": "Illustration Works"
+        }
+      ],
+      "$display": {
+        "section": "images",
+        "tagSpace": "internal"
+      },
+      "hashTag_JP": "画像",
+      "hashTag_EN": "Images",
+      "searchable": false
+    }
+  ]
+}

@@ -1,0 +1,987 @@
+{
+  "$DefType": [
+    {
+      "$slot": "#Index",
+      "$slotMatch": { "$type": "#Index" },
+      "$slotNote": "作品ごとに hashTag が異なる主インデックス(Num/Card/Unit/BeastType/Drc/Letter/Model/Chronos/Virtues 等)を先頭へ寄せる。複数宣言している作品は作品側の宣言順を保つ"
+    },
+    {
+      "hashTag": "Progress",
+      "$type": "$EnumDef",
+      "hashTag_JP": "進捗",
+      "hashTag_EN": "Creation Progress",
+      "$display": {
+        "section": "basic",
+        "tagSpace": "creatorProgress",
+        "facet": { "order": 40 }
+      }
+    },
+    {
+      "hashTag": "AnotherVersions_DBLink",
+      "$type": "$Def_DBLinkRef[]|#Null",
+      "hashTag_JP": "別バージョン",
+      "hashTag_EN": "Another Versions",
+      "$enrich": false
+    },
+    {
+      "hashTag": "AnotherRegions_DBLink",
+      "$type": "$Def_DBLinkRef[]|#Null",
+      "hashTag_JP": "異空岐路存在(アナザーレギオン)",
+      "hashTag_EN": "ANOTHER-REGIONs",
+      "$enrich": true
+    },
+    {
+      "$slot": "#SecondaryMeta",
+      "$slotExpand": "$MetaType.$Def_SecondaryMeta",
+      "$slotNote": "二次創作メタ(sec_*)は $Def_SecondaryMeta の宣言順をここへ展開する。トップレベル $DefType へ再掲すると二重管理になるため参照で解決する"
+    },
+    {
+      "$slot": "#WorkDBLinkRef",
+      "$slotMatch": { "$typeIncludes": "$Def_DBLinkRef" },
+      "$slotNote": "作品固有の _DBLink 参照(SameModels_DBLink 等)をグローバル _DBLink 群の直後へ。$type が配列(インライン構造体)のエントリには一致しない"
+    },
+    {
+      "hashTag": "Name_JP",
+      "$type": "##String_JP|#Null",
+      "hashTag_JP": "愛称"
+    },
+    {
+      "hashTag": "Name_JPReading",
+      "$type": "##String_JP|#Null",
+      "hashTag_JP": "愛称の読み仮名",
+      "$display": { "auto": false }
+    },
+    {
+      "hashTag": "Name_EN",
+      "$type": "##String_EN|#Null",
+      "hashTag_EN": "Name"
+    },
+    {
+      "$slot": "#Images",
+      "$slotMatch": { "$display": { "section": "images" } },
+      "$slotNote": "画像コンテナ。field 名ではなく $display.section で識別する。画像を持たない作品(UnauthedLogica 等)は宣言自体が無く、このスロットは空になる"
+    },
+    {
+      "$slot": "#WorkBasic",
+      "$slotMatch": { "$inLayout": "basicFields" },
+      "$slotAnchor": "basicFields",
+      "$slotNote": "作品の $DetailLayout.basicFields に載る作品固有フィールド(TailsUnit/ForMasterCalling/For79thDealerCalling 等)。行き先が BustSize の直後・ThirdPersonCalling の直後…と点在するため、マーカー位置へまとめず $slotAnchor で basicFields 上の直前の隣人へ散らす。この位置はアンカーを解決できなかったメンバーの落とし先(基本項目ブロックの先頭)"
+    },
+    {
+      "hashTag": "FormalName_JP",
+      "$type": "##String_JP|#Null",
+      "hashTag_JP": "正式名称"
+    },
+    {
+      "hashTag": "FormalName_JPReading",
+      "$type": "##String_JP|#Null",
+      "hashTag_JP": "正式名称の読み仮名",
+      "$display": { "auto": false }
+    },
+    {
+      "hashTag": "FormalName_EN",
+      "$type": "##String_EN|#Null",
+      "hashTag_EN": "Formal Name"
+    },
+    {
+      "hashTag": "CodeName_JP",
+      "$type": "##String_JP|#Null",
+      "$alt": "SPCodeName_JP",
+      "hashTag_JP": "コードネーム",
+      "$display": { "auto": false }
+    },
+    {
+      "hashTag": "CodeName_EN",
+      "$type": "##String_EN|#Null",
+      "$alt": "SPCodeName_EN",
+      "hashTag_EN": "Code Name",
+      "$display": { "auto": false }
+    },
+    {
+      "hashTag": "SPCodeName_JP",
+      "$type": "##String_JP|#Null",
+      "hashTag_JP": "特殊なコードネーム",
+      "$display": { "auto": false }
+    },
+    {
+      "hashTag": "SPCodeName_EN",
+      "$type": "##String_EN|#Null",
+      "hashTag_EN": "Special Code Name",
+      "$display": { "auto": false }
+    },
+    {
+      "hashTag": "ModelNumber",
+      "$type": "##String",
+      "hashTag_JP": "型番",
+      "hashTag_EN": "Model Number",
+      "$display": { "langMode": "shared" }
+    },
+    {
+      "hashTag": "ModelName_JP",
+      "$type": "##String_JP|#Summary|#Null",
+      "hashTag_JP": "モデル名",
+      "$display": { "section": "basic", "tagSpace": "creation" }
+    },
+    {
+      "hashTag": "ModelName_JPReading",
+      "$type": "##String_JP|#Null",
+      "hashTag_JP": "モデル名の読み仮名",
+      "$display": { "auto": false }
+    },
+    {
+      "hashTag": "ModelName_EN",
+      "$type": "##String_EN|#Summary|#Null",
+      "hashTag_EN": "Model Name",
+      "$display": { "section": "basic", "tagSpace": "creation" }
+    },
+    {
+      "hashTag": "RaceType",
+      "$type": "#DictIndex|#DictIndex_withAbout[]",
+      "$dict": "RaceType",
+      "hashTag_JP": "種族",
+      "hashTag_EN": "Race",
+      "$display": {
+        "section": "basic",
+        "tagSpace": "creation",
+        "facet": { "order": 50 }
+      }
+    },
+    {
+      "hashTag": "GenderType",
+      "$type": "#DictIndex|#DictIndex_withAbout",
+      "$dict": "GenderType",
+      "hashTag_JP": "性別",
+      "hashTag_EN": "Gender",
+      "$display": {
+        "section": "basic",
+        "tagSpace": "creation",
+        "langMode": "shared",
+        "facet": { "order": 60 }
+      }
+    },
+    {
+      "hashTag": "Belonging",
+      "$type": "$Def_Faction[]",
+      "$dict": "Faction",
+      "hashTag_JP": "所属",
+      "hashTag_EN": "Belonging",
+      "$display": {
+        "section": "basic",
+        "tagSpace": "creation",
+        "facet": { "path": "Faction", "order": 10, "hierarchy": 10 }
+      }
+    },
+    {
+      "hashTag": "FromArea",
+      "$type": "$Def_BaseArea",
+      "hashTag_JP": "出身地",
+      "hashTag_EN": "From Area",
+      "$display": {
+        "facet": { "path": "Area", "order": 20 }
+      }
+    },
+    {
+      "hashTag": "Class",
+      "$type": "#DictIndex[]",
+      "$dict": "Class",
+      "hashTag_JP": "クラス名",
+      "hashTag_EN": "Class",
+      "$display": {
+        "section": "basic",
+        "tagSpace": "creation",
+        "facet": { "order": 30, "maxGroups": 12, "hierarchy": 30 }
+      }
+    },
+    {
+      "hashTag": "Height_cm",
+      "$type": "#Number|#Number_withAbout[]",
+      "hashTag_JP": "身長_cm",
+      "hashTag_EN": "Height_cm",
+      "$display": { "unit": "cm" }
+    },
+    {
+      "hashTag": "Weight_kg",
+      "$type": "#Number|#Number_withAbout[]",
+      "hashTag_JP": "体重_kg",
+      "hashTag_EN": "Weight_kg",
+      "$display": { "unit": "kg" }
+    },
+    {
+      "hashTag": "BustSize",
+      "$type": "#ListIndex|#ListIndex_withAbout",
+      "hashTag_JP": "バストサイズ",
+      "hashTag_EN": "Bust Size",
+      "$display": { "langMode": "shared" }
+    },
+    {
+      "hashTag": "Age",
+      "$type": "#Number|#Number_withAbout",
+      "$alt": "ConceptAge",
+      "hashTag_JP": "年齢",
+      "hashTag_EN": "Age"
+    },
+    {
+      "hashTag": "ConceptAge",
+      "$type": "#Number|#Number_withAbout",
+      "hashTag_JP": "設定年齢",
+      "hashTag_EN": "Concept Age"
+    },
+    {
+      "hashTag": "BirthDay",
+      "$type": "$Def_Day",
+      "$alt": "AnivDay",
+      "hashTag_JP": "誕生日",
+      "hashTag_EN": "Birth Day",
+      "$display": { "section": "basic", "aliasOf": "AnivDay" }
+    },
+    {
+      "hashTag": "AnivDay",
+      "$type": "$Def_Day[]",
+      "hashTag_JP": "記念日",
+      "hashTag_EN": "Anniversary Day",
+      "$display": { "section": "basic" }
+    },
+    {
+      "hashTag": "FirstPersonCalling",
+      "$type": "#String|#String_EN|#Summary|#Null",
+      "hashTag_JP": "一人称",
+      "hashTag_EN": "First Person Calling",
+      "$display": { "section": "sub" }
+    },
+    {
+      "hashTag": "SecondPersonCalling",
+      "$type": "#String|#String_EN|#Summary|#Null",
+      "hashTag_JP": "二人称",
+      "hashTag_EN": "Second Person Calling",
+      "$display": { "section": "sub" }
+    },
+    {
+      "hashTag": "ThirdPersonCalling",
+      "$type": "#String|#String_EN|#Summary|#Null",
+      "hashTag_JP": "三人称",
+      "hashTag_EN": "Third Person Calling",
+      "$display": { "section": "sub" }
+    },
+    {
+      "hashTag": "Character_JP",
+      "$type": "#String|#Summary",
+      "hashTag_JP": "性格"
+    },
+    {
+      "hashTag": "Character_EN",
+      "$type": "#String_EN|#Summary|#Null",
+      "hashTag_EN": "Character"
+    },
+    {
+      "hashTag": "Hobby_JP",
+      "$type": "#String|#Summary|#Null",
+      "hashTag_JP": "趣味"
+    },
+    {
+      "hashTag": "Hobby_EN",
+      "$type": "#String_EN|#Summary|#Null",
+      "hashTag_EN": "Hobby"
+    },
+    {
+      "hashTag": "SpecialSkill_JP",
+      "$type": "#String|#Summary|#Null",
+      "hashTag_JP": "特技"
+    },
+    {
+      "hashTag": "SpecialSkill_EN",
+      "$type": "#String_EN|#Summary|#Null",
+      "hashTag_EN": "Special Skill"
+    },
+    {
+      "hashTag": "Favor_JP",
+      "$type": "#String|#Summary|#Null",
+      "hashTag_JP": "好きなもの"
+    },
+    {
+      "hashTag": "Favor_EN",
+      "$type": "#String_EN|#Summary|#Null",
+      "hashTag_EN": "Favor"
+    },
+    {
+      "hashTag": "Unlike_JP",
+      "$type": "#String|#Summary|#Null",
+      "hashTag_JP": "苦手なもの"
+    },
+    {
+      "hashTag": "Unlike_EN",
+      "$type": "#String_EN|#Summary|#Null",
+      "hashTag_EN": "Unlike"
+    },
+    {
+      "hashTag": "Strength_JP",
+      "$type": "#String|#Summary|#Null",
+      "hashTag_JP": "強み"
+    },
+    {
+      "hashTag": "Strength_EN",
+      "$type": "#String_EN|#Summary|#Null",
+      "hashTag_EN": "Strength"
+    },
+    {
+      "hashTag": "Weakness_JP",
+      "$type": "#String|#Summary|#Null",
+      "hashTag_JP": "弱み"
+    },
+    {
+      "hashTag": "Weakness_EN",
+      "$type": "#String_EN|#Summary|#Null",
+      "hashTag_EN": "Weakness"
+    },
+    {
+      "hashTag": "AppearanceDetail",
+      "$type": "$Def_AppearanceDetail[]|#Null",
+      "hashTag_JP": "外見デザイン詳細",
+      "hashTag_EN": "Appearance Design Details",
+      "searchable": false,
+      "$display": {
+        "section": "profile",
+        "sectionWrapper": "appearanceDetailSection"
+      }
+    },
+    {
+      "hashTag": "ColorPalette",
+      "$type": "$Def_ColorPalette[]|#Null",
+      "hashTag_JP": "配色",
+      "hashTag_EN": "Color Palette",
+      "searchable": false,
+      "$display": {
+        "section": "profile"
+      }
+    },
+    {
+      "hashTag": "ConversationPattern",
+      "$type": [
+        {
+          "hashTag": "TalkingTone_JP",
+          "$type": "#String|#Summary|#Null",
+          "hashTag_JP": "口調"
+        },
+        {
+          "hashTag": "TalkingTone_EN",
+          "$type": "#String_EN|#Summary|#Null",
+          "hashTag_EN": "Talking Tone"
+        },
+        {
+          "hashTag": "TopicPreference_JP",
+          "$type": "#String|#Summary|#Null",
+          "hashTag_JP": "話題嗜好"
+        },
+        {
+          "hashTag": "TopicPreference_EN",
+          "$type": "#String_EN|#Summary|#Null",
+          "hashTag_EN": "Topic Preference"
+        },
+        {
+          "hashTag": "TalkFrequency_JP",
+          "$type": "#String|#Summary|#Null",
+          "hashTag_JP": "会話頻度"
+        },
+        {
+          "hashTag": "TalkFrequency_EN",
+          "$type": "#String_EN|#Summary|#Null",
+          "hashTag_EN": "Talk Frequency"
+        },
+        {
+          "hashTag": "PreferredTopics_JP",
+          "$type": "#String|#Summary|#Null",
+          "hashTag_JP": "やりがちな話題"
+        },
+        {
+          "hashTag": "PreferredTopics_EN",
+          "$type": "#String_EN|#Summary|#Null",
+          "hashTag_EN": "Preferred Topics"
+        },
+        {
+          "hashTag": "AvoidedTopics_JP",
+          "$type": "#String|#Summary|#Null",
+          "hashTag_JP": "避けがちな話題"
+        },
+        {
+          "hashTag": "AvoidedTopics_EN",
+          "$type": "#String_EN|#Summary|#Null",
+          "hashTag_EN": "Avoided Topics"
+        },
+        {
+          "hashTag": "ConversationNotes_JP",
+          "$type": "#String|#Summary|#Null",
+          "hashTag_JP": "会話における補足"
+        },
+        {
+          "hashTag": "ConversationNotes_EN",
+          "$type": "#String_EN|#Summary|#Null",
+          "hashTag_EN": "Conversation Notes"
+        },
+        {
+          "hashTag": "DialogueExamples",
+          "$type": "#Dialogue[]|#Dialogue_withAbout[]|#Dialogue_bilingual[]|#Null",
+          "hashTag_JP": "台詞の例",
+          "hashTag_EN": "Dialogue Examples"
+        },
+        {
+          "hashTag": "TouchReactions",
+          "$type": "$Def_TouchReaction[]|#Null",
+          "hashTag_JP": "接触への反応",
+          "hashTag_EN": "Touch Reactions"
+        }
+      ],
+      "hashTag_JP": "会話パターンについて",
+      "hashTag_EN": "Conversation Pattern",
+      "searchable": false,
+      "$display": {
+        "section": "profile",
+        "sectionWrapper": "structuredObjectSection"
+      }
+    },
+    {
+      "hashTag": "RelationNotes_JP",
+      "$type": "#Summary",
+      "hashTag_JP": "関連性について"
+    },
+    {
+      "hashTag": "RelationNotes_EN",
+      "$type": "#Summary|#Null",
+      "hashTag_EN": "Relation Notes"
+    },
+    {
+      "hashTag": "Summary_JP",
+      "$type": "#Summary",
+      "hashTag_JP": "概要・紹介文"
+    },
+    {
+      "hashTag": "Summary_EN",
+      "$type": "#Summary|#Null",
+      "hashTag_EN": "Summary"
+    },
+    {
+      "hashTag": "BodyBlocks_JP",
+      "$type": "#Summary[]",
+      "hashTag_JP": "本文ブロック",
+      "hashTag_EN": "Body Block",
+      "$display": { "langMode": "jp" }
+    },
+    {
+      "hashTag": "BodyBlocks_EN",
+      "$type": "#Summary[]|#Null",
+      "hashTag_JP": "本文ブロック（英訳）",
+      "hashTag_EN": "Body Block (English)",
+      "$display": { "langMode": "en" }
+    },
+    {
+      "hashTag": "BodyBlocks",
+      "$type": "#Summary[]",
+      "hashTag_JP": "本文ブロック",
+      "hashTag_EN": "Body Block",
+      "$display": { "langMode": "jp" }
+    },
+    {
+      "hashTag": "BodyBlock_JP",
+      "$type": "#Summary[]",
+      "hashTag_JP": "本文ブロック",
+      "hashTag_EN": "Body Block",
+      "$display": { "langMode": "jp" }
+    },
+    {
+      "hashTag": "BodyBlock_EN",
+      "$type": "#Summary[]|#Null",
+      "hashTag_JP": "本文ブロック（英訳）",
+      "hashTag_EN": "Body Block (English)",
+      "$display": { "langMode": "en" }
+    },
+    {
+      "hashTag": "AbilityStats",
+      "$type": [
+        {
+          "hashTag": "Speed",
+          "$type": "$EnumDef_Rank,$EnumLink",
+          "hashTag_JP": "俊敏性",
+          "hashTag_EN": "Speed Ability"
+        },
+        {
+          "hashTag": "Communication",
+          "$type": "$EnumDef_Rank,$EnumLink",
+          "hashTag_JP": "社交性",
+          "hashTag_EN": "Communication Ability"
+        },
+        {
+          "hashTag": "Leading",
+          "$type": "$EnumDef_Rank,$EnumLink",
+          "hashTag_JP": "統治性",
+          "hashTag_EN": "Leading Ability"
+        },
+        {
+          "hashTag": "Precision",
+          "$type": "$EnumDef_Rank,$EnumLink",
+          "hashTag_JP": "器用さ",
+          "hashTag_EN": "Precision Ability"
+        },
+        {
+          "hashTag": "Technic",
+          "$type": "$EnumDef_Rank,$EnumLink",
+          "hashTag_JP": "技術力",
+          "hashTag_EN": "Technic Ability"
+        },
+        {
+          "hashTag": "Actuation",
+          "$type": "$EnumDef_Rank,$EnumLink",
+          "hashTag_JP": "動作性",
+          "hashTag_EN": "Actuation Ability"
+        }
+      ],
+      "hashTag_JP": "身体能力値",
+      "hashTag_EN": "Ability Status",
+      "$display": {
+        "rankFormat": "alphaLabel",
+        "enumLinkKey": "AbilityText",
+        "sectionWrapper": "statsSection"
+      }
+    },
+    {
+      "hashTag": "Backgrounds_JP",
+      "$type": "#Summary",
+      "hashTag_JP": "キャラクターの背景"
+    },
+    {
+      "hashTag": "Backgrounds_EN",
+      "$type": "#Summary|#Null",
+      "hashTag_EN": "Character Background"
+    },
+    { "hashTag": "InStory_JP", "$type": "#Summary", "hashTag_JP": "劇中では" },
+    {
+      "hashTag": "InStory_EN",
+      "$type": "#Summary|#Null",
+      "hashTag_EN": "In Story"
+    },
+    {
+      "hashTag": "AdditionalDesigned_JP",
+      "$type": "#Summary",
+      "hashTag_JP": "追加デザイン協力者について",
+      "searchable": false
+    },
+    {
+      "hashTag": "AdditionalDesigned_EN",
+      "$type": "#Summary|#Null",
+      "hashTag_EN": "Additional Design Collaborators",
+      "searchable": false
+    },
+    {
+      "$slot": "#WorkRest",
+      "$slotMatch": "*",
+      "$slotOrder": "subFields",
+      "$slotNote": "どのスロットにも該当しない作品固有フィールドの受け皿。並びは作品の $DetailLayout.subFields（詳細画面のセクション順）へ寄せ、subFields 未登録のものは作品別 $DefType の宣言順で後ろへ送る"
+    }
+  ],
+  "$MetaType": {
+    "$Def_OldTitleCatalog": {
+      "$DefType": [
+        {
+          "hashTag": "Title_JP",
+          "$type": "##String_JP|#Summary|#Null",
+          "hashTag_JP": "旧題"
+        },
+        {
+          "hashTag": "Title_EN",
+          "$type": "##String_EN|#Summary|#Null",
+          "hashTag_EN": "Old Title"
+        },
+        {
+          "hashTag": "ArchivedYear",
+          "$type": "#Number|#Null",
+          "hashTag_JP": "旧題の使用終了年",
+          "hashTag_EN": "Archived Year"
+        }
+      ]
+    },
+    "$Def_OfficialLinkCatalog": {
+      "$DefType": [
+        {
+          "hashTag": "LinkType",
+          "$type": "#ListIndex|#String|#Null",
+          "hashTag_JP": "リンク種別",
+          "hashTag_EN": "Link Type"
+        },
+        {
+          "hashTag": "URL",
+          "$type": "#String|#Null",
+          "hashTag_JP": "URL",
+          "hashTag_EN": "URL"
+        },
+        {
+          "hashTag": "Label_JP",
+          "$type": "##String_JP|#Summary|#Null",
+          "hashTag_JP": "リンク表示名"
+        },
+        {
+          "hashTag": "Label_EN",
+          "$type": "##String_EN|#Summary|#Null",
+          "hashTag_EN": "Link Label"
+        }
+      ]
+    },
+    "$Def_StoryEra": {
+      "$display": { "wrapper": "eraSummary" },
+      "$DefType": [
+        {
+          "hashTag": "EraGen",
+          "$type": "#Number|#Null",
+          "hashTag_JP": "創世紀",
+          "hashTag_EN": "WDCE(World Development Creations Era) Generation",
+          "$display": { "role": "eraGeneration" }
+        },
+        {
+          "hashTag": "YearInEra",
+          "$type": "#Number|#Null",
+          "hashTag_JP": "創世紀内年",
+          "hashTag_EN": "Year in WDCE",
+          "$display": { "role": "eraYear" }
+        },
+        {
+          "hashTag": "byRealYear",
+          "$type": "#Number|#Null",
+          "hashTag_JP": "西暦換算年",
+          "hashTag_EN": "Equivalent Real Year",
+          "$display": { "role": "realYear" }
+        },
+        {
+          "hashTag": "about_JP",
+          "$type": "#Summary|#Null",
+          "hashTag_JP": "年代補足",
+          "$display": { "role": "pointLabel" }
+        },
+        {
+          "hashTag": "about_EN",
+          "$type": "#Summary|#Null",
+          "hashTag_EN": "Era Supplement",
+          "$display": { "role": "pointLabelAlt" }
+        }
+      ]
+    },
+    "$Def_StoryEraCatalog": {
+      "$display": { "wrapper": "storyEraSummary" },
+      "$DefType": [
+        {
+          "hashTag": "FromEra",
+          "$type": "$Def_StoryEra[]|#Null",
+          "hashTag_JP": "開始年代",
+          "hashTag_EN": "From Era",
+          "$display": { "role": "rangeStart" }
+        },
+        {
+          "hashTag": "ToEra",
+          "$type": "$Def_StoryEra[]|#Null",
+          "hashTag_JP": "終了年代",
+          "hashTag_EN": "To Era",
+          "$display": { "role": "rangeEnd" }
+        },
+        {
+          "hashTag": "InEra",
+          "$type": "$Def_StoryEra[]|#Null",
+          "hashTag_JP": "代表年代",
+          "hashTag_EN": "Representative in Era",
+          "$display": { "role": "representativePoint" }
+        },
+        {
+          "hashTag": "StoryEraAbout_JP",
+          "$type": "#Summary_JP|#Null",
+          "hashTag_JP": "年代概要",
+          "$display": { "role": "preferredLabel" }
+        },
+        {
+          "hashTag": "StoryEraAbout_EN",
+          "$type": "#Summary_EN|#Null",
+          "hashTag_EN": "Era Summary",
+          "$display": { "role": "preferredLabelAlt" }
+        }
+      ]
+    },
+    "$Def_CreationWorkCatalog": {
+      "$DefType": [
+        {
+          "hashTag": "Title_JP",
+          "$type": "##String_JP|#Summary|#Null",
+          "hashTag_JP": "作品名"
+        },
+        {
+          "hashTag": "Title_EN",
+          "$type": "##String_EN|#Summary|#Null",
+          "hashTag_EN": "Title"
+        },
+        {
+          "hashTag": "Works_Code",
+          "$type": "##String|#Null",
+          "hashTag_JP": "作品コード",
+          "hashTag_EN": "Work Code",
+          "$display": { "langMode": "shared" }
+        },
+        {
+          "hashTag": "Works_Summary_JP",
+          "$type": "#Summary|#Null",
+          "hashTag_JP": "作品概要"
+        },
+        {
+          "hashTag": "Works_Summary_EN",
+          "$type": "#Summary|#Null",
+          "hashTag_EN": "Work Summary"
+        },
+        {
+          "hashTag": "OldTitles",
+          "$type": "$Def_OldTitleCatalog[]|#Null",
+          "hashTag_JP": "旧題一覧",
+          "hashTag_EN": "Old Titles"
+        },
+        {
+          "hashTag": "Works_OfficialLinks",
+          "$type": "$Def_OfficialLinkCatalog[]|#Null",
+          "hashTag_JP": "公式リンク",
+          "hashTag_EN": "Official Links"
+        },
+        {
+          "hashTag": "CalendarColorId",
+          "$type": "#String|#Null",
+          "hashTag_JP": "カレンダー色ID",
+          "hashTag_EN": "Calendar Color ID",
+          "$display": { "role": "internal" }
+        }
+      ]
+    },
+    "$Def_DatabaseCatalog": {
+      "$DefType": [
+        {
+          "hashTag": "DB_Label_JP",
+          "$type": "##String_JP|#Summary|#Null",
+          "hashTag_JP": "DB表示名"
+        },
+        {
+          "hashTag": "DB_Label_EN",
+          "$type": "##String_EN|#Summary|#Null",
+          "hashTag_EN": "DB Label"
+        },
+        {
+          "hashTag": "DB_Summary_JP",
+          "$type": "#Summary|#Null",
+          "hashTag_JP": "DB概要"
+        },
+        {
+          "hashTag": "DB_Summary_EN",
+          "$type": "#Summary|#Null",
+          "hashTag_EN": "DB Summary"
+        },
+        {
+          "hashTag": "DB_Layer",
+          "$type": "##String|#Null",
+          "hashTag_JP": "DB配置レイヤー",
+          "hashTag_EN": "DB Layer"
+        },
+        {
+          "hashTag": "DB_File",
+          "$type": "##String|#Null",
+          "hashTag_JP": "DBファイル名",
+          "hashTag_EN": "DB Filename"
+        },
+        {
+          "hashTag": "StoryEra",
+          "$type": "$Def_StoryEraCatalog|#Null",
+          "hashTag_JP": "物語上の年代",
+          "hashTag_EN": "Era Summary",
+          "$display": { "sectionWrapper": "storyEraSection" }
+        },
+        {
+          "hashTag": "SecondarySummary_JP",
+          "$type": "#Summary|#Null",
+          "hashTag_JP": "二次創作概要（日本語）",
+          "hashTag_EN": "Secondary Summary (JP)"
+        },
+        {
+          "hashTag": "SecondarySummary_EN",
+          "$type": "#Summary|#Null",
+          "hashTag_JP": "二次創作概要（英語）",
+          "hashTag_EN": "Secondary Summary (EN)"
+        },
+        {
+          "hashTag": "DB_Image",
+          "$type": "##String|#Null",
+          "hashTag_JP": "DB代表画像",
+          "hashTag_EN": "Database Cover Image",
+          "$display": { "role": "internal" }
+        }
+      ]
+    },
+    "$Def_SecondaryMeta": {
+      "hashTag_JP": "二次創作情報",
+      "$DefType": [
+        {
+          "hashTag": "sec_SeriesTitle",
+          "$type": "#DictIndex|#Null",
+          "$dict": "SeriesTitle",
+          "hashTag_JP": "二次創作シリーズ名",
+          "hashTag_EN": "Secondary Title",
+          "$display": { "section": "secondaryInfo" }
+        },
+        {
+          "hashTag": "sec_Category",
+          "$type": "#DictIndex|#Null",
+          "$dict": "Category",
+          "hashTag_JP": "二次創作分類",
+          "hashTag_EN": "Secondary Category",
+          "$display": { "section": "secondaryInfo" }
+        },
+        {
+          "hashTag": "sec_DesignedBy",
+          "$type": "#DictIndex[]|#Null",
+          "$dict": "DesignedBy",
+          "hashTag_JP": "キャラクターデザイン・考案",
+          "hashTag_EN": "Character Design / Concept By",
+          "$display": {
+            "section": "secondaryInfo",
+            "mapPartition": {
+              "ownerFlag": "isOwner",
+              "ownLabel_JP": "自作のみ",
+              "ownLabel_EN": "Own works only",
+              "sharedLabel_JP": "共同二次創作",
+              "sharedLabel_EN": "Collaborative works"
+            }
+          }
+        },
+        {
+          "hashTag": "SecondarySummary_JP",
+          "$type": "#Summary|#Null",
+          "hashTag_JP": "二次創作概要（日本語）",
+          "hashTag_EN": "Secondary Summary (JP)",
+          "$display": { "auto": false }
+        },
+        {
+          "hashTag": "SecondarySummary_EN",
+          "$type": "#Summary|#Null",
+          "hashTag_JP": "二次創作概要（英語）",
+          "hashTag_EN": "Secondary Summary (EN)",
+          "$display": { "auto": false }
+        },
+        {
+          "hashTag": "StoryEra",
+          "$type": "$Def_StoryEraCatalog|#Null",
+          "hashTag_JP": "物語上の年代",
+          "hashTag_EN": "Era Summary",
+          "$display": { "auto": false, "sectionWrapper": "storyEraSection" }
+        }
+      ]
+    },
+    "$Def_SupersededDesignElement": {
+      "hashTag_JP": "廃止デザイン要素",
+      "$DefType": [
+        {
+          "hashTag": "DesignElement",
+          "$type": "#ListIndex",
+          "hashTag_JP": "旧デザイン要素キー",
+          "hashTag_EN": "Retired Design Element Key"
+        },
+        {
+          "hashTag": "SupersededByField",
+          "$type": "#String",
+          "hashTag_JP": "移行先フィールド名",
+          "hashTag_EN": "Superseded-By Field"
+        },
+        {
+          "hashTag": "SupersededByType",
+          "$type": "#String|#Null",
+          "hashTag_JP": "移行先の型",
+          "hashTag_EN": "Superseded-By Type"
+        },
+        {
+          "hashTag": "SupersededDate",
+          "$type": "#String|#Null",
+          "hashTag_JP": "移行日",
+          "hashTag_EN": "Superseded Date"
+        },
+        {
+          "hashTag": "Note_JP",
+          "$type": "#String|#Null",
+          "hashTag_JP": "補足（日本語）",
+          "hashTag_EN": "Note (JP)"
+        },
+        {
+          "hashTag": "Note_EN",
+          "$type": "#String_EN|#Null",
+          "hashTag_JP": "補足（英語）",
+          "hashTag_EN": "Note (EN)"
+        }
+      ]
+    }
+  },
+  "$Def_DBLinkRef": {
+    "$DefType": [
+      {
+        "hashTag": "_Work",
+        "$type": "#String|#Null",
+        "hashTag_EN": "Target Work Override"
+      },
+      {
+        "hashTag": "_DB",
+        "$type": "#String|#Null",
+        "hashTag_EN": "Target DB Override"
+      },
+      {
+        "hashTag": "label_JP",
+        "$type": "#String_JP|#Null",
+        "hashTag_JP": "ラベル"
+      },
+      {
+        "hashTag": "label_EN",
+        "$type": "#String_EN|#Null",
+        "hashTag_EN": "Label"
+      }
+    ]
+  },
+  "$Def_DBCrossLinkPath": {
+    "$DefType": [
+      {
+        "hashTag": "_DB",
+        "$type": "#String",
+        "hashTag_JP": "データベース参照先",
+        "hashTag_EN": "Target DB Override"
+      },
+      {
+        "hashTag": "_Work",
+        "$type": "#String|#Null",
+        "hashTag_JP": "創作タイトル参照先",
+        "hashTag_EN": "Target Work Override"
+      },
+      {
+        "hashTag": "_Field",
+        "$type": "#String|#Null",
+        "hashTag_JP": "参照するフォルダに紐づけられたImageフィールド名",
+        "hashTag_EN": "Image Field linking Target Folder Name Override"
+      },
+      {
+        "hashTag": "_IsoPath",
+        "$type": "#PNGFilePath",
+        "hashTag_JP": "参照するフォルダからの相対パス",
+        "hashTag_EN": "Isolate Path in Target Folder"
+      }
+    ]
+  },
+  "$ScalarDef": {
+    "#Hexcode": {
+      "description_JP": "16進数エンコーディングのベース型。長さ・用途はサブタイプで指定する。",
+      "description_EN": "Base type for hexadecimal-encoded values. Length and usage are specified by subtypes.",
+      "pattern": "^#[0-9A-Fa-f]+"
+    },
+    "#Hexcode_Color": {
+      "extends": "#Hexcode",
+      "description_JP": "RGB または RGBA カラーコード。#RRGGBB または #RRGGBBAA 形式。",
+      "description_EN": "RGB or RGBA color code in #RRGGBB or #RRGGBBAA format.",
+      "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$",
+      "example": "#FF0000"
+    },
+    "#Hexcode_ASCII": {
+      "extends": "#Hexcode",
+      "description_JP": "ASCIIコードの16進数表現。",
+      "description_EN": "Hexadecimal representation of ASCII code.",
+      "pattern": "^0x[0-9A-Fa-f]{2}$",
+      "example": "0x41"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "GenderType": "Female",
+    "GenderType_JP": "女性",
+    "GenderType_EN": "Female"
+  },
+  {
+    "GenderType": "Male",
+    "GenderType_JP": "男性",
+    "GenderType_EN": "Male"
+  },
+  {
+    "GenderType": "Neutral",
+    "GenderType_JP": "中性",
+    "GenderType_EN": "Neutral"
+  }
+]

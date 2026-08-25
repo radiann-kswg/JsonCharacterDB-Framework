@@ -1,0 +1,72 @@
+name = "creationsdb-api"
+main = "worker.js"
+compatibility_date = "2024-12-01"
+workers_dev = false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# カスタムドメイン ルーティング
+# TOML パース規則: [section] / [[array]] ヘッダーより後に書くとそのスコープに取り込まれる。
+# root-level キーはすべての [section] / [[array]] より前に置くこと。
+# ─────────────────────────────────────────────────────────────────────────────
+
+routes = [
+  { pattern = "database.numbertales-radiann.net/api/v1/*", zone_name = "numbertales-radiann.net" },
+  # Today Action Board ダッシュボード（同一 Worker に統合）
+  #   /dashboard       … HTML 本体（完全一致）
+  #   /dashboard/*     … /dashboard/data 等の配下
+  { pattern = "database.numbertales-radiann.net/dashboard", zone_name = "numbertales-radiann.net" },
+  { pattern = "database.numbertales-radiann.net/dashboard/*", zone_name = "numbertales-radiann.net" }
+]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# R2 バインディング
+#   creationsdb-data: data/** の JSON を格納する静的ミラーバケット
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "creationsdb-data"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# D1 バインディング
+#   creationsdb-d1: 正規化メタ・レコードインデックス・全文検索テーブル
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[d1_databases]]
+binding = "DB"
+database_name = "creationsdb-d1"
+database_id = "b8bf7187-1966-4831-88d2-2b8906cfa745"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 環境変数 (Cloudflare Dashboard または .dev.vars で上書き可能)
+# ─────────────────────────────────────────────────────────────────────────────
+
+[vars]
+# GitHub Pages の配信 URL（末尾スラッシュなし）
+# R2 に未収録の静的アセット（画像等）のフォールバック参照先
+REPO_BASE_URL = "https://radiann-kswg.github.io/100BeautiesLab_CreationsDB"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# シークレット運用（[vars] には書かない）
+#   Today Action Board の GitHub パネルは GITHUB_TOKEN（Worker secret）を使用する。
+#   トークンは平文で wrangler.toml に置かず、必ず secret として登録すること:
+#       wrangler secret put GITHUB_TOKEN
+#   未設定でもダッシュボードは動作し、GitHub パネルは「トークン未設定」表示になる。
+#   トークン値は /dashboard/data のレスポンスには一切含めない（ヘッダー利用のみ）。
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ローカル開発環境 (wrangler dev)
+# ─────────────────────────────────────────────────────────────────────────────
+
+[dev]
+port = 8787
+local_protocol = "http"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 環境定義は設けず、トップレベル設定のみを使用する。
+# [env.production] を定義すると wrangler が production 環境を優先し
+# トップレベルの routes が継承されず "No targets deployed" になるため削除。
+# また routes = [...] は必ず [vars] より前に配置すること。
+# TOML パース規則上、[vars] 以降に書くと vars.routes（環境変数）として解釈される。
+# ─────────────────────────────────────────────────────────────────────────────

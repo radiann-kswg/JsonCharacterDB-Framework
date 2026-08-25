@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 二次創作・利用ガイドライン
+    url: https://github.com/radiann-kswg/100BeautiesLab_CreationsDB/blob/develop/guideline.md
+    about: ライセンス・二次創作の可否についてはこちらを確認してください（Issueでの質問より先にご一読を）
+  - name: ホームページ（画像利用許可申請など）
+    url: https://www.numbertales-radiann.net
+    about: 一次創作作品の画像利用許可申請等はこちらから

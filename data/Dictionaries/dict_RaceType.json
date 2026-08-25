@@ -1,0 +1,12 @@
+[
+  {
+    "RaceType": "Human",
+    "RaceType_JP": "人間",
+    "RaceType_EN": "Human"
+  },
+  {
+    "RaceType": "Neutral",
+    "RaceType_JP": "不明",
+    "RaceType_EN": "Unknown"
+  }
+]

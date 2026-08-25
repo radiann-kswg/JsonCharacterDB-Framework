@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>JsonCharacterDB-Framework</title>
+
+	<!-- pages/characters.html と同じデザインシステム（CSS変数）を流用し、配色定義を二重管理しません -->
+	<link rel="stylesheet" href="./pages/characters.css" />
+</head>
+
+<body>
+	<header class="site-header">
+		<div class="container">
+			<h1>JsonCharacterDB-Framework</h1>
+			<p class="lead">JSON でキャラクターDBを管理し、GitHub Pages で公開する静的サイトフレームワーク</p>
+		</div>
+	</header>
+
+	<main class="container" style="padding: var(--spacing-xl) 0;">
+		<section class="card" aria-labelledby="top-links">
+			<h2 id="top-links">デモ</h2>
+			<p class="sub">同梱のサンプル作品（<code>data/Works_Sample/</code>）で動作を確認できます。</p>
+			<div class="control-row" style="margin-top: var(--spacing-md);">
+				<a class="btn btn-primary btn-lg" href="./pages/characters.html">キャラシートUI</a>
+				<a class="btn btn-secondary btn-lg" href="./pages/relations.html">相関図UI</a>
+				<a class="btn btn-secondary btn-lg" href="./api/">API（GUI）</a>
+			</div>
+		</section>
+
+		<section class="card" aria-labelledby="doc-links">
+			<h2 id="doc-links">はじめかた</h2>
+			<ul style="margin: var(--spacing-md) 0 0; padding-left: 1.2em;">
+				<li><a href="./docs/json-db-implementation-guide.md">JSON DB 実装ガイド</a></li>
+				<li><a href="./README.md">README</a></li>
+				<li><a href="./LICENSE">LICENSE (CC BY-NC 4.0)</a></li>
+			</ul>
+		</section>
+
+		<section class="card" aria-labelledby="api-links">
+			<h2 id="api-links">擬似 API（代表例）</h2>
+			<ul style="margin: var(--spacing-md) 0 0; padding-left: 1.2em;">
+				<li><a href="/api/v1/index">/api/v1/index</a></li>
+				<li><a href="/api/v1/works">/api/v1/works</a></li>
+				<li><a href="/pages/v1/works">/pages/v1/works</a></li>
+			</ul>
+		</section>
+	</main>
+</body>
+
+</html>

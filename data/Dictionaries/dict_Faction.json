@@ -1,0 +1,22 @@
+[
+  {
+    "Faction": "サンプル所属",
+    "Faction_EN": "Sample Faction",
+    "FactionsBaseArea": {
+      "Area": "サンプル地方"
+    },
+    "isForSecondary": false,
+    "isMaker": null,
+    "isAcademic": null
+  },
+  {
+    "Faction": "対立勢力",
+    "Faction_EN": "Rival Faction",
+    "FactionsBaseArea": {
+      "Area": "隣接地方"
+    },
+    "isForSecondary": false,
+    "isMaker": null,
+    "isAcademic": null
+  }
+]

@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>創作キャラ・相関図 | 100BeautiesLab Creations DB</title>
+	<meta
+		name="description"
+		content="/data の創作データベースを クライアント内API (/pages/v1 ほか) 経由で取得し、全創作タイトルのキャラクター相関図として表示します。" />
+	<meta name="asset-version" content="2026.08.08.2" />
+	<!--
+		スタイルシートは 2 枚重ねる。
+		1) characters.css … デザインシステム（CSS 変数）と .card / .btn / .control-row などの共通クラス
+		2) relations.css  … 本ページ固有のレイアウト（SASS から自動生成）
+		relations.css が未生成でも「装飾が欠けるが機能はする」状態を保つため、この順序を守ること。
+	-->
+	<script>
+		(() => {
+			const version = (
+				document.querySelector('meta[name="asset-version"]')?.content || ""
+			).trim();
+			const suffix = version ? `?v=${encodeURIComponent(version)}` : "";
+			for (const name of ["characters", "relations"]) {
+				const link = document.createElement("link");
+				link.rel = "stylesheet";
+				link.href = `./${name}.css${suffix}`;
+				document.head.appendChild(link);
+			}
+			window.__RELATIONS_ASSET_VERSION__ = version;
+		})();
+	</script>
+	<!--
+		Cytoscape.js（相関図の描画）用の import map。
+		pages/vendor/ に同梱し、外部CDNへは依存しない（pages/vendor/THIRD_PARTY_NOTICES.md 参照）。
+		実際のロードは relations.js の初期化時の動的 import() まで発生しない。
+		import map はモジュールスクリプトより前に存在する必要があるため <head> に置く。
+	-->
+	<script type="importmap">
+		{
+			"imports": {
+				"cytoscape": "./vendor/cytoscape/cytoscape.esm.min.js"
+			}
+		}
+	</script>
+</head>
+
+<body class="relmap-body">
+	<!-- サイトヘッダー -->
+	<header class="site-header">
+		<h1 id="page-title">創作キャラ・相関図</h1>
+		<p id="page-lead" class="lead">
+			<code>/data/**</code> のキャラクター同士のつながり（<code>Relation</code>・<code>_DBLink</code>
+			ほか）を、クライアント内API（Service Worker）経由で取得してグラフとして表示します。
+			<a href="./characters.html">キャラシートUI</a> へ戻る。
+		</p>
+	</header>
+
+	<!-- ========================================
+	     相関図アプリ本体 — 3 ペイン構成
+	     左レール（操作） / 中央（グラフ） / 右（インスペクタ）
+	     ======================================== -->
+	<main class="relmap" id="app">
+
+		<!-- ---------- 左レール：スコープ・グルーピング・絞り込み ---------- -->
+		<aside class="relmap__rail card" id="rail" aria-label="表示設定">
+			<button
+				id="btn-rail-toggle"
+				class="relmap__rail-toggle ghost"
+				type="button"
+				aria-expanded="true"
+				aria-controls="rail-body">表示設定</button>
+
+			<div class="relmap__rail-body" id="rail-body">
+				<!--
+					マップ切替。`$display.mapPartition` 宣言（sec_DesignedBy + 辞書の isOwner）により、
+					本人以外が関わった共同二次創作を別マップへ分ける。宣言が無ければ表示されない。
+				-->
+				<section class="relmap__group">
+					<h2 class="relmap__group-title" id="label-map">マップ</h2>
+					<div class="relmap__presets" id="map-select" role="group" aria-labelledby="label-map"></div>
+					<label class="relmap__check">
+						<input id="chk-secondary" type="checkbox" />
+						<span>二次創作系のDBも含める</span>
+					</label>
+				</section>
+
+				<!--
+					グルーピング（色分け・囲い）。選択肢は `$display.facet` 宣言から自動列挙される。
+					ドリルダウンの階層とは独立した軸。
+				-->
+				<section class="relmap__group">
+					<h2 class="relmap__group-title" id="label-grouping">グルーピング</h2>
+					<div class="relmap__field">
+						<span id="label-grouping-axis">束ね方</span>
+						<div
+							class="relmap__presets"
+							id="select-grouping"
+							role="group"
+							aria-labelledby="label-grouping-axis"></div>
+					</div>
+					<label class="relmap__check">
+						<input id="chk-merge-same" type="checkbox" checked />
+						<span>同一存在をまとめる</span>
+					</label>
+					<label class="relmap__check">
+						<input id="chk-thumbs" type="checkbox" />
+						<span>サムネイル画像を出す</span>
+					</label>
+				</section>
+
+				<!-- エッジ種別 -->
+				<section class="relmap__group">
+					<h2 class="relmap__group-title" id="label-edge-kinds">つながりの種類</h2>
+					<div class="relmap__legend" id="edge-kinds" role="group" aria-labelledby="label-edge-kinds"></div>
+				</section>
+
+				<!-- 検索 -->
+				<section class="relmap__group">
+					<h2 class="relmap__group-title" id="label-search">検索</h2>
+					<label class="relmap__field">
+						<span class="sr-only">キャラクター名で絞り込み</span>
+						<input id="search-input" type="search" placeholder="例: ツグ / 57 / Unitta" />
+					</label>
+				</section>
+
+				<!-- 表示オプション -->
+				<section class="relmap__group">
+					<h2 class="relmap__group-title">表示</h2>
+					<button
+						id="btn-lang-toggle"
+						class="ghost lang-toggle"
+						type="button"
+						title="表示言語を英語へ切り替え">
+						<span class="lang-toggle__label">言語/Language</span>
+						<span class="lang-toggle__opts" aria-hidden="true"><span class="lang-toggle__opt" data-opt="jp">JP</span><span class="lang-toggle__sep">/</span><span class="lang-toggle__opt" data-opt="en">EN</span></span>
+					</button>
+					<button id="btn-refit" class="ghost" type="button">全体を表示</button>
+					<button id="btn-relayout" class="ghost" type="button">再配置</button>
+					<button id="btn-back" class="ghost" type="button">← 一段戻る</button>
+				</section>
+			</div>
+		</aside>
+
+		<!-- ---------- 中央：グラフキャンバス ---------- -->
+		<section class="relmap__stage card" aria-labelledby="label-stage">
+			<h2 id="label-stage" class="sr-only">相関図</h2>
+
+			<!-- パンくず（ドリルダウンの階層） -->
+			<nav class="relmap__breadcrumb" id="breadcrumb" aria-label="表示階層"></nav>
+
+			<!-- グラフ本体（Cytoscape が canvas を挿入する） -->
+			<div class="relmap__canvas" id="canvas" role="application" aria-labelledby="label-stage"
+				aria-describedby="stage-hint">
+				<!--
+					集約表示の「マス塗り」を描く背景レイヤー。
+					Cytoscape のノードにすると cy.layout() が O(n²) で固まる（実測: 200 ノードで 672ms、
+					400 超で無言に grid へ切り替わってセル座標が壊れる）ため、
+					ここへ直接描いて Cytoscape のノード数はグループ数（9〜27）に据え置く。
+					Cytoscape は自分の canvas をこの要素の後ろへ追加するので、
+					DOM 順どおり「テクスチャ → マス塗り → グラフ」の重なりになる。
+				-->
+				<canvas class="relmap__board" id="board" aria-hidden="true"></canvas>
+				<!-- ポインタが乗っている区画の名前（マス塗りはノードではないので自前で出す） -->
+				<p class="relmap__hover-label" id="hover-label" aria-live="polite" hidden></p>
+			</div>
+			<p id="stage-hint" class="sr-only">
+				ノードを選択すると右側に詳細が表示されます。グラフの内容は下の「関係の一覧（テキスト）」でも確認できます。
+			</p>
+
+			<!-- 読み込み・エラー表示 -->
+			<div class="relmap__overlay" id="overlay">
+				<p class="relmap__overlay-text" id="overlay-text">読み込み中…</p>
+			</div>
+
+			<!-- 統計バー -->
+			<p class="relmap__stats muted" id="stats" aria-live="polite"></p>
+		</section>
+
+		<!-- ---------- 右：インスペクタ ---------- -->
+		<aside class="relmap__inspector card" id="inspector" aria-label="選択中のキャラクター">
+			<p class="relmap__inspector-empty" id="inspector-empty">
+				ノードを選ぶと、ここに詳細と関係先が出ます。
+			</p>
+			<div class="relmap__inspector-body" id="inspector-body" hidden></div>
+		</aside>
+	</main>
+
+	<!-- ========================================
+	     テキスト版（アクセシビリティの代替経路）
+	     Cytoscape は canvas 描画なので、同じ情報を DOM でも提供する
+	     ======================================== -->
+	<section class="container relmap__aux">
+		<details class="card" id="adjacency">
+			<summary>関係の一覧（テキスト）</summary>
+			<div id="adjacency-body" class="relmap__adjacency"></div>
+		</details>
+
+		<details class="card" id="isolated">
+			<summary>関係が登録されていないキャラクター</summary>
+			<div id="isolated-body" class="relmap__isolated"></div>
+		</details>
+
+		<details class="card" id="diagnostics">
+			<summary>データの診断情報</summary>
+			<div id="diagnostics-body" class="relmap__diagnostics"></div>
+		</details>
+	</section>
+
+	<!-- サイトフッター -->
+	<footer class="site-footer">
+		<small>©ラジアン(柏木主税) / ©RadianN_kswg</small>
+	</footer>
+
+	<!-- メインアプリケーションスクリプト（ES6モジュール） -->
+	<script type="module">
+		const version = (
+			window.__RELATIONS_ASSET_VERSION__ ||
+			document.querySelector('meta[name="asset-version"]')?.content ||
+			""
+		).trim();
+		const scriptPath = version
+			? `./relations.js?v=${encodeURIComponent(version)}`
+			: "./relations.js";
+		import(scriptPath);
+	</script>
+</body>
+
+</html>

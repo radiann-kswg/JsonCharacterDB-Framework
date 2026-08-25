@@ -1,0 +1,12 @@
+{
+  "Databases": {
+    "#Ref_Vocabulary": {
+      "DB_Label_JP": "語彙辞書",
+      "DB_Label_EN": "Vocabulary",
+      "DB_Layer": "References",
+      "DB_File": "ref_Vocabulary.json",
+      "DB_Summary": "作品世界の固有名詞・造語の対訳集。",
+      "DB_Summary_EN": "Glossary of in-world terms."
+    }
+  }
+}

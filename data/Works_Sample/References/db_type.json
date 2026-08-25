@@ -1,0 +1,42 @@
+{
+  "$IndexDef": {
+    "hashTag": "Term_JP",
+    "IndexLabel_JP": "用語",
+    "IndexLabel_EN": "Term"
+  },
+  "$DefType": [
+    {
+      "hashTag": "Term_JP",
+      "$type": "#Index",
+      "hashTag_JP": "用語(日本語)",
+      "hashTag_EN": "Term (JP)"
+    },
+    {
+      "hashTag": "Term_EN",
+      "$type": "#String",
+      "hashTag_JP": "用語(英語)",
+      "hashTag_EN": "Term (EN)",
+      "$display": {
+        "section": "basic"
+      }
+    },
+    {
+      "hashTag": "Description_JP",
+      "$type": "#Summary|#Null",
+      "hashTag_JP": "説明(日本語)",
+      "hashTag_EN": "Description (JP)",
+      "$display": {
+        "section": "profile"
+      }
+    },
+    {
+      "hashTag": "Description_EN",
+      "$type": "#Summary|#Null",
+      "hashTag_JP": "説明(英語)",
+      "hashTag_EN": "Description (EN)",
+      "$display": {
+        "section": "profile"
+      }
+    }
+  ]
+}

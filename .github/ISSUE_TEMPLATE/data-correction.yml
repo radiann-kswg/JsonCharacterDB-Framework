@@ -1,0 +1,65 @@
+name: データ内容の誤り・修正報告
+description: キャラクターデータベース（JSON）の表示内容に誤り・不整合を見つけた場合の報告用フォームです。
+title: "[データ修正] "
+labels: ["data-correction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        創作データベースの内容修正に関する報告、ありがとう！わかる範囲でいいので入力してね。
+        ※ 未公開の設定・台詞・固有用語など「まだ公開していない創作内容」はここに書かないでね。
+  - type: dropdown
+    id: work
+    attributes:
+      label: 対象作品（Works）
+      options:
+        - ナンバーテールズ (NumberTales)
+        - 運命線探偵78 (FLInvestigator78)
+        - 獣爾騎兵 (ShouArRiders)
+        - ハンカクライブ (UnibyteLive)
+        - 豹変系女子 (SinisterChangingGirls)
+        - アンオースドロジカ (UnauthedLogica)
+        - パストダイヴァー (PastDivers)
+        - 運命線狐の記録 (DestinyFoxRecords)
+        - ラジアン代理 (Proxies)
+        - その他/不明
+    validations:
+      required: true
+  - type: input
+    id: db
+    attributes:
+      label: 対象DB
+      description: "画面上部の「DB」ドロップダウンで選ばれている名前（例: Primary, Secondary など）"
+      placeholder: 例）Primary
+  - type: input
+    id: character
+    attributes:
+      label: 対象キャラクター名 / インデックス値
+      description: キャラシート詳細画面のタイトル、またはURLの idx / idxKey の値など
+      placeholder: 例）ツグ（Num=2）
+    validations:
+      required: true
+  - type: input
+    id: field
+    attributes:
+      label: 該当フィールド名（わかれば）
+      placeholder: 例）BirthDay, Relation など
+  - type: textarea
+    id: detail
+    attributes:
+      label: 誤り・修正内容の詳細
+      description: 現状の表示内容と、正しいと思われる内容をできるだけ具体的に書いてね
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: 該当ページのURL（あれば）
+      placeholder: https://database.numbertales-radiann.net/pages/characters.html?...
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 確認事項
+      options:
+        - label: 未公開の創作内容（未発表の設定・台詞・固有用語など）を含まないことを確認しました
+          required: true

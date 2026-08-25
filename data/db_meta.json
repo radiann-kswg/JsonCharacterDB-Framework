@@ -1,0 +1,1249 @@
+{
+  "CreationWorks": {
+    "#Works_Sample": {
+      "Title_JP": "サンプル作品",
+      "Title_EN": "Sample Work",
+      "Works_Code": "SMP",
+      "Works_Summary_JP": "JsonCharacterDB-Framework の動作確認用サンプル作品です。\nこの作品ディレクトリを複製して、あなた自身の作品DBを作り始めてください。",
+      "Works_Summary_EN": "A sample work for verifying JsonCharacterDB-Framework.\nCopy this work directory to start building your own character database.",
+      "Works_OfficialLinks": [],
+      "$DetailLayout": {
+        "headerPills": [
+          "Progress"
+        ],
+        "basicFields": [
+          "FormalName",
+          "RaceType",
+          "GenderType",
+          "Class",
+          "Height_cm",
+          "Weight_kg",
+          "Age",
+          "BirthDay",
+          "FirstPersonCalling",
+          "SecondPersonCalling",
+          "ThirdPersonCalling"
+        ],
+        "subFields": [
+          "AppearanceDetail",
+          "ColorPalette",
+          "Relation"
+        ]
+      }
+    }
+  },
+  "General": {
+    "$VarsDef": {
+      "#List_hideText": [
+        {
+          "hideText": "？？？",
+          "hideText_JP": "？？？",
+          "hideText_EN": "????"
+        },
+        {
+          "hideText": "データ無",
+          "hideText_JP": "データ無",
+          "hideText_EN": "No Data"
+        },
+        {
+          "hideText": "公開不能",
+          "hideText_JP": "公開不能",
+          "hideText_EN": "Openly Not"
+        },
+        {
+          "hideText": "判定不能",
+          "hideText_JP": "判定不能",
+          "hideText_EN": "Unjudgeble"
+        },
+        {
+          "hideText": "判定失敗",
+          "hideText_JP": "判定失敗",
+          "hideText_EN": "Judgement Failed"
+        },
+        {
+          "hideText": "検証中",
+          "hideText_JP": "検証中",
+          "hideText_EN": "Now Researching"
+        },
+        {
+          "hideText": "極秘事項",
+          "hideText_JP": "極秘事項",
+          "hideText_EN": "Confidential"
+        },
+        {
+          "hideText": "非公開希望",
+          "hideText_JP": "非公開希望",
+          "hideText_EN": "Non-Public at Pleasure"
+        },
+        {
+          "hideText": "非公開",
+          "hideText_JP": "非公開",
+          "hideText_EN": "Non-Public"
+        },
+        {
+          "hideText": "条件による",
+          "hideText_JP": "条件による",
+          "hideText_EN": "Depending on Conditions"
+        },
+        {
+          "hideText": "定義不能",
+          "hideText_JP": "定義不能",
+          "hideText_EN": "Undefineble"
+        },
+        {
+          "hideText": "本人すら把握されていない",
+          "hideText_JP": "本人すら把握されていない",
+          "hideText_EN": "Not Aware"
+        },
+        {
+          "hideText": "不定",
+          "hideText_JP": "不定",
+          "hideText_EN": "Indefinite"
+        },
+        {
+          "hideText": "削除済み",
+          "hideText_JP": "削除済み",
+          "hideText_EN": "Archived or Deleted"
+        },
+        {
+          "hideText": "公開不要",
+          "hideText_JP": "プロフィール公開不要",
+          "hideText_EN": "Un-Profiling"
+        }
+      ],
+      "$Def_Day": {
+        "$display": {
+          "wrapper": "daySummary",
+          "sectionWrapper": "daySection"
+        },
+        "$DefType": [
+          {
+            "hashTag": "Month",
+            "$type": "#ListIndex",
+            "hashTag_JP": "月",
+            "$display": {
+              "role": "month"
+            }
+          },
+          {
+            "hashTag": "DayOfMonth",
+            "$type": "#Number",
+            "hashTag_JP": "日",
+            "$display": {
+              "role": "dayOfMonth"
+            }
+          },
+          {
+            "hashTag": "DayAbout_JP",
+            "$type": "#String_JP|#Null",
+            "hashTag_JP": "この日付について",
+            "$display": {
+              "role": "annotation"
+            }
+          },
+          {
+            "hashTag": "DayAbout_EN",
+            "$type": "#String_EN|#Null",
+            "hashTag_EN": "Day Annotation",
+            "$display": {
+              "role": "annotationAlt"
+            }
+          }
+        ],
+        "#List_Month": [
+          {
+            "Month": 1,
+            "Month_EN": "Jan"
+          },
+          {
+            "Month": 2,
+            "Month_EN": "Feb"
+          },
+          {
+            "Month": 3,
+            "Month_EN": "Mar"
+          },
+          {
+            "Month": 4,
+            "Month_EN": "Apr"
+          },
+          {
+            "Month": 5,
+            "Month_EN": "May"
+          },
+          {
+            "Month": 6,
+            "Month_EN": "Jun"
+          },
+          {
+            "Month": 7,
+            "Month_EN": "Jul"
+          },
+          {
+            "Month": 8,
+            "Month_EN": "Aug"
+          },
+          {
+            "Month": 9,
+            "Month_EN": "Sep"
+          },
+          {
+            "Month": 10,
+            "Month_EN": "Oct"
+          },
+          {
+            "Month": 11,
+            "Month_EN": "Nov"
+          },
+          {
+            "Month": 12,
+            "Month_EN": "Dec"
+          }
+        ]
+      },
+      "$Def_BaseArea": {
+        "$display": {
+          "wrapper": "baseAreaSummary"
+        },
+        "$DefType": [
+          {
+            "hashTag": "Area",
+            "$type": "#DictIndex",
+            "$dict": "Area",
+            "hashTag_JP": "地域(エリア)"
+          },
+          {
+            "hashTag": "BaseAreaAbout_JP",
+            "$type": "#Summary|#Null",
+            "hashTag_JP": "地域補足"
+          },
+          {
+            "hashTag": "BaseAreaAbout_EN",
+            "$type": "#Summary|#Null",
+            "hashTag_EN": "Area Supplement"
+          }
+        ],
+        "hashTag_JP": "活動地域",
+        "hashTag_EN": "Base Area"
+      },
+      "$Def_Faction": {
+        "$DefType": [
+          {
+            "hashTag": "Faction",
+            "$type": "#DictIndex",
+            "$dict": "Faction",
+            "hashTag_JP": "所属先",
+            "hashTag_EN": "Faction",
+            "$display": {
+              "role": "factionCode"
+            }
+          },
+          {
+            "hashTag": "FactionsBaseArea",
+            "$type": "$Def_BaseArea",
+            "$dictRef": {
+              "from": "Faction",
+              "field": "FactionsBaseArea"
+            },
+            "hashTag_JP": "活動地域",
+            "hashTag_EN": "Base Area",
+            "$display": {
+              "role": "factionArea"
+            }
+          }
+        ],
+        "$shorthand": "Faction",
+        "$display": {
+          "wrapper": "factionSummary",
+          "arrayLayout": "multiline"
+        },
+        "hashTag_JP": "所属陣営",
+        "hashTag_EN": "Belonging Faction"
+      },
+      "$Def_MotifCommentary": {
+        "$DefType": [
+          {
+            "hashTag": "Topic",
+            "$type": "#ListIndex",
+            "$dict": "MotifTopic",
+            "hashTag_JP": "対象",
+            "hashTag_EN": "Topic",
+            "$display": {
+              "role": "dialogueKey"
+            }
+          },
+          {
+            "hashTag": "TopicValue",
+            "$type": "#Number|#String|#Null",
+            "hashTag_JP": "対象の値",
+            "hashTag_EN": "Topic Value",
+            "$display": {
+              "role": "dialogueKeyValue"
+            }
+          },
+          {
+            "hashTag": "value_JP",
+            "$type": "#Dialogue|#Summary|#Null",
+            "hashTag_JP": "解説(和)"
+          },
+          {
+            "hashTag": "value_EN",
+            "$type": "#Dialogue|#Summary|#Null",
+            "hashTag_EN": "Commentary"
+          },
+          {
+            "hashTag": "about_JP",
+            "$type": "#String_JP|#Null",
+            "hashTag_JP": "補足(和)"
+          },
+          {
+            "hashTag": "about_EN",
+            "$type": "#String_EN|#Null",
+            "hashTag_EN": "Note"
+          }
+        ],
+        "$display": {
+          "wrapper": "keyedDialogueSummary",
+          "arrayLayout": "multiline"
+        },
+        "hashTag_JP": "モチーフ解説",
+        "hashTag_EN": "Motif Commentary"
+      },
+      "$Def_TouchReaction": {
+        "$DefType": [
+          {
+            "hashTag": "Action",
+            "$type": "#ListIndex",
+            "$dict": "TouchAction",
+            "hashTag_JP": "行為",
+            "hashTag_EN": "Action",
+            "$display": {
+              "role": "dialogueKey"
+            }
+          },
+          {
+            "hashTag": "value_JP",
+            "$type": "#Dialogue|#Null",
+            "hashTag_JP": "反応台詞(和)"
+          },
+          {
+            "hashTag": "value_EN",
+            "$type": "#Dialogue|#Null",
+            "hashTag_EN": "Reaction"
+          },
+          {
+            "hashTag": "about_JP",
+            "$type": "#String_JP|#Null",
+            "hashTag_JP": "補足(和)"
+          },
+          {
+            "hashTag": "about_EN",
+            "$type": "#String_EN|#Null",
+            "hashTag_EN": "Note"
+          }
+        ],
+        "$display": {
+          "wrapper": "keyedDialogueSummary",
+          "arrayLayout": "multiline"
+        },
+        "hashTag_JP": "接触への反応",
+        "hashTag_EN": "Touch Reaction"
+      },
+      "#List_TouchAction": [
+        {
+          "TouchAction": "pat",
+          "TouchAction_JP": "なでる",
+          "TouchAction_EN": "Pat"
+        },
+        {
+          "TouchAction": "poke",
+          "TouchAction_JP": "つつく",
+          "TouchAction_EN": "Poke"
+        },
+        {
+          "TouchAction": "fluff",
+          "TouchAction_JP": "もふる",
+          "TouchAction_EN": "Fluff"
+        },
+        {
+          "TouchAction": "hug",
+          "TouchAction_JP": "抱っこ",
+          "TouchAction_EN": "Hug"
+        }
+      ],
+      "#List_BustSize": [
+        {
+          "BustSize": "AA"
+        },
+        {
+          "BustSize": "A"
+        },
+        {
+          "BustSize": "B"
+        },
+        {
+          "BustSize": "C"
+        },
+        {
+          "BustSize": "D"
+        },
+        {
+          "BustSize": "E"
+        },
+        {
+          "BustSize": "F"
+        },
+        {
+          "BustSize": "G"
+        },
+        {
+          "BustSize": "H"
+        },
+        {
+          "BustSize": "I"
+        },
+        {
+          "BustSize": "J"
+        },
+        {
+          "BustSize": "K"
+        },
+        {
+          "BustSize": "L"
+        },
+        {
+          "BustSize": "M"
+        },
+        {
+          "BustSize": "N"
+        },
+        {
+          "BustSize": "O"
+        },
+        {
+          "BustSize": "P"
+        },
+        {
+          "BustSize": "Q"
+        },
+        {
+          "BustSize": "R"
+        },
+        {
+          "BustSize": "S"
+        },
+        {
+          "BustSize": "T"
+        },
+        {
+          "BustSize": "U"
+        },
+        {
+          "BustSize": "V"
+        },
+        {
+          "BustSize": "W"
+        },
+        {
+          "BustSize": "X"
+        },
+        {
+          "BustSize": "Y"
+        },
+        {
+          "BustSize": "Z"
+        },
+        {
+          "BustSize": "ZZ",
+          "BustSize_JP": "測量範囲外",
+          "BustSize_EN": "Out of Measurement Range"
+        }
+      ],
+      "$EnumDef_Rank": {
+        "#Rank0": {
+          "Rank": "ZZ"
+        },
+        "#Rank1": {
+          "Rank": "Z"
+        },
+        "#Rank2adv": {
+          "Rank": "S+"
+        },
+        "#Rank2": {
+          "Rank": "S"
+        },
+        "#Rank3": {
+          "Rank": "A"
+        },
+        "#Rank4adv": {
+          "Rank": "B+"
+        },
+        "#Rank4": {
+          "Rank": "B"
+        },
+        "#Rank5": {
+          "Rank": "C"
+        },
+        "#Rank6": {
+          "Rank": "D"
+        },
+        "#Rank7": {
+          "Rank": "E"
+        }
+      },
+      "$EnumDef_Rarity": {
+        "#Rarity0": {
+          "Rarity": "UR"
+        },
+        "#Rarity1": {
+          "Rarity": "SSR"
+        },
+        "#Rarity2adv": {
+          "Rarity": "SR+"
+        },
+        "#Rarity2": {
+          "Rarity": "SR"
+        },
+        "#Rarity3adv": {
+          "Rarity": "R+"
+        },
+        "#Rarity3": {
+          "Rarity": "R"
+        },
+        "#Rarity4adv": {
+          "Rarity": "N+"
+        },
+        "#Rarity4": {
+          "Rarity": "N"
+        },
+        "#Rarity5": {
+          "Rarity": "C"
+        }
+      },
+      "$EnumDef_Decave": {
+        "#Decave0": {
+          "Decave": "50%+",
+          "DecaveText": "50%以上",
+          "DecaveText_JP": "50%以上",
+          "DecaveText_EN": "50% or more"
+        },
+        "#Decave1": {
+          "Decave": "90%+",
+          "DecaveText": "90%以上",
+          "DecaveText_JP": "90%以上",
+          "DecaveText_EN": "90% or more"
+        },
+        "#Decave1adv": {
+          "Decave": "95%+",
+          "DecaveText": "95%以上",
+          "DecaveText_JP": "95%以上",
+          "DecaveText_EN": "95% or more"
+        },
+        "#Decave2": {
+          "Decave": "99%+",
+          "DecaveText": "99%以上",
+          "DecaveText_JP": "99%以上",
+          "DecaveText_EN": "99% or more"
+        },
+        "#Decave3": {
+          "Decave": "99.9%+",
+          "DecaveText": "トリナイン",
+          "DecaveText_JP": "トリナイン(99.9%以上)",
+          "DecaveText_EN": "Trinine(99.9% or more)"
+        },
+        "#Decave4": {
+          "Decave": "99.99%+",
+          "DecaveText": "クァッドナイン",
+          "DecaveText_JP": "クァッドナイン(99.99%以上)",
+          "DecaveText_EN": "Quadnine(99.99% or more)"
+        },
+        "#Decave5": {
+          "Decave": "9xV",
+          "DecaveText": "クィントナイン",
+          "DecaveText_JP": "クィントナイン(99.999%以上)",
+          "DecaveText_EN": "Quintnine(99.999% or more)"
+        },
+        "#Decave6": {
+          "Decave": "9xVI",
+          "DecaveText": "セクストナイン",
+          "DecaveText_JP": "セクストナイン(99.9999%以上)",
+          "DecaveText_EN": "Sextnine(99.9999% or more)"
+        },
+        "#Decave7": {
+          "Decave": "9xVII",
+          "DecaveText": "セプトナイン",
+          "DecaveText_JP": "セプトナイン(99.99999%以上)",
+          "DecaveText_EN": "Septnine(99.99999% or more)"
+        },
+        "#Decave8": {
+          "Decave": "9xVIII",
+          "DecaveText": "オクトナイン",
+          "DecaveText_JP": "オクトナイン(99.999999%以上)",
+          "DecaveText_EN": "Octonine(99.999999% or more)"
+        },
+        "#Decave9": {
+          "Decave": "9xIX",
+          "DecaveText": "ノヴェナイン",
+          "DecaveText_JP": "ノヴェナイン(99.9999999%以上)",
+          "DecaveText_EN": "Novenine(99.9999999% or more)"
+        },
+        "#Decave10": {
+          "Decave": "9xX",
+          "DecaveText": "デカナイン",
+          "DecaveText_JP": "デカナイン(99.99999999%以上)",
+          "DecaveText_EN": "Decanine(99.99999999% or more)"
+        },
+        "#Decave10adv": {
+          "Decave": "100%",
+          "DecaveText": "フルナイン",
+          "DecaveText_JP": "フルナイン(99.999999999-100%)",
+          "DecaveText_EN": "Fullnine(99.999999999-100%)"
+        },
+        "#DecaveNegative0": {
+          "Decave": "<50%",
+          "DecaveText": "50%未満",
+          "DecaveText_JP": "50%未満",
+          "DecaveText_EN": "less than 50%"
+        },
+        "#DecaveNegative1": {
+          "Decave": "<10%",
+          "DecaveText": "10%未満",
+          "DecaveText_JP": "10%未満",
+          "DecaveText_EN": "less than 10%"
+        },
+        "#DecaveNegative2": {
+          "Decave": "<5%",
+          "DecaveText": "5%未満",
+          "DecaveText_JP": "5%未満",
+          "DecaveText_EN": "less than 5%"
+        },
+        "#DecaveNegative2adv": {
+          "Decave": "<1%",
+          "DecaveText": "1%未満",
+          "DecaveText_JP": "1%未満",
+          "DecaveText_EN": "less than 1%"
+        },
+        "#DecaveNegative3": {
+          "Decave": "<0.1%",
+          "DecaveText": "トライゼロ",
+          "DecaveText_JP": "トライゼロ(0.1%未満)",
+          "DecaveText_EN": "Trizero(less than 0.1%)"
+        },
+        "#DecaveNegative4": {
+          "Decave": "<0.01%",
+          "DecaveText": "クァッドゼロ",
+          "DecaveText_JP": "クァッドゼロ(0.01%未満)",
+          "DecaveText_EN": "Quadzero(less than 0.01%)"
+        },
+        "#DecaveNegative5": {
+          "Decave": "0xV",
+          "DecaveText": "クィントゼロ",
+          "DecaveText_JP": "クィントゼロ(0.001%未満)",
+          "DecaveText_EN": "Quintzero(less than 0.001%)"
+        },
+        "#DecaveNegative6": {
+          "Decave": "0xVI",
+          "DecaveText": "セクストゼロ",
+          "DecaveText_JP": "セクストゼロ(0.0001%未満)",
+          "DecaveText_EN": "Sextzero(less than 0.0001%)"
+        },
+        "#DecaveNegative7": {
+          "Decave": "0xVII",
+          "DecaveText": "セプトゼロ",
+          "DecaveText_JP": "セプトゼロ(0.00001%未満)",
+          "DecaveText_EN": "Septzero(less than 0.00001%)"
+        },
+        "#DecaveNegative8": {
+          "Decave": "0xVIII",
+          "DecaveText": "オクトゼロ",
+          "DecaveText_JP": "オクトゼロ(0.000001%未満)",
+          "DecaveText_EN": "Octozero(less than 0.000001%)"
+        },
+        "#DecaveNegative9": {
+          "Decave": "0xIX",
+          "DecaveText": "ノヴィゼロ",
+          "DecaveText_JP": "ノヴィゼロ(0.0000001%未満)",
+          "DecaveText_EN": "Novezero(less than 0.0000001%)"
+        },
+        "#DecaveNegative10": {
+          "Decave": "0xX",
+          "DecaveText": "デカゼロ",
+          "DecaveText_JP": "デカゼロ(0.00000001%未満)",
+          "DecaveText_EN": "Decazero(less than 0.00000001%)"
+        },
+        "#DecaveNegative10adv": {
+          "Decave": "0%",
+          "DecaveText": "フルゼロ",
+          "DecaveText_JP": "フルゼロ(0%-0.000000001%)",
+          "DecaveText_EN": "Fullzero(0%-0.000000001%)"
+        }
+      },
+      "$EnumDef_Progress": {
+        "#Progress_Yet": {
+          "Progress": "notProceeded",
+          "Progress_JP": "未着手",
+          "isForSecondary": false
+        },
+        "#Progress_Tentative": {
+          "Progress": "stillTentative",
+          "Progress_JP": "現状は仮公開(アルファリリース)",
+          "isForSecondary": false
+        },
+        "#Progress_Unprofiled": {
+          "Progress": "unprofiled",
+          "Progress_JP": "プロフィール公開は無し",
+          "isForSecondary": false
+        },
+        "#Progress_Creating": {
+          "Progress": "nowCreating",
+          "Progress_JP": "制作中",
+          "isForSecondary": false
+        },
+        "#Progress_Secret": {
+          "Progress": "unreleased",
+          "Progress_JP": "公開待ち",
+          "isForSecondary": false
+        },
+        "#Progress_BetaReleased": {
+          "Progress": "released(beta)",
+          "Progress_JP": "公開済み(ベータリリース)",
+          "isForSecondary": false
+        },
+        "#Progress_Released": {
+          "Progress": "released",
+          "Progress_JP": "公開済み",
+          "isForSecondary": false
+        },
+        "#Progress_Recreating": {
+          "Progress": "nowRecreating",
+          "Progress_JP": "再制作中",
+          "isForSecondary": false
+        },
+        "#Progress_Founded": {
+          "Progress": "founded",
+          "Progress_JP": "確認済み",
+          "isForSecondary": true
+        },
+        "#Progress_Accepted": {
+          "Progress": "accepted",
+          "Progress_JP": "公認済み",
+          "isForSecondary": true
+        },
+        "#Progress_Remaking": {
+          "Progress": "accepted\nnowRemaking",
+          "Progress_JP": "公認済み\nこちらで再制作中",
+          "isForSecondary": true
+        },
+        "#Progress_Remaded": {
+          "Progress": "accepted\nremadeReleased",
+          "Progress_JP": "公認済み\nこちらからも公開済み",
+          "isForSecondary": true
+        },
+        "#Progress_Archived": {
+          "Progress": "archived",
+          "Progress_JP": "更新停止",
+          "isForSecondary": null
+        }
+      },
+      "$Def_AbilityStats": {
+        "$EnumLink_AbilityText": {
+          "#Rank1": {
+            "Rank": "Z",
+            "AbilityText": "過剰",
+            "AbilityText_EN": "Excessive"
+          },
+          "#Rank2adv": {
+            "Rank": "S+",
+            "AbilityText": "訓練済/強化済",
+            "AbilityText_EN": "Trained/Extended"
+          },
+          "#Rank2": {
+            "Rank": "S",
+            "AbilityText": "卓越",
+            "AbilityText_EN": "Excellent"
+          },
+          "#Rank3": {
+            "Rank": "A",
+            "AbilityText": "優秀",
+            "AbilityText_EN": "Very Good"
+          },
+          "#Rank4adv": {
+            "Rank": "B+",
+            "AbilityText": "標準",
+            "AbilityText_EN": "Standard"
+          },
+          "#Rank4": {
+            "Rank": "B",
+            "AbilityText": "普通",
+            "AbilityText_EN": "Average"
+          },
+          "#Rank5": {
+            "Rank": "C",
+            "AbilityText": "稚拙",
+            "AbilityText_EN": "Poor"
+          },
+          "#Rank6": {
+            "Rank": "D",
+            "AbilityText": "欠落",
+            "AbilityText_EN": "Missing"
+          },
+          "#Rank7": {
+            "Rank": "E",
+            "AbilityText": "障碍有",
+            "AbilityText_EN": "Obstructed"
+          }
+        }
+      },
+      "$Def_AppearanceAttr": {
+        "$DefType": [
+          {
+            "hashTag": "AttrLabel",
+            "$type": "#ListIndex|#Null",
+            "hashTag_JP": "属性ラベル",
+            "hashTag_EN": "Attribute Label"
+          }
+        ]
+      },
+      "$Def_AppearanceDetail": {
+        "$DefType": [
+          {
+            "hashTag": "Formation",
+            "$type": "#DictIndex|#Null",
+            "$dict": "Formation",
+            "hashTag_JP": "形態名",
+            "hashTag_EN": "Formation"
+          },
+          {
+            "hashTag": "Costume",
+            "$type": "#DictIndex|#Null",
+            "$dict": "Costume",
+            "hashTag_JP": "衣装",
+            "hashTag_EN": "Costume"
+          },
+          {
+            "hashTag": "BodyPart",
+            "$type": "#ListIndex[]|#Null",
+            "hashTag_JP": "身体部位",
+            "hashTag_EN": "Body Part"
+          },
+          {
+            "hashTag": "Laterality",
+            "$type": "#ListIndex|#Null",
+            "hashTag_JP": "左右",
+            "hashTag_EN": "Laterality"
+          },
+          {
+            "hashTag": "DesignElement",
+            "$type": "#ListIndex|#Null",
+            "hashTag_JP": "デザイン要素",
+            "hashTag_EN": "Design Element"
+          },
+          {
+            "hashTag": "Attrs",
+            "$type": "$Def_AppearanceAttr[]|#Null",
+            "hashTag_JP": "属性リスト",
+            "hashTag_EN": "Attributes"
+          },
+          {
+            "hashTag": "img_PNGName",
+            "$type": "#PNGFileName|#Null",
+            "hashTag_JP": "部位詳細画像",
+            "hashTag_EN": "Detail Image"
+          },
+          {
+            "hashTag": "Note_JP",
+            "$type": "#String|#Null",
+            "hashTag_JP": "補足テキスト"
+          },
+          {
+            "hashTag": "Note_EN",
+            "$type": "#String_EN|#Null",
+            "hashTag_EN": "Note"
+          }
+        ]
+      },
+      "$Def_ColorPalette": {
+        "$DefType": [
+          {
+            "hashTag": "Role",
+            "$type": "#ListIndex|#Null",
+            "hashTag_JP": "配色役割",
+            "hashTag_EN": "Role"
+          },
+          {
+            "hashTag": "Hex",
+            "$type": "#Hexcode_Color|#Null",
+            "hashTag_JP": "カラーコード",
+            "hashTag_EN": "Color Code"
+          },
+          {
+            "hashTag": "ColorName_JP",
+            "$type": "#String|#Null",
+            "hashTag_JP": "色名"
+          },
+          {
+            "hashTag": "ColorName_EN",
+            "$type": "#String_EN|#Null",
+            "hashTag_EN": "Color Name"
+          },
+          {
+            "hashTag": "AppliesTo",
+            "$type": "#ListIndex[]|#Null",
+            "hashTag_JP": "適用部位",
+            "hashTag_EN": "Applies To"
+          },
+          {
+            "hashTag": "Formation",
+            "$type": "#DictIndex|#Null",
+            "$dict": "Formation",
+            "hashTag_JP": "形態名",
+            "hashTag_EN": "Formation"
+          },
+          {
+            "hashTag": "Note_JP",
+            "$type": "#String|#Null",
+            "hashTag_JP": "補足テキスト"
+          },
+          {
+            "hashTag": "Note_EN",
+            "$type": "#String_EN|#Null",
+            "hashTag_EN": "Note"
+          }
+        ]
+      },
+      "$EnumDef_ColorRole": {
+        "#ColorRole_Primary": {
+          "ColorRole": "Primary",
+          "ColorRole_JP": "主色",
+          "ColorRole_EN": "Primary"
+        },
+        "#ColorRole_Secondary": {
+          "ColorRole": "Secondary",
+          "ColorRole_JP": "副色",
+          "ColorRole_EN": "Secondary"
+        },
+        "#ColorRole_Accent": {
+          "ColorRole": "Accent",
+          "ColorRole_JP": "差し色",
+          "ColorRole_EN": "Accent"
+        },
+        "#ColorRole_Sub": {
+          "ColorRole": "Sub",
+          "ColorRole_JP": "補助色",
+          "ColorRole_EN": "Sub"
+        }
+      },
+      "$EnumDef_DesignBodyPart": {
+        "#BodyPart_Head": {
+          "BodyPart": "Head",
+          "BodyPart_JP": "頭",
+          "BodyPart_EN": "Head",
+          "bilateral": false
+        },
+        "#BodyPart_Hair": {
+          "BodyPart": "Hair",
+          "BodyPart_JP": "髪",
+          "BodyPart_EN": "Hair",
+          "bilateral": false
+        },
+        "#BodyPart_Eye": {
+          "BodyPart": "Eye",
+          "BodyPart_JP": "目・瞳",
+          "BodyPart_EN": "Eye",
+          "bilateral": true
+        },
+        "#BodyPart_Ear": {
+          "BodyPart": "Ear",
+          "BodyPart_JP": "耳",
+          "BodyPart_EN": "Ear",
+          "bilateral": true
+        },
+        "#BodyPart_Cheek": {
+          "BodyPart": "Cheek",
+          "BodyPart_JP": "頬",
+          "BodyPart_EN": "Cheek",
+          "bilateral": true
+        },
+        "#BodyPart_Neck": {
+          "BodyPart": "Neck",
+          "BodyPart_JP": "首",
+          "BodyPart_EN": "Neck",
+          "bilateral": false
+        },
+        "#BodyPart_Shoulder": {
+          "BodyPart": "Shoulder",
+          "BodyPart_JP": "肩",
+          "BodyPart_EN": "Shoulder",
+          "bilateral": true
+        },
+        "#BodyPart_Arm": {
+          "BodyPart": "Arm",
+          "BodyPart_JP": "腕",
+          "BodyPart_EN": "Arm",
+          "bilateral": true
+        },
+        "#BodyPart_Hand": {
+          "BodyPart": "Hand",
+          "BodyPart_JP": "手",
+          "BodyPart_EN": "Hand",
+          "bilateral": true
+        },
+        "#BodyPart_Chest": {
+          "BodyPart": "Chest",
+          "BodyPart_JP": "胸",
+          "BodyPart_EN": "Chest",
+          "bilateral": false
+        },
+        "#BodyPart_Back": {
+          "BodyPart": "Back",
+          "BodyPart_JP": "背中",
+          "BodyPart_EN": "Back",
+          "bilateral": false
+        },
+        "#BodyPart_Waist": {
+          "BodyPart": "Waist",
+          "BodyPart_JP": "腰",
+          "BodyPart_EN": "Waist",
+          "bilateral": false
+        },
+        "#BodyPart_Leg": {
+          "BodyPart": "Leg",
+          "BodyPart_JP": "脚",
+          "BodyPart_EN": "Leg",
+          "bilateral": true
+        },
+        "#BodyPart_Foot": {
+          "BodyPart": "Foot",
+          "BodyPart_JP": "足",
+          "BodyPart_EN": "Foot",
+          "bilateral": true
+        },
+        "#BodyPart_Tail": {
+          "BodyPart": "Tail",
+          "BodyPart_JP": "尻尾",
+          "BodyPart_EN": "Tail",
+          "bilateral": false
+        },
+        "#BodyPart_Wing": {
+          "BodyPart": "Wing",
+          "BodyPart_JP": "翼",
+          "BodyPart_EN": "Wing",
+          "bilateral": true
+        },
+        "#BodyPart_Halo": {
+          "BodyPart": "Halo",
+          "BodyPart_JP": "ヘイロー",
+          "BodyPart_EN": "Halo"
+        },
+        "#BodyPart_Interchangeable": {
+          "BodyPart": "Interchangeable",
+          "BodyPart_JP": "付け替え可能",
+          "BodyPart_EN": "Interchangeable",
+          "bilateral": false
+        },
+        "#BodyPart_FaceMaking": {
+          "BodyPart": "FaceMaking",
+          "BodyPart_JP": "フェイスメイク",
+          "BodyPart_EN": "Face Makeup",
+          "bilateral": false
+        }
+      },
+      "$EnumDef_DesignElement": {
+        "#Element_Motif": {
+          "DesignElement": "Motif",
+          "DesignElement_JP": "モチーフ",
+          "DesignElement_EN": "Motif"
+        },
+        "#Element_Halo": {
+          "DesignElement": "Halo",
+          "DesignElement_JP": "ヘイロー",
+          "DesignElement_EN": "Halo"
+        },
+        "#Element_Wing": {
+          "DesignElement": "Wing",
+          "DesignElement_JP": "翼・翅",
+          "DesignElement_EN": "Wing"
+        },
+        "#Element_Emblem": {
+          "DesignElement": "Emblem",
+          "DesignElement_JP": "エムブレム/紋様",
+          "DesignElement_EN": "Emblem / Pattern"
+        },
+        "#Element_Tag": {
+          "DesignElement": "Tag",
+          "DesignElement_JP": "タグ/ラベル",
+          "DesignElement_EN": "Tag / Label"
+        },
+        "#Element_CostumeItem": {
+          "DesignElement": "CostumeItem",
+          "DesignElement_JP": "衣装アイテム",
+          "DesignElement_EN": "Costume Item"
+        },
+        "#Element_Ear": {
+          "DesignElement": "Ear",
+          "DesignElement_JP": "耳の形状",
+          "DesignElement_EN": "Ear Shape"
+        },
+        "#Element_Expression": {
+          "DesignElement": "Expression",
+          "DesignElement_JP": "表情・動作",
+          "DesignElement_EN": "Expression / Action"
+        },
+        "#Element_BodyType": {
+          "DesignElement": "BodyType",
+          "DesignElement_JP": "体型・容姿",
+          "DesignElement_EN": "Body Type / Appearance"
+        }
+      },
+      "$EnumDef_Laterality": {
+        "#Lat_Left": {
+          "Laterality": "Left",
+          "Laterality_JP": "左",
+          "Laterality_EN": "Left"
+        },
+        "#Lat_Right": {
+          "Laterality": "Right",
+          "Laterality_JP": "右",
+          "Laterality_EN": "Right"
+        },
+        "#Lat_Both": {
+          "Laterality": "Both",
+          "Laterality_JP": "左右両方",
+          "Laterality_EN": "Both"
+        },
+        "#Lat_Upper": {
+          "Laterality": "Upper",
+          "Laterality_JP": "上",
+          "Laterality_EN": "Upper"
+        },
+        "#Lat_Lower": {
+          "Laterality": "Lower",
+          "Laterality_JP": "下",
+          "Laterality_EN": "Lower"
+        },
+        "#Lat_Front": {
+          "Laterality": "Front",
+          "Laterality_JP": "前方",
+          "Laterality_EN": "Front"
+        },
+        "#Lat_Rear": {
+          "Laterality": "Rear",
+          "Laterality_JP": "後方",
+          "Laterality_EN": "Rear"
+        },
+        "#Lat_Around": {
+          "Laterality": "Around",
+          "Laterality_JP": "周囲",
+          "Laterality_EN": "Surrounding"
+        },
+        "#Lat_Center": {
+          "Laterality": "Center",
+          "Laterality_JP": "中央",
+          "Laterality_EN": "Center"
+        },
+        "#Lat_Periphery": {
+          "Laterality": "Periphery",
+          "Laterality_JP": "周辺",
+          "Laterality_EN": "Periphery"
+        }
+      },
+      "$EnumDef_DesignAttrLabel": {
+        "#DesignAttr_Shape": {
+          "AttrLabel": "Shape",
+          "AttrLabel_JP": "形状",
+          "AttrLabel_EN": "Shape",
+          "$fields": [
+            "vdict_TailShapeType",
+            "value_JP",
+            "value_EN"
+          ]
+        },
+        "#DesignAttr_Color": {
+          "AttrLabel": "Color",
+          "AttrLabel_JP": "色",
+          "AttrLabel_EN": "Color",
+          "$fields": [
+            "value_Color",
+            "value_JP",
+            "value_EN"
+          ]
+        },
+        "#DesignAttr_Position": {
+          "AttrLabel": "Position",
+          "AttrLabel_JP": "位置",
+          "AttrLabel_EN": "Position",
+          "$fields": [
+            "vdict_Laterality",
+            "value_JP",
+            "value_EN"
+          ]
+        },
+        "#DesignAttr_Notation": {
+          "AttrLabel": "Notation",
+          "AttrLabel_JP": "表記方式",
+          "AttrLabel_EN": "Notation",
+          "$fields": [
+            "vdict_NotationType",
+            "value_JP",
+            "value_EN"
+          ]
+        },
+        "#DesignAttr_Count": {
+          "AttrLabel": "Count",
+          "AttrLabel_JP": "本数・個数",
+          "AttrLabel_EN": "Count",
+          "$fields": [
+            "value_Num"
+          ]
+        },
+        "#DesignAttr_Material": {
+          "AttrLabel": "Material",
+          "AttrLabel_JP": "素材感",
+          "AttrLabel_EN": "Material",
+          "$fields": [
+            "value_JP",
+            "value_EN"
+          ]
+        },
+        "#DesignAttr_Overview": {
+          "AttrLabel": "Overview",
+          "AttrLabel_JP": "概要",
+          "AttrLabel_EN": "Overview",
+          "$fields": [
+            "value_JP",
+            "value_EN"
+          ]
+        },
+        "#DesignAttr_Ear": {
+          "AttrLabel": "Ear",
+          "AttrLabel_JP": "耳",
+          "AttrLabel_EN": "Ear",
+          "$fields": [
+            "vdict_EarShapeType",
+            "about_JP",
+            "about_EN"
+          ]
+        },
+        "#DesignAttr_Branch": {
+          "AttrLabel": "Branch",
+          "AttrLabel_JP": "分岐配置",
+          "AttrLabel_EN": "Branch Layout",
+          "$fields": [
+            "vdict_Laterality",
+            "value_Num_1",
+            "value_Num_2"
+          ],
+          "$multi": true
+        },
+        "#DesignAttr_Segment": {
+          "AttrLabel": "Segment",
+          "AttrLabel_JP": "節数",
+          "AttrLabel_EN": "Segment Count",
+          "$fields": [
+            "value_Num"
+          ]
+        }
+      }
+    }
+  }
+}

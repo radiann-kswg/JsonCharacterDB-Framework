@@ -1,0 +1,37 @@
+{
+  "$VarsDef": {},
+  "$MetaType": {
+    "$Def_DictionaryCatalog": {
+      "$DefType": [
+        {
+          "hashTag": "DB_Label_JP",
+          "$type": "##String_JP|#Summary|#Null",
+          "hashTag_JP": "辞書表示名"
+        },
+        {
+          "hashTag": "DB_Label_EN",
+          "$type": "##String_EN|#Summary|#Null",
+          "hashTag_EN": "Dictionary Label"
+        },
+        {
+          "hashTag": "keyField",
+          "$type": "#String",
+          "hashTag_JP": "代表キー",
+          "hashTag_EN": "Key Field"
+        },
+        {
+          "hashTag": "compatListKey",
+          "$type": "#String|#Null",
+          "hashTag_JP": "互換リストキー",
+          "hashTag_EN": "Compatibility List Key"
+        },
+        {
+          "hashTag": "langMode",
+          "$type": "#String|#Null",
+          "hashTag_JP": "言語モード",
+          "hashTag_EN": "Language Mode"
+        }
+      ]
+    }
+  }
+}
