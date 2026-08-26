@@ -1,5 +1,14 @@
 # 静的ファイルをそのまま GitHub Pages へ配信する。
 # Jekyll ビルドは通さない（リポジトリ直下の `.nojekyll` と対になる設計）。
+#
+# ⚠ フレームワークの配布時は **オプトイン制** です（クローン/フォーク直後は何もしません）。
+#   公開したくなったら次の 2 つを設定してください:
+#     1. Settings → Pages → Source を「GitHub Actions」にする
+#        （未設定でも下の configure-pages が自動有効化を試みます）
+#     2. Settings → Secrets and variables → Actions → Variables に
+#        `ENABLE_PAGES` = `true` を追加する
+#   設定するまで push 時のジョブは skip（灰色）になり、赤い失敗ログは出ません。
+#   1 回だけ試すなら Actions タブからの手動実行（Run workflow）で変数なしでも動きます。
 name: Deploy static site to GitHub Pages
 
 on:
@@ -19,6 +28,9 @@ concurrency:
 
 jobs:
   build:
+    # オプトインの門番。変数が無い環境（配布直後のフォーク等）では丸ごと skip する。
+    # deploy は needs: build なので連鎖して skip される。
+    if: vars.ENABLE_PAGES == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,7 +39,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       # データ整合性が壊れたまま公開しないための門番

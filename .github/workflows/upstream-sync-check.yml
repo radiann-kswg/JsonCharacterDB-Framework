@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
 
       # 上流は public なので anonymous clone で足りる（PAT 不要）。
       # 履歴は不要なので --depth=1 で済ませ、スクリプトには --no-fetch を渡す。

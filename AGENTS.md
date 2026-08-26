@@ -264,7 +264,7 @@
   - **疑似 API（ブラウザ専用）**: Service Worker (`/pages/v1/`, `/svc/v1/`) + 共通ライブラリ（`lib/sw-common.js`, `lib/data-common.js`）→ GitHub Pages 継続
 - **ホスティング**: GitHub Pages（静的サイト）+ Cloudflare Workers（エッジ実 API）
 - **生成・バッチ処理（計画中）**: Google Cloud（Cloud Run / GCE）→ ADR-0002
-- **テスト**: Vitest（`npm test` / `npm run test:watch`、Node.js 18.0.0 以上）
+- **テスト**: Vitest（`npm test` / `npm run test:watch`、Node.js 22.19.0 以上）
 - **パッケージ管理 / バージョン管理**: npm / Git
 
 ### 主要ディレクトリ
@@ -464,7 +464,8 @@ UI → Service Worker (`/pages/v1/`) → 静的 JSON 読み込み + `_DBLink`/`_
 
 ## テスト戦略
 
-- **フレームワーク**: Vitest。`npm test`（全実行）/ `npm run test:watch`。Node.js 18.0.0 以上。
+- **フレームワーク**: Vitest。`npm test`（全実行）/ `npm run test:watch`。Node.js 22.19.0 以上。
+  下限は jsdom 30（依存する undici 8 が `>=22.19.0`）が決めています。CI の `node-version` も `22` で揃えてあるので、片方だけ下げないでください。
 - **Windows/PowerShell 補足**: 実行ポリシーで `npm.ps1` がブロックされる環境では `npm.cmd test` または `.\node_modules\.bin\vitest.cmd run` を使用します。
 
 ### 主なテスト

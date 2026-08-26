@@ -6,6 +6,37 @@
 
 ---
 
+## GitHub Pages の公開（オプトイン）
+
+キャラシート・相関図・疑似 API は GitHub Pages だけで動きます（Cloudflare は任意）。
+ただし `.github/workflows/pages.yml` は **オプトイン制**です。クローン/フォーク直後は
+ジョブが skip され、Pages 未設定リポジトリで赤い失敗ログが出ません。
+
+有効化の手順:
+
+1. **Settings → Pages → Source** を「**GitHub Actions**」にする
+   （未設定でもワークフロー内の `configure-pages` が自動有効化を試みますが、
+   Free プランの private リポジトリでは Pages 自体が使えないので public にしてください）
+2. **Settings → Secrets and variables → Actions → Variables** で
+   `ENABLE_PAGES` = `true` を追加する
+3. `develop` へ push する（または Actions タブから手動実行）
+
+| 変数 | 値 | 効果 |
+| --- | --- | --- |
+| `ENABLE_PAGES` | `true` | `develop` への push で自動デプロイ |
+| （未設定） | — | push 時は skip。手動実行（Run workflow）のみ動く |
+
+公開 URL は `https://<ユーザー名>.github.io/<リポジトリ名>/pages/characters.html`。
+デプロイ前に `npm test` が走るため、データ整合性が壊れていると公開されません。
+
+CLI で設定する場合:
+
+```bash
+gh variable set ENABLE_PAGES --body true
+```
+
+---
+
 ## GitHub Actions による自動更新（`cf-api-sync.yml`）
 
 `develop` ブランチへの push 時に、変更パスに応じて自動実行される:

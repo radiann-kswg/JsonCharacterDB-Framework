@@ -27,6 +27,19 @@
 
 ### Changed
 
+- **必要な Node.js を 18.0.0 以上 → 22.19.0 以上へ引き上げ**（`package.json` の `engines`、
+  CI 全ワークフローの `node-version: "22"`、`AGENTS.md` / `docs/json-db-implementation-guide.md`）。
+  dependabot が入れた `jsdom@30` の依存 `undici@8` が `>=22.19.0` を要求し、Node 20 の CI では
+  `TypeError: webidl.util.markAsUncloneable is not a function` で jsdom 系テストが collect 段階から
+  落ちていた（`npm ci` 後の `npm test` は 49 ファイル 742 件すべて green を確認）。
+  `pkg/{nodejs,mcp}` は jsdom に依存しない独立パッケージのため Node 18 対応のまま据え置き。
+
+- **GitHub Pages への配信（`.github/workflows/pages.yml`）をオプトイン制へ変更**。
+  Actions Variables に `ENABLE_PAGES=true` がある場合のみ push で走る（`cf-api-sync.yml` と同じ
+  「配布時は動かさない」方針に揃えた）。未設定のクローン/フォークではジョブが skip され、
+  Pages 未設定リポジトリで赤い失敗ログが溜まらない。手動実行（`workflow_dispatch`）は
+  変数なしでも動くので、お試しデプロイの導線は残る。手順は `docs/deploy-howto.md`。
+
 - `AGENTS.md` §1 に「1-1. フォーク同期」を追加。エージェントは `sync:update` まで行ってよいが、
   **`git merge` は User の判断**とすることを明文化した。
 

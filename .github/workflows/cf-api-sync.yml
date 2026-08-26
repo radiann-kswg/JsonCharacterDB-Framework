@@ -81,7 +81,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
 
       # スキーマを idempotent 適用（CREATE TABLE IF NOT EXISTS なので既存 DB でも安全）
       - name: D1 スキーマ適用
@@ -117,7 +117,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Worker デプロイ
         run: npx wrangler deploy --config pkg/cloudflare/wrangler.toml

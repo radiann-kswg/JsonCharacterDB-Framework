@@ -1,7 +1,7 @@
 # JSON DB 実装ガイド（JSON DB Implementation Guide）
 
 > **対象**: JsonCharacterDB-Framework で自分のキャラクターDBを一から作る人。
-> **前提**: Node.js 18 以上。ビルドは不要です（Vanilla JS + Service Worker）。
+> **前提**: Node.js 22.19.0 以上。ビルドは不要です（Vanilla JS + Service Worker）。
 >
 > 宣言の**仕様の正典**は [`schema-meta-processing.md`](./schema-meta-processing.md) です。
 > 本書は「実際に手を動かす順番」を示す実装ガイドで、詳細は逐一そちらへリンクします。
