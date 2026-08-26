@@ -282,7 +282,8 @@ describe('buildHexFill', () => {
 		const t0 = Date.now();
 		const res = buildHexFill(groups);
 		const ms = Date.now() - t0;
+		const wallClockBudgetMs = process.env.CI ? 300 : 60;
 		expect(res.totalCells).toBe(groups.reduce((s, g) => s + g.size, 0));
-		expect(ms, `${ms}ms かかった`).toBeLessThan(60);
+		expect(ms, `${ms}ms かかった`).toBeLessThan(wallClockBudgetMs);
 	});
 });

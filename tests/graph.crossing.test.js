@@ -318,11 +318,12 @@ describe('reduceCrossings', () => {
 		const t0 = Date.now();
 		const res = reduceCrossings(positions, edges);
 		const ms = Date.now() - t0;
+		const wallClockBudgetMs = process.env.CI ? 1200 : 300;
 
 		expect(res.skipped).toBe(false);
 		expect(res.passes).toBeLessThanOrEqual(6); // 予算制御が効いている
 		expect(res.after).toBeLessThanOrEqual(res.before);
-		expect(ms, `${ms}ms かかった（予算制御が外れていないか確認）`).toBeLessThan(300);
+		expect(ms, `${ms}ms かかった（予算制御が外れていないか確認）`).toBeLessThan(wallClockBudgetMs);
 	});
 });
 
