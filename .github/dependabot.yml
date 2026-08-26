@@ -1,0 +1,66 @@
+# Dependabot version updates（定期的な依存関係の更新）
+#
+# 対象と運用の考え方は docs/fork-sync.md「7. 依存関係の定期更新（Dependabot）」を参照。
+# 本ファイルは上流との同期対象外（`.github/**` は各リポジトリ個別管理）です。
+# ディレクトリ構成が違うため、下流へコピーするときは directory の増減を確認してください。
+#
+# ※ security updates（脆弱性由来の PR）は本ファイルが無くても GitHub 側で動きます。
+#   ここで設定するのは「定期的なバージョン追従」のほうです。
+version: 2
+
+updates:
+  # ---- npm（リポジトリ直下） ----
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
+    groups:
+      # 開発依存のマイナー/パッチはまとめて 1 PR にする（レビュー負荷を下げる目的）
+      dev-minor-patch:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  # ---- npm（MCP サーバ：独立した package.json を持つ） ----
+  - package-ecosystem: npm
+    directory: /pkg/mcp
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+    commit-message:
+      prefix: 'chore(deps)'
+
+  # ---- GitHub Actions ----
+  # actions/checkout や actions/setup-node の major 更新（v4 → v5 等）を拾うためのもの。
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: 'chore(actions)'
+    groups:
+      actions-all:
+        patterns:
+          - '*'

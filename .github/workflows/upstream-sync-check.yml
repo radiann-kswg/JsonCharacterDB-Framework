@@ -1,0 +1,86 @@
+# 上流リポジトリとの定期同期点検。
+#
+# 仕組みの正典は docs/fork-sync.md。取り込み対象は .sync/upstream.json で決まる。
+# 本ワークフローは **検出と通知だけ** を行う。ベンダーブランチの更新や develop への
+# merge は行わない（コンフリクト解決は人の判断が要るため）。
+name: Upstream sync check
+
+on:
+  schedule:
+    # 毎週月曜 00:00 UTC = 09:00 JST
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: "upstream-sync-check"
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+
+      # 上流は public なので anonymous clone で足りる（PAT 不要）。
+      # 履歴は不要なので --depth=1 で済ませ、スクリプトには --no-fetch を渡す。
+      - name: Fetch upstream (shallow)
+        run: |
+          URL=$(node -p "require('./.sync/upstream.json').repo")
+          BRANCH=$(node -p "require('./.sync/upstream.json').branch")
+          git remote add upstream "$URL" 2>/dev/null || git remote set-url upstream "$URL"
+          git fetch --depth=1 upstream "$BRANCH"
+
+      - name: Check drift
+        id: check
+        run: |
+          set +e
+          node tools/sync-upstream.mjs --check --no-fetch --markdown > drift.md
+          echo "drift=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          cat drift.md
+
+      - name: Open or update tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRIFT: ${{ steps.check.outputs.drift }}
+        run: |
+          set -euo pipefail
+          gh label create upstream-sync --color BFD4F2 --description "上流リポジトリとの同期" 2>/dev/null || true
+          NUMBER=$(gh issue list --label upstream-sync --state open --limit 1 --json number --jq '.[0].number // empty')
+
+          if [ "$DRIFT" = "0" ]; then
+            if [ -n "$NUMBER" ]; then
+              gh issue close "$NUMBER" --comment "上流との差分が解消されたため自動クローズしました。"
+            fi
+            echo "差分なし。"
+            exit 0
+          fi
+
+          {
+            echo "上流の更新が本リポジトリへ未反映です。"
+            echo
+            cat drift.md
+            echo
+            echo "---"
+            echo "<sub>\`.github/workflows/upstream-sync-check.yml\` による自動更新。実行: [${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})</sub>"
+          } > body.md
+
+          if [ -n "$NUMBER" ]; then
+            gh issue edit "$NUMBER" --body-file body.md
+            echo "Issue #$NUMBER を更新しました。"
+          else
+            gh issue create \
+              --title "上流との同期: 未取り込みの差分があります" \
+              --label upstream-sync \
+              --body-file body.md
+          fi

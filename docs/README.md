@@ -17,6 +17,7 @@ This folder contains documentation for **JsonCharacterDB-Framework**.
 - API / SW technical note (JP): `api-sw-spec.md`
 - Wrapper summary registry note (JP): `wrapper-summary-registry.md`
 - Implementation playbook (JP): `implementation-playbook.md`
+- **Fork sync (JP)**: `fork-sync.md` — 上流 `100BeautiesLab_CreationsDB` / 派生 `RadianNs_SecondaryWorksDB` とのフォーク構造、ベンダーブランチ方式の同期手順、定期点検、Dependabot
 - Third-party policy (JP): `third-party-policy.md`
 - **pkg/ client libraries (JP)**: `pkg-client-libraries.md` — サブモジュール向けクライアントパッケージ（Node.js / Python / C# / Cloudflare Workers / MCP）の設計・使い方
 

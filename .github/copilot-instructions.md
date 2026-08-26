@@ -52,6 +52,40 @@
 
 本リポジトリには**創作データの実体を置きません**。`data/Works_Sample/` は動作確認用の雛形です。
 
+### 1-1. フォーク同期（上流 → 本リポジトリ → 派生）
+
+3 つは GitHub 上のフォークではなく**履歴が無関係な独立リポジトリ**です。そのため上流を直接 merge せず、
+マニフェストで絞り込んだ**ベンダーブランチ**を経由します。**正典は [`docs/fork-sync.md`](./docs/fork-sync.md)。**
+
+```
+上流/develop ──[.sync/upstream.json で絞り込み]──▶ upstream/creationsdb ──[git merge]──▶ develop
+```
+
+| やること | コマンド |
+| --- | --- |
+| 上流との差分を見る | `npm run sync:check`（差分ありで exit 1 / オフラインは `sync:check:offline`） |
+| ベンダーブランチを進める | `npm run sync:update` |
+| 取り込む | `git merge upstream/creationsdb` → `npm test` |
+
+**エージェントが守ること:**
+
+- **`git merge` を勝手に実行しない。** `sync:update` までは行ってよいが、`develop` への取り込みと
+  コンフリクト解決は User の判断です。
+- **同期対象は `.sync/upstream.json` だけが決める。** 判断に迷っても推測でファイルをコピーしない。
+  対象を変えたいときはマニフェストを編集し、理由を User に説明すること。
+- **`data/**` を同期対象へ入れない。** 本リポジトリが創作データを持たない前提が崩れます。
+- **ツールを `exclude` したら、そのツールのテストも必ず `exclude` する。** 片方だけだと `npm test` が壊れます。
+  この対応関係は `tests/sync-upstream.manifest.test.js` が固定しています。
+- **フレームワークのバグは上流で直す。** 本リポジトリで直接直すと次回の同期でコンフリクトになります。
+
+定期点検は 2 系統です。詳細は `docs/fork-sync.md` §7。
+
+- **GitHub Actions**: `.github/workflows/upstream-sync-check.yml`（毎週月曜 09:00 JST・差分があれば Issue を起票/更新）
+- **Cowork 週次タスク**: 差分の中身を判断し `_work_in_progress/YYYY-MM-DD_upstream-sync.md` へレポート
+
+依存関係の定期更新は `.github/dependabot.yml`（npm / GitHub Actions・毎週月曜 09:00 JST）。
+`.github/**` は**同期対象外**で各リポジトリ個別管理です。
+
 ---
 
 ## 2. 指示書を更新するときの手順

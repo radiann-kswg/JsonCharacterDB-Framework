@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### Added
+
+- **上流 `100BeautiesLab_CreationsDB` との同期の仕組みを実装**（正典: `docs/fork-sync.md`）。
+  3 リポジトリは GitHub 上のフォークではなく履歴が無関係な独立リポジトリのため、`git subtree` も
+  素の `git merge` も使えない。マニフェストで絞り込んだ**ベンダーブランチ `upstream/creationsdb` を経由**して
+  通常の `git merge` で取り込む方式を採用した（1 回接げば以後は普通の 3-way merge になる）。
+  - `.sync/upstream.json` — 同期対象のマニフェスト（`include` / `exclude`）。運用の調整ノブはここだけで、
+    スクリプト本体を触る必要はない
+  - `tools/sync-upstream.mjs` — ベンダーブランチの更新と差分報告。`git read-tree` / `write-tree` を
+    一時 index 上で使うため**作業ツリーに触れず**、上流の blob をそのまま使うので
+    上流 CRLF / 下流 LF の改行差で偽の差分が出ない。`develop` への merge は行わない
+  - npm scripts: `sync:check`（差分ありで exit 1）/ `sync:check:offline` / `sync:update`
+  - `tests/sync-upstream.manifest.test.js` — glob マッチャとマニフェストの健全性を固定。
+    `data/**` や生成物が同期対象へ入らないこと、**除外したツールとそのテストが対で除外されている**ことを検査する
+- **定期点検を 2 系統で設置**。
+  - `.github/workflows/upstream-sync-check.yml` — 毎週月曜 09:00 JST。差分があれば `upstream-sync`
+    ラベルの Issue を起票/上書き更新し、解消で自動クローズ。上流が public のため**PAT 不要**
+  - Cowork の週次タスク — 差分の中身を判断し `_work_in_progress/YYYY-MM-DD_upstream-sync.md` へレポート
+- **`.github/dependabot.yml` を新規追加**（npm: リポジトリ直下 / `pkg/mcp`、GitHub Actions。毎週月曜 09:00 JST）。
+  上流にも存在しなかったため新規導入（従来動いていたのは設定不要の security updates のみ）。
+  `_work_in_progress/2026-08-26_github-triage.md` §3-2 の Node20 deprecation（actions v4 → v5）は
+  これで自動追従される。
+
+### Changed
+
+- `AGENTS.md` §1 に「1-1. フォーク同期」を追加。エージェントは `sync:update` まで行ってよいが、
+  **`git merge` は User の判断**とすることを明文化した。
+
 ## [0.1.0] - 2026-08-25
 
 ### Added

@@ -1,0 +1,37 @@
+{
+	"$comment": "上流との同期マニフェスト。仕様は docs/fork-sync.md を参照。include/exclude は tools/sync-upstream.mjs が **/*/? のみ解釈する簡易 glob。不変則: ツールを exclude したら、そのツールのテストも必ず exclude する（取り込むと npm test が確実に壊れるため）。",
+	"name": "creationsdb",
+	"repo": "https://github.com/radiann-kswg/100BeautiesLab_CreationsDB.git",
+	"remote": "upstream",
+	"branch": "develop",
+	"vendorBranch": "upstream/creationsdb",
+	"include": [
+		".gitattributes",
+		"api/**",
+		"docs/**",
+		"lib/**",
+		"pages/**",
+		"pkg/**",
+		"svc/**",
+		"tests/**",
+		"tools/**",
+		"vitest.config.js"
+	],
+	"exclude": [
+		"**/CNAME",
+		"docs/README.md",
+		"docs/localization-glossary-quickref.md",
+		"pkg/cloudflare/wrangler.toml",
+		"tools/agent-instructions/**",
+		"tools/build-calendar-ics.mjs",
+		"tools/sync-calendar-gcal.mjs",
+		"tools/inject-conversation-patterns.mjs",
+		"tools/normalize-callings.mjs",
+		"tools/patch-*.mjs",
+
+		"tests/calendar.*",
+		"tests/conversation-pattern.test.js",
+		"tests/data.roleplay-prompts.test.js",
+		"tests/patch-*.test.js"
+	]
+}
