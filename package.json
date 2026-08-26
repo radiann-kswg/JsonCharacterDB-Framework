@@ -30,10 +30,8 @@
     "deepl:draft": "node tools/deepl/draft-translate.mjs"
   },
   "devDependencies": {
-    "glob": "^11.1.0",
-    "jsdom": "^30.0.1",
     "glob": "^13.0.6",
-    "jsdom": "^26.1.0",
+    "jsdom": "^30.0.1",
     "playwright": "^1.62.1",
     "vitest": "^4.1.11"
   },
