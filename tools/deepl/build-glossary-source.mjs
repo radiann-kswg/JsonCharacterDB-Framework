@@ -211,7 +211,9 @@ function isPluralPair(a, b) {
  * JP 側が併記形（`繁殖鼠/生体改造済みモルモット種族`）なら各断片をソースへ展開する。
  * 読みグロス付きの原形（`算象(アリスマ)諸国`）は DB 本文にその形で出るため、素形に
  * 加えてソースへ追加する（マッチ網羅の維持）。
- * EN側が `splitMultiForm` で複数断片に分かれる場合は、先頭断片（本文中で
+ * JP / EN の双方が併記形で断片数が一致する場合（`猫又/化猫` ↔ `Nekomata / Warcat`）は
+ * 位置対応でペアリングし、各断片対（`猫又→Nekomata` / `化猫→Warcat`）を独立エントリと
+ * して登録する。断片数が一致しない場合は従来どおり EN 先頭断片（本文中で
  * 実際に多用される略号・優先表記）を JA→EN の訳語として採用する。
  * 衝突は「同一 JP ソースに異なる EN」が来た場合のみ記録するが、単数/複数形
  * だけの差は文法依存のため用語集へ登録せず、レビュー用に別記する。
@@ -245,14 +247,18 @@ function buildJaEnMap(pairs) {
     conflicts.push({ src: jp, kept: existing.target, dropped: en, file: source });
   };
   for (const p of pairs) {
-    const [primaryEn] = splitMultiForm(stripParenNotes(p.en));
-    for (const seg of splitMultiForm(stripParenNotes(p.jp))) {
-      add(seg, primaryEn, p.source, p.base);
-    }
+    const enSegs = splitMultiForm(stripParenNotes(p.en));
+    const jpSegs = splitMultiForm(stripParenNotes(p.jp));
+    const paired = jpSegs.length > 1 && jpSegs.length === enSegs.length;
+    jpSegs.forEach((seg, i) => {
+      add(seg, paired ? enSegs[i] : enSegs[0], p.source, p.base);
+    });
     if (hasReadingGlossOnly(p.jp)) {
-      for (const seg of splitMultiForm(p.jp)) {
-        add(seg, primaryEn, `${p.source} (reading-gloss)`, p.base);
-      }
+      const rawSegs = splitMultiForm(p.jp);
+      const rawPaired = rawSegs.length > 1 && rawSegs.length === enSegs.length;
+      rawSegs.forEach((seg, i) => {
+        add(seg, rawPaired ? enSegs[i] : enSegs[0], `${p.source} (reading-gloss)`, p.base);
+      });
     }
   }
   return { map, conflicts };
@@ -262,8 +268,9 @@ function buildJaEnMap(pairs) {
  * EN→JA マップを構築する。ソース EN・訳先 JP ともに括弧注釈を除去した素形を採用する
  * （方針: 機械訳にフリガナ・注釈を混ぜない／注釈違いだけの語を別キーにしない）。
  * これにより「併記形 vs 素形」「注釈付き vs 素形」だけの差は衝突にならない。
- * 訳先 JP が併記形なら先頭断片を採用する。
- * EN側が `splitMultiForm` で複数断片に分かれる場合は、断片それぞれを別の
+ * EN / JP の双方が併記形で断片数が一致する場合は位置対応でペアリングし、各断片対
+ * （`Nekomata→猫又` / `Warcat→化猫`）を独立エントリとして登録する。
+ * 断片数が一致しない場合は訳先 JP の先頭断片を採用し、EN側の断片それぞれを別の
  * ソースキーとして登録する（略号・全文のどちらで出現しても同じ JP へ解決できる）。
  *
  * 「正式名（Term_JP）vs 通称（Aliases）」の衝突は、文章の性質（冗長な説明文
@@ -302,11 +309,13 @@ function buildEnJaMap(pairs) {
     conflicts.push({ src: en, kept: existing.target, dropped: jpTarget, file: source });
   };
   for (const p of pairs) {
-    const [target] = splitMultiForm(stripParenNotes(p.jp));
+    const jpSegs = splitMultiForm(stripParenNotes(p.jp));
+    const enSegs = splitMultiForm(stripParenNotes(p.en));
+    const paired = enSegs.length > 1 && enSegs.length === jpSegs.length;
     const isAlias = p.base === "Aliases";
-    for (const seg of splitMultiForm(stripParenNotes(p.en))) {
-      add(seg, target, p.source, isAlias);
-    }
+    enSegs.forEach((seg, i) => {
+      add(seg, paired ? jpSegs[i] : jpSegs[0], p.source, isAlias);
+    });
   }
   return { map, conflicts };
 }
@@ -356,7 +365,7 @@ function main() {
     "",
     "> 同一 source に複数の訳語が存在したエントリ。先に出現した訳を採用（kept）。",
     "> 丸括弧の中身（読み仮名グロス・補足注釈）は訳語決定に関与しない付随情報として自動除去済みのため、`猫又` と `猫又(後天的)` のような差はここには出ません。",
-    "> `略号 / 全文` のような併記形（スラッシュ区切り・改行区切り）も自動分割済みのため、双方向とも登録できていればここには出ません。",
+    "> `略号 / 全文` のような併記形（スラッシュ区切り・改行区切り）も自動分割済みのため、双方向とも登録できていればここには出ません。JP/EN の断片数が一致する併記形（`猫又/化猫` ↔ `Nekomata / Warcat`）は位置対応でペアリングし、各断片対を独立エントリとして登録します。",
     "> 単数形/複数形だけの差（例: `Regiowner`/`Regiowners`）は JP側に数の情報が無く用語集で強制すると逆の文脈で誤訳になるため、`[文法差につき用語集登録なし]` として自動除外し、双方をレビュー用に併記します。採否は用途に応じて人間が個別に判断してください。",
     "> 正式名（Term_JP）vs 通称（Aliases）の差（例: `『第7の世界創造』`/`多様化社会`）は、冗長な説明文では通称・略称寄り、該当語自体を定義・説明する文では正式名寄りという文脈依存の使い分けがあり、EN→JA の単一キーには固定できないため `[文脈依存につき用語集登録なし]` として自動除外し、双方をレビュー用に併記します。訳出時は文章の性質に応じて人間が個別に判断してください。",
     "> ここに残るのは「素形でも異なる」真の衝突です。必要なら trans_*.json / ref_*.json / dict_*.json 側で正規化してください。",

@@ -506,7 +506,7 @@
 
 `DB_Layer` は DB 実体の配置ディレクトリを表す補助キーで、未指定時は `DataBases` とみなされます。`Glossaries` や `References` を段階導入する際の入口として使います。
 
-`#Ref_*` は資料系 DB 用の catalog key で、未指定の実体名を `ref_<Name>.json` として扱います。たとえば `#Ref_Glossary` は `References/ref_Glossary.json` を既定候補として引きます。
+`#Ref_*` は資料系 DB 用の catalog key で、未指定の実体名を `ref_<Name>.json` として扱います。たとえば `#Ref_Vocabulary` は `References/ref_Vocabulary.json` を既定候補として引きます。
 
 `DB_File` は DB 実体のファイル名を表す補助キーで、未指定時は `#DB_*` なら `db_<DbName>.json`、`#Ref_*` なら `ref_<Name>.json` を使います。既定名から外したい場合だけ明示します。
 

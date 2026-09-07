@@ -19,7 +19,10 @@ import {
 	parseIdxToken,
 	buildIdxToken,
 	parseViewerLocator,
-	buildViewerQueryString
+	buildViewerQueryString,
+	SHORT_LOCATOR_PARAM,
+	parseShortLocator,
+	buildShortQueryString
 } from '../lib/viewer-locator.js';
 
 describe('定数', () => {
@@ -287,6 +290,35 @@ describe('buildViewerQueryString', () => {
 	it('何も無ければ空文字', () => {
 		expect(buildViewerQueryString({})).toBe('');
 		expect(buildViewerQueryString()).toBe('');
+	});
+});
+
+describe('短縮ロケータ（b=<Works_Code>-<Badge>[/<Db>]）', () => {
+	it('クエリキーは `b`', () => {
+		expect(SHORT_LOCATOR_PARAM).toBe('b');
+	});
+
+	it('DB 無しはバッジだけに分解する', () => {
+		expect(parseShortLocator('NTS-57')).toEqual({ badge: 'NTS-57', db: '' });
+		expect(parseShortLocator('')).toEqual({ badge: '', db: '' });
+	});
+
+	it('`/Db` を分離する（バッジ本体の `-` は温存）', () => {
+		expect(parseShortLocator('FLI-M16/PrimaryDealer')).toEqual({ badge: 'FLI-M16', db: 'PrimaryDealer' });
+		expect(parseShortLocator('UAL-X-1/Primary')).toEqual({ badge: 'UAL-X-1', db: 'Primary' });
+	});
+
+	it('生成は `?b=` 1 本で、`/` を可読のまま出す', () => {
+		expect(buildShortQueryString('NTS-57')).toBe('?b=NTS-57');
+		expect(buildShortQueryString('FLI-M16', 'PrimaryDealer')).toBe('?b=FLI-M16/PrimaryDealer');
+		expect(buildShortQueryString('')).toBe('');
+	});
+
+	it('往復しても同じ組に解決する', () => {
+		for (const [badge, db] of [['NTS-57', ''], ['FLI-M16', 'PrimaryDealer']]) {
+			const raw = new URLSearchParams(buildShortQueryString(badge, db).replace(/^\?/, '')).get(SHORT_LOCATOR_PARAM);
+			expect(parseShortLocator(raw || '')).toEqual({ badge, db });
+		}
 	});
 });
 

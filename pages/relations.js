@@ -13,6 +13,7 @@
  * - 配置:       `lib/graph/graph-layout.js`（三角格子へのスナップ）
  * - 描画:       Cytoscape.js（`pages/vendor/` に同梱。初期化時に動的 import）
  * - 直リンク:   `lib/viewer-locator.js`（キャラシートと同じ URL 文法を共有）
+ * - ロケータ:   `lib/relations-locator.js`（`r=[<map>/]<Works_Code>/<段の値...>` の分解・組み立て）
  * - 辞書:       `lib/basic-renders/type-common.js`（`globalThis.TypeResolver`）
  *
  * ## 階層は typedef 駆動
@@ -36,7 +37,8 @@
  */
 
 import '../lib/basic-renders/type-common.js';
-import { buildViewerQueryString } from '../lib/viewer-locator.js';
+import { buildViewerQueryString, parseShortLocator } from '../lib/viewer-locator.js';
+import { buildRelationsLocator, parseRelationsLocator, RELATIONS_LOCATOR_PARAM } from '../lib/relations-locator.js';
 import { api, fetchJSON, ensureApiSW, replayRememberedSwInitError } from '../lib/page-api-bridge.js';
 import {
 	EDGE_KINDS,
@@ -76,10 +78,11 @@ import {
 
 /** 相関図の URL クエリキー（キャラシート側の `c` / `q` / `lang` と衝突しない） */
 const QS = Object.freeze({
-	MAP: 'm',        // 'own' | 'shared'
-	DRILL: 'd',      // ドリルダウンの選択値をスラッシュ区切りで（'NumberTales/百花繚乱研究所'）
+	LOCATOR: RELATIONS_LOCATOR_PARAM, // 圧縮ロケータ `r=[<map>/]<Works_Code>/<段の値...>`（生成はこれだけ）
+	MAP: 'm',        // 旧形式（読み取りのみ）: 'own' | 'shared'
+	DRILL: 'd',      // 旧形式（読み取りのみ）: ドリルダウンの選択値をスラッシュ区切りで（'NumberTales/百花繚乱研究所'）
 	GROUPING: 'g',   // 色分け・囲いの軸キー（階層とは独立）
-	FOCUS: 'f',      // エゴネットワークで見ているノードキー
+	FOCUS: 'f',      // エゴネットワークで見ているノード（インデックスバッジ `NTS-57`。旧形式のノードキーも読み取る）
 	EDGE_OFF: 'e',   // 手動で非表示にしたエッジ種別（カンマ区切り）
 	QUERY: 'q',
 	LANG: 'lang',
@@ -294,25 +297,37 @@ function resolveFacetLabelPack(facet, value, record = null) {
    URL 状態
    ======================================================================== */
 
-/** URL から状態を復元する（キャラシートの `c=` 形式も後方互換で受理する） */
+/**
+ * URL から状態を復元する
+ * @description 圧縮ロケータ `r` を最優先で読み、無ければ旧 `m` / `d`。
+ * キャラシートの `c=` 形式・旧 `s=` は作品段へ降りる用途だけ後方互換で受理する。
+ */
 function readStateFromUrl() {
 	const p = new URLSearchParams(location.search);
 
-	const map = p.get(QS.MAP);
-	if (map === 'shared' || map === 'own') state.map = map;
-
-	const drill = p.get(QS.DRILL);
-	if (drill !== null) state.drill = drill.split('/').filter(Boolean);
+	// `r` の値は作品コード・辞書 code のまま state.drill へ置く。
+	// 実データを見て値へ戻すのはデータ読込後の resolveLocators() に任せる
+	const locator = p.get(QS.LOCATOR);
+	const drill = locator === null ? p.get(QS.DRILL) : null;
+	if (locator !== null) {
+		const parsed = parseRelationsLocator(locator);
+		state.map = parsed.map;
+		state.drill = parsed.segments;
+	} else {
+		const map = p.get(QS.MAP);
+		if (map === 'shared' || map === 'own') state.map = map;
+		if (drill !== null) state.drill = drill.split('/').filter(Boolean);
+	}
 
 	// キャラシートの直リンク（`c=Work/Db/Idx`）で開かれたら作品段まで降りる
 	const legacy = p.get('c');
-	if (legacy && drill === null) {
+	if (legacy && locator === null && drill === null) {
 		const [work = ''] = legacy.split('/');
 		if (work) state.drill = [normalizeWorkId(work)];
 	}
 	// 旧 `s=Work/Db` 形式も受理
 	const legacyScope = p.get('s');
-	if (legacyScope && drill === null) {
+	if (legacyScope && locator === null && drill === null) {
 		const [work = ''] = legacyScope.split('/');
 		if (work) state.drill = [normalizeWorkId(work)];
 	}
@@ -334,10 +349,14 @@ function readStateFromUrl() {
 /** 現在の状態から URL を組み立てる（空値は載せない） @returns {string} */
 function buildStateQuery() {
 	const qs = new URLSearchParams();
-	if (state.map !== 'own') qs.set(QS.MAP, state.map);
-	if (state.drill.length) qs.set(QS.DRILL, state.drill.join('/'));
+	const levels = currentLevels();
+	const locator = buildRelationsLocator({
+		map: state.map,
+		segments: state.drill.map((value, depth) => (depth === 0 ? encodeWorkSegment(value) : encodeDrillValue(levels[depth], value)))
+	});
+	if (locator) qs.set(QS.LOCATOR, locator);
 	if (state.grouping) qs.set(QS.GROUPING, state.grouping);
-	if (state.focusKey) qs.set(QS.FOCUS, state.focusKey);
+	if (state.focusKey) qs.set(QS.FOCUS, encodeFocus(state.focusKey));
 	if (state.hiddenKinds.size) qs.set(QS.EDGE_OFF, [...state.hiddenKinds].join(','));
 	if (state.query) qs.set(QS.QUERY, state.query);
 	if (state.includeSecondary) qs.set(QS.SECONDARY, '1');
@@ -353,6 +372,90 @@ function syncUrl(push = false) {
 	const url = `${location.pathname}${buildStateQuery()}`;
 	if (push) history.pushState({ relmap: true }, '', url);
 	else history.replaceState({ relmap: true }, '', url);
+}
+
+/* ---- ロケータの値 ⇄ 実データ（作品コード / 辞書 code / バッジ） ---- */
+
+/** ドリル段の「未設定」グループを表すセグメント（`UNSET_GROUP_KEY` は先頭に空白を持ち URL に向かない） */
+const UNSET_SEGMENT = '-';
+
+/** 作品段のセグメント（`Works_Code`。未宣言なら短縮ID） @param {string} workId @returns {string} */
+function encodeWorkSegment(workId) {
+	return getWorksCode(state.globalMeta, workId) || shortWork(workId);
+}
+
+/**
+ * 作品段のセグメント（`NTS` / `NumberTales` / `#Works_NumberTales`）を作品IDへ
+ * @param {string} seg @returns {string} 既知の作品に当たらなければ `normalizeWorkId()` の結果
+ */
+function resolveWorkSegment(seg) {
+	const ids = state.works.map(w => normalizeWorkId(w?.work)).filter(Boolean);
+	return ids.find(id => id === normalizeWorkId(seg) || getWorksCode(state.globalMeta, id) === seg) || normalizeWorkId(seg);
+}
+
+/**
+ * 軸段の値を URL 用セグメントへ
+ *
+ * @description 軸に `$display.facet.codeFrom`（辞書行の列名）が宣言されていれば辞書 code、無ければ生値。
+ * 辞書行に列が無い値も生値へフォールバックするので、code を後から辞書へ足すだけで URL が短くなる。
+ * @param {Object} level - `currentLevels()` の要素 @param {string} value @returns {string}
+ */
+function encodeDrillValue(level, value) {
+	if (value === UNSET_GROUP_KEY) return UNSET_SEGMENT;
+	if (!level?.codeFrom || !level?.dict) return value;
+	const lookup = createDictCellLookup(
+		state.varsDefByWork[scopeWorkId()] || {},
+		{ $type: [{ hashTag: level.key, $dict: level.dict }] }
+	);
+	return lookup(level.key, value, level.codeFrom) || value;
+}
+
+/**
+ * フォーカスのノードキーを URL 用のバッジへ（`NTS-57`。同じバッジのノードが他にあれば `NTS-57/Db`）
+ * @param {string} key @returns {string} バッジが組めなければノードキーのまま
+ */
+function encodeFocus(key) {
+	const nodes = state.graph?.nodes || [];
+	const node = nodes.find(n => n.key === key);
+	if (!node?.badgeFull) return key;
+	const dup = nodes.some(n => n !== node && n.badgeFull === node.badgeFull);
+	return dup ? `${node.badgeFull}/${node.dbName}` : node.badgeFull;
+}
+
+/**
+ * URL から読んだロケータの値を実データへ解決する（データ読込後・`normalizeDrillPath()` の前に呼ぶ）
+ *
+ * @description
+ * - 作品段: `Works_Code` / 短縮ID → 作品ID
+ * - 軸段: 辞書 code → 軸の値。候補値を `encodeDrillValue()` で符号化して突き合わせる（逆引き表は持たない）
+ * - フォーカス: バッジ（`NTS-57[/Db]`）→ ノードキー。旧形式のノードキー（`|` を含む）はそのまま
+ * 解決できない段はそのまま残し、`normalizeDrillPath()` の切り詰めに任せる。
+ */
+function resolveLocators() {
+	if (state.drill.length) state.drill[0] = resolveWorkSegment(state.drill[0]);
+	const levels = currentLevels();
+	let list = baseNodes().filter(n => n.workId === state.drill[0]);
+	for (let depth = 1; depth < state.drill.length && depth < levels.length; depth += 1) {
+		const level = levels[depth];
+		const seg = state.drill[depth];
+		const values = [...new Set(list.flatMap(n => facetValuesOf(n, level)))];
+		const value = seg === UNSET_SEGMENT
+			? UNSET_GROUP_KEY
+			: (values.includes(seg) ? seg : values.find(v => encodeDrillValue(level, v) === seg));
+		if (value === undefined) break;
+		state.drill[depth] = value;
+		list = list.filter((n) => {
+			const own = facetValuesOf(n, level);
+			return value === UNSET_GROUP_KEY ? own.length === 0 : own.includes(value);
+		});
+	}
+
+	const raw = state.focusKey;
+	if (raw && !raw.includes('|')) {
+		const { badge, db } = parseShortLocator(raw);
+		const hit = (state.graph?.nodes || []).find(n => n.badgeFull === badge && (!db || n.dbName === db));
+		if (hit) state.focusKey = hit.key;
+	}
 }
 
 /** @param {string} raw @returns {string} */
@@ -402,17 +505,18 @@ async function loadAll() {
 
 		// 辞書束: 作品メタ + 作品 typedef + グローバルメタ の $VarsDef を合流する。
 		// VirtuesUs の `#List_Virtues`（Virtues_Num を持つ）は作品メタ側にしか無い
-		const vars = {};
 		const sources = [
 			globalMeta?.General?.$VarsDef,
 			metaRes?.meta?.General?.$VarsDef, metaRes?.General?.$VarsDef,
 			workTypeDefs[workId]?.$VarsDef, workTypeDefs[workId]?.$VersDef,
 			metaRes?.meta?.Dictionaries, metaRes?.Dictionaries
 		];
-		for (const src of sources) {
-			if (!src || typeof src !== 'object') continue;
-			for (const [k, v] of Object.entries(src)) if (Array.isArray(v)) vars[k] = v;
-		}
+		// 同名の `#List_*`（例: 所属別クラス辞書（グローバル側）と作品共通クラス辞書が両方 `#List_Class`）は
+		// 置換ではなく連結する（キャラシートの mergeVarsDefLayers と同じ規則）。
+		// 置換だとグローバル側の行が丸ごと消え、相関図 URL の `Class_Code` が引けず生値へ落ちる
+		const merged = globalThis.TypeResolver.mergeVarsDefLayers(...sources);
+		const vars = {};
+		for (const [k, v] of Object.entries(merged)) if (Array.isArray(v)) vars[k] = v;
 		varsDefByWork[workId] = vars;
 	}));
 
@@ -2445,6 +2549,7 @@ function wireControls() {
 
 	window.addEventListener('popstate', () => {
 		readStateFromUrl();
+		resolveLocators();
 		normalizeDrillPath();
 		syncUrl(false);
 		applyLangToUi();
@@ -2517,6 +2622,7 @@ async function main() {
 	});
 
 	decorateNodes();
+	resolveLocators();
 	normalizeDrillPath();
 	syncUrl(false);
 
