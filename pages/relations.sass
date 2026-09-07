@@ -1,0 +1,543 @@
+// ==================================================
+// 創作キャラ・相関図ページ用スタイルシート
+// 100BeautiesLab Creations DB (Web) - pages/relations.html 用
+//
+// characters.css を先に読み込んだうえで重ねる差分スタイル。
+// 配色・スペーシング・角丸・フォントサイズはすべて characters.sass の
+// CSS カスタムプロパティ（--bg / --accent / --spacing-* など）を流用し、
+// このファイルでは新しいデザイントークンを定義しない。
+//
+// 参考にした UI の考え方（アークナイツのノードマップ）:
+//   1. 集約ノードからのドリルダウンとパンくず（操作感）
+//   2. 左レール / 中央キャンバス / 右インスペクタの 3 ペイン（画面構成）
+// 見た目のトーンそのものは踏襲せず、既存デザインシステムの範囲で組む。
+// ==================================================
+
+// ==================================================
+// ページ全体レイアウト
+// ==================================================
+
+// 相関図はビューポート高いっぱいを使うため、ページ全体のスクロールを抑える
+.relmap-body
+	min-height: 100vh
+
+// 3 ペイン（デスクトップ）／縦積み（モバイル）
+.relmap
+	display: grid
+	grid-template-columns: 1fr
+	gap: var(--spacing-md)
+	padding: 0 var(--spacing-md) var(--spacing-md)
+	max-width: 1600px
+	margin: 0 auto
+
+	@media (min-width: 1024px)
+		grid-template-columns: 260px minmax(0, 1fr) 300px
+		align-items: start
+		padding: 0 var(--spacing-lg) var(--spacing-lg)
+
+	@media (min-width: 1280px)
+		grid-template-columns: 280px minmax(0, 1fr) 340px
+
+// ==================================================
+// 左レール（スコープ・グルーピング・絞り込み）
+// ==================================================
+
+.relmap__rail
+	padding: var(--spacing-md)
+	align-self: start
+
+	@media (min-width: 1024px)
+		position: sticky
+		top: var(--spacing-md)
+		max-height: calc(100vh - var(--spacing-xl))
+		overflow-y: auto
+
+// レールの開閉ボタンはモバイルのみ表示する
+.relmap__rail-toggle
+	width: 100%
+	margin-bottom: var(--spacing-sm)
+
+	@media (min-width: 1024px)
+		display: none
+
+.relmap__rail-body
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-lg)
+
+	&[hidden]
+		display: none
+
+.relmap__group
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+
+// 左レールの小見出し。
+// `.card h2`（詳細度 0,1,1）が `.relmap__group-title`（0,1,0）に勝つため、
+// 何もしないと 5 つの小見出し全部に accent→azure の発光バーが付いてしまい、
+// `--glow` の希少性（characters.sass で 2 箇所のみ）が壊れる。
+// クラス 2 つ（0,2,0）で受けて打ち消す。打ち消しの作法は characters.sass:704-712 と同じ。
+.relmap__rail .relmap__group-title
+	margin: 0
+	padding: 0
+	font-size: var(--font-size-sm)
+	color: var(--muted)
+	letter-spacing: 0.04em
+	border-bottom: none
+
+	&::before
+		display: none
+
+.relmap__field
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-xs)
+	font-size: var(--font-size-sm)
+
+	select, input
+		width: 100%
+
+.relmap__check
+	display: flex
+	align-items: center
+	gap: var(--spacing-sm)
+	font-size: var(--font-size-sm)
+	// タッチターゲットを 44px 以上に保つ
+	min-height: 44px
+
+.relmap__presets
+	display: flex
+	flex-wrap: wrap
+	gap: var(--spacing-xs)
+
+// マップ選択・グルーピング軸のチップ。
+//
+// `.ghost`（characters.sass:714-717）は**すべてのボタンへ accent の枠と文字色**を付けるため、
+// `.is-active` で accent を再指定しても差が出ず、選択状態が見えていなかった。
+// 非選択側を沈めることで区別する（characters.sass:1478-1487 の `.lang-toggle__opt` と同じ作法。
+// あちらも `opacity 0.35 → 1` で「沈める / 起こす」を表現している）。
+.relmap__preset
+	flex: 1 1 auto
+	min-height: 44px
+	font-size: var(--font-size-xs)
+	// 非選択: 枠も文字も地に寄せる
+	border-color: var(--border)
+	color: var(--muted)
+	background: transparent
+
+	&:hover:not(:disabled)
+		border-color: var(--border-strong)
+		color: var(--fg)
+
+	// 選択中: 色相は変えず accent で点灯させる
+	&.is-active
+		border-color: var(--accent)
+		color: var(--accent)
+		background: var(--card)
+
+// エッジ種別の凡例（色 + 線種のスウォッチ付き）
+.relmap__legend
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-xs)
+
+.relmap__legend-item
+	display: flex
+	align-items: center
+	flex-wrap: wrap
+	gap: var(--spacing-sm)
+	font-size: var(--font-size-sm)
+	min-height: 32px
+	cursor: pointer
+
+	// 密度により自動で隠している種別。「なぜ消えたか」が分かるようにする
+	&.is-auto-hidden
+		opacity: 0.75
+
+// 「自動で非表示中（密度）」のバッジ
+.relmap__legend-auto
+	flex: 1 0 100%
+	padding-left: 36px
+	font-size: var(--font-size-xs)
+	color: var(--warning)
+
+// スウォッチは色だけでなく線種でも区別できるようにする
+// （色覚特性や、グレースケール印刷でも読めるようにするため）
+.relmap__legend-swatch
+	flex: 0 0 auto
+	width: 28px
+	height: 0
+	border-top-width: 3px
+	border-top-style: var(--swatch-line, solid)
+	border-top-color: var(--swatch-color, currentColor)
+
+// ==================================================
+// 中央ステージ（グラフキャンバス）
+// ==================================================
+
+// 中央ステージ。角を斜めに落として「機材のパネル」らしさを出す
+// （アークナイツのキャラクター一覧から取り込んだ要素。配色は増やさず形だけ借りる）。
+// clip-path は characters.sass に前例が無いので、相関図の中だけに閉じる。
+.relmap__stage
+	position: relative
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+	padding: var(--spacing-md)
+	min-width: 0
+	clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)
+
+.relmap__breadcrumb
+	display: flex
+	flex-wrap: wrap
+	align-items: center
+	gap: var(--spacing-xs)
+	font-size: var(--font-size-sm)
+
+.relmap__crumb
+	padding: var(--spacing-xs) var(--spacing-sm)
+	font-size: var(--font-size-sm)
+
+.relmap__crumb--current
+	color: var(--fg)
+	font-weight: bold
+
+.relmap__crumb-sep
+	color: var(--muted)
+
+// 「（次: 所属）」のように、次に掘れる段を示すヒント
+.relmap__crumb-hint
+	font-size: var(--font-size-xs)
+
+// インデックスバッジ（NTS-57 / FLI-M16 など）
+.relmap__badge
+	display: inline-block
+	padding: 1px var(--spacing-xs)
+	border: 1px solid var(--border-strong)
+	border-radius: var(--border-radius-sm)
+	font-size: var(--font-size-xs)
+	color: var(--accent)
+	letter-spacing: 0.03em
+
+// Cytoscape が canvas を差し込むコンテナ。高さを明示しないと 0 になる。
+//
+// 「機材のスクリーン」定型（characters.sass:2248-2255 の .model-viewer__stage）へ揃える:
+//   border-strong + bg-deep + glow 0 0 16px
+// 一番「盤面」であるべき面がこの型を外していたのが、相関図がキャラシートから浮いて見える一因だった。
+.relmap__canvas
+	position: relative
+	width: 100%
+	height: 60vh
+	min-height: 360px
+	border: 1px solid var(--border-strong)
+	border-radius: var(--border-radius-md)
+	background: var(--bg-deep)
+	box-shadow: var(--glow) 0 0 16px
+	overflow: hidden
+
+	@media (min-width: 1024px)
+		height: calc(100vh - 220px)
+		min-height: 480px
+
+	// サイト地のテクスチャ（characters.sass:90-99 の body::before と同じ 46px 方眼 ×2 + 170px 星屑）。
+	//
+	// **画面固定にする（background-attachment: fixed）。** pan/zoom へ追随させると、
+	// 46px 方眼と相関図の格子（122px）が 2.652:1 の非整数比なので干渉縞が出るうえ、
+	// zoom 0.12 で線被覆 18.1%（ベタ塗り化）・zoom 3 で 0.7%（消失）になり LOD クランプが要る。
+	// 「画面に固定された地」と「世界座標の格子」を役割分離すれば、これらが一度に消える。
+	// body::before が position: fixed である事実とも整合する。
+	&::before
+		content: ""
+		position: absolute
+		inset: 0
+		z-index: 0
+		pointer-events: none
+		background-image: linear-gradient(rgba(120, 180, 255, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(120, 180, 255, 0.045) 1px, transparent 1px), radial-gradient(circle, rgba(180, 225, 255, 0.6) 0.6px, transparent 0.7px)
+		background-size: 46px 46px, 46px 46px, 170px 170px
+		background-position: 0 0, 0 0, 12px 28px
+		background-attachment: fixed
+		opacity: 0.2
+
+	// 集約表示のマス塗りを描く背景レイヤー。
+	// Cytoscape の canvas より奥（DOM 順で先）に置き、pan/zoom は JS 側で同期する。
+	// クリックは Cytoscape 側で拾うのでイベントは通す
+	.relmap__board
+		position: absolute
+		inset: 0
+		z-index: 0
+		pointer-events: none
+		display: block
+
+	// ポインタが乗っている区画の名前。走査線（z-index: 1）より前へ出す
+	.relmap__hover-label
+		position: absolute
+		left: var(--spacing-sm)
+		bottom: var(--spacing-sm)
+		z-index: 2
+		margin: 0
+		padding: var(--spacing-xs) var(--spacing-sm)
+		max-width: calc(100% - var(--spacing-lg))
+		pointer-events: none
+		border: 1px solid var(--accent)
+		border-radius: var(--border-radius-sm)
+		background: var(--panel)
+		backdrop-filter: blur(4px)
+		-webkit-backdrop-filter: blur(4px)
+		color: var(--accent)
+		font-size: var(--font-size-xs)
+		white-space: nowrap
+		overflow: hidden
+		text-overflow: ellipsis
+
+		&[hidden]
+			display: none
+
+	// 走査線。新しい色は使わず --accent(#5fd6ff) の rgb をごく薄いアルファで敷くだけ
+	&::after
+		content: ""
+		position: absolute
+		inset: -100% 0
+		z-index: 1
+		pointer-events: none
+		background-image: repeating-linear-gradient(rgba(95, 214, 255, 0.03) 0 1px, transparent 1px 3px)
+		animation: relmap-scan 8s linear infinite
+
+// 走査線がゆっくり流れる（3px 周期ぶんだけ動かす＝継ぎ目が出ない）
+@keyframes relmap-scan
+	from
+		transform: translateY(0)
+	to
+		transform: translateY(3px)
+
+.relmap__overlay
+	position: absolute
+	inset: 0
+	display: flex
+	align-items: center
+	justify-content: center
+	// 直値 rgba(5, 8, 15, 0.72) をやめて既存トークンへ。--panel も同じ 0.72 アルファ。
+	// blur はこのリポジトリのオーバーレイ共通の語彙（characters.sass:211-212, 1735-1736）
+	background: var(--panel)
+	backdrop-filter: blur(4px)
+	-webkit-backdrop-filter: blur(4px)
+	border-radius: var(--border-radius-md)
+	z-index: 2
+
+	&[hidden]
+		display: none
+
+.relmap__overlay-text
+	margin: 0
+	color: var(--fg)
+	font-size: var(--font-size-lg)
+
+.relmap__stats
+	margin: 0
+	font-size: var(--font-size-xs)
+
+.relmap__fatal
+	padding: var(--spacing-xl)
+	color: var(--error)
+
+	h2
+		margin: 0 0 var(--spacing-sm)
+		font-size: var(--font-size-lg)
+
+// ==================================================
+// 右インスペクタ
+// ==================================================
+
+// 未選択時（.relmap__inspector-empty のみ表示）でも右ペインが小箱に潰れないよう、
+// 左レール・中央ステージと釣り合う最低高さを確保する（3 ペインの構図を壊さないため）。
+.relmap__inspector
+	display: flex
+	flex-direction: column
+	padding: var(--spacing-md)
+	align-self: start
+
+	@media (min-width: 1024px)
+		position: sticky
+		top: var(--spacing-md)
+		max-height: calc(100vh - var(--spacing-xl))
+		min-height: 240px
+		overflow-y: auto
+
+.relmap__inspector-empty
+	flex: 1
+	display: flex
+	align-items: center
+	justify-content: center
+	margin: 0
+	text-align: center
+	color: var(--muted)
+	font-size: var(--font-size-sm)
+
+	&[hidden]
+		display: none
+
+.relmap__inspector-title
+	margin: 0 0 var(--spacing-xs)
+	font-size: var(--font-size-lg)
+
+.relmap__inspector-sub,
+.relmap__inspector-index
+	margin: 0 0 var(--spacing-xs)
+	font-size: var(--font-size-xs)
+
+.relmap__inspector-open
+	display: inline-block
+	margin: var(--spacing-sm) 0 var(--spacing-md)
+
+.relmap__inspector-h3
+	margin: var(--spacing-md) 0 var(--spacing-sm)
+	font-size: var(--font-size-sm)
+	color: var(--muted)
+
+.relmap__rel-list
+	margin: 0
+	padding-left: 1.1em
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+	font-size: var(--font-size-sm)
+
+.relmap__rel-labels
+	color: var(--muted)
+
+.relmap__rel-comment
+	margin: var(--spacing-xs) 0 0
+	color: var(--muted)
+	font-size: var(--font-size-xs)
+	white-space: pre-wrap
+
+// エッジ種別のバッジ。色は JS 側の graph-palette.js の `palette.edge` と対応させる。
+//
+// 以前は同一存在に --success（緑）、主従に --warning（橙）を使っていたが、
+// これは「状態を表す意味論色」の目的外流用だった。水色〜紺の単一系統へ寄せて
+// --success / --warning は本来の状態語彙へ返す。
+// 線種（solid / dashed / dotted）との二重符号化が凡例スウォッチにあるので識別性は落ちない。
+.relmap__kind
+	display: inline-block
+	padding: 1px var(--spacing-xs)
+	border-radius: var(--border-radius-sm)
+	font-size: var(--font-size-xs)
+	border: 1px solid currentColor
+
+.relmap__kind--related
+	color: var(--accent)
+
+.relmap__kind--commented
+	color: var(--muted)
+
+.relmap__kind--sameBeing
+	color: var(--accent-bright)
+
+.relmap__kind--variant
+	color: var(--accent-2)
+
+.relmap__kind--master
+	color: var(--azure)
+
+// ==================================================
+// テキスト版（アクセシビリティの代替経路）
+// ==================================================
+
+.relmap__aux
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-md)
+	padding-bottom: var(--spacing-2xl)
+
+	// 「▸ ラベルだけの単調な帯」から、既存の折りたたみパネル
+	// （characters.sass の .section--collapsible）と同じ見た目に揃える。
+	// 新しい色トークンは足さず、color-mix() も既存トークン同士の合成のみ。
+	> details
+		padding: var(--spacing-md)
+		border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border))
+		background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--card)) 0%, var(--card) 100%)
+
+		&[open]
+			box-shadow: var(--shadow-sm)
+
+	summary
+		cursor: pointer
+		font-size: var(--font-size-sm)
+		min-height: 32px
+		display: flex
+		align-items: center
+		justify-content: space-between
+		gap: var(--spacing-sm)
+		list-style: none
+
+		&::-webkit-details-marker
+			display: none
+
+		&::after
+			content: "▾"
+			color: var(--muted)
+			font-size: var(--font-size-sm)
+			line-height: 1
+			transition: transform 0.2s ease, color 0.2s ease
+
+		&:hover::after
+			color: var(--accent)
+
+		&:focus-visible
+			outline: 2px solid var(--accent)
+			outline-offset: 3px
+			border-radius: var(--border-radius-sm)
+
+	> details:not([open]) summary::after
+		transform: rotate(-90deg)
+
+.relmap__adjacency
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-md)
+	margin-top: var(--spacing-md)
+	font-size: var(--font-size-sm)
+
+.relmap__adjacency-item
+	h3
+		margin: 0 0 var(--spacing-xs)
+		font-size: var(--font-size-sm)
+
+	ul
+		margin: 0
+		padding-left: 1.2em
+
+.relmap__isolated,
+.relmap__diagnostics
+	margin-top: var(--spacing-md)
+	font-size: var(--font-size-sm)
+
+.relmap__isolated-list
+	margin: 0
+	padding-left: 1.2em
+	columns: 1
+
+	@media (min-width: 768px)
+		columns: 2
+
+	@media (min-width: 1280px)
+		columns: 3
+
+.relmap__diag-h3
+	margin: var(--spacing-md) 0 var(--spacing-xs)
+	font-size: var(--font-size-sm)
+	color: var(--muted)
+
+// ==================================================
+// アニメーション抑制（OS の「視差効果を減らす」を尊重）
+// ==================================================
+
+@media (prefers-reduced-motion: reduce)
+	// キャンバス自身（走査線の ::after）も対象に含める。
+	// 子孫セレクタだけだと擬似要素の animation が止まらない
+	.relmap__canvas,
+	.relmap__canvas::after,
+	.relmap__canvas *
+		animation-duration: 0.01ms !important
+		animation-iteration-count: 1 !important
+		transition-duration: 0.01ms !important

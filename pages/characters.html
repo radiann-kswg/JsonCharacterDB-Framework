@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>創作キャラ・キャラシート | 100BeautiesLab Creations DB</title>
+	<meta
+		name="description"
+		content="/data の創作データベースを クライアント内API (/pages/v1 ほか) 経由で取得し、キャラシートとして表示します。" />
+	<meta name="asset-version" content="2026.08.15.8" />
+	<!-- メインスタイルシート（SASS から自動生成） -->
+	<script>
+		(() => {
+			const version = (
+				document.querySelector('meta[name="asset-version"]')?.content || ""
+			).trim();
+			const href = version
+				? `./characters.css?v=${encodeURIComponent(version)}`
+				: "./characters.css";
+			const stylesheet = document.createElement("link");
+			stylesheet.rel = "stylesheet";
+			stylesheet.href = href;
+			document.head.appendChild(stylesheet);
+			window.__CHARACTERS_ASSET_VERSION__ = version;
+		})();
+	</script>
+	<!--
+		VRM 3Dビューア（lib/section-renders/vrmViewer.js）用の import map。
+		three.js / @pixiv/three-vrm は pages/vendor/ に同梱し、外部CDNへは依存しない
+		（pages/vendor/THIRD_PARTY_NOTICES.md 参照）。ビューア起動ボタン押下時にのみ
+		動的 import() されるため、この import map があるだけでは何もロードされない。
+		import map はモジュールスクリプトより前に存在する必要があるため <head> に置く。
+	-->
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "./vendor/three/build/three.module.min.js",
+				"three/addons/": "./vendor/three/addons/",
+				"@pixiv/three-vrm": "./vendor/three-vrm/three-vrm.module.min.js"
+			}
+		}
+	</script>
+</head>
+
+<body>
+	<!-- サイトヘッダー：アプリケーションタイトルと説明 -->
+	<header class="site-header">
+		<h1 id="page-title">創作キャラ・キャラシート</h1>
+		<p id="page-lead" class="lead">
+			本ページはクライアント内API（Service
+			Worker）<code>/pages/v1/*</code>（優先）、<code>/svc/v1/*</code>（別名）、<code>/api/v1/*</code>（レガシー）のいずれかを用い、<code>/data/**</code>
+			の情報からキャラシートを生成します。
+		</p>
+	</header>
+
+	<!-- メインアプリケーションコンテナ -->
+	<main class="container" id="app">
+		<!-- コントロールパネル：作品選択、DB選択、検索、オプション -->
+		<section class="controls card">
+			<div class="control-row">
+				<!-- 作品選択ドロップダウン -->
+				<label>
+					<span id="label-work">作品（Works）</span>
+					<select id="select-work" aria-label="作品を選択"></select>
+				</label>
+				<!-- データベース選択ドロップダウン -->
+				<label>
+					<span id="label-db">DB</span>
+					<select id="select-db" aria-label="DBを選択"></select>
+				</label>
+				<!-- 検索・絞り込み入力フィールド -->
+				<label class="grow">
+					<span id="label-search">絞り込み（名前/番号 など 部分一致）</span>
+					<input
+						id="search-input"
+						type="search"
+						placeholder="例: ツグ / 2 / Unitta" />
+				</label>
+			</div>
+			<!-- オプション設定行 -->
+			<div class="control-row small">
+				<label><input id="chk-resolve" type="checkbox" checked />
+					<span id="label-resolve">参照解決を有効化（推奨）</span></label>
+				<label><input id="chk-debug" type="checkbox" />
+					<span id="label-debug">デバッグ情報</span></label>
+				<a id="btn-open-relations" class="ghost" href="./relations.html">相関図を開く</a>
+				<button
+					id="btn-lang-toggle"
+					class="ghost lang-toggle"
+					type="button"
+					title="表示言語を英語へ切り替え">
+					<span class="lang-toggle__label">言語/Language</span>
+					<span class="lang-toggle__opts" aria-hidden="true"><span class="lang-toggle__opt" data-opt="jp">JP</span><span class="lang-toggle__sep">/</span><span class="lang-toggle__opt" data-opt="en">EN</span></span>
+				</button>
+				<button
+					id="btn-reset-sw"
+					class="ghost"
+					type="button"
+					title="キャッシュとService Workerをリセットしてリロードします">
+					キャッシュ/SWリセット
+				</button>
+				<a
+					id="btn-feature-issue"
+					class="ghost control-row__issue-link"
+					href="#"
+					target="_blank"
+					rel="noopener noreferrer">⚙ サイト機能を提案</a>
+			</div>
+		</section>
+
+		<section id="meta-overview" class="card meta-overview" hidden>
+			<div class="meta-overview__grid">
+				<article class="meta-overview__panel">
+					<p id="label-meta-work" class="meta-overview__eyebrow">作品情報</p>
+					<h2 id="meta-work-title" class="meta-overview__title">-</h2>
+					<p id="meta-work-sub" class="meta-overview__sub muted" hidden></p>
+					<p id="meta-work-summary" class="meta-overview__summary" hidden></p>
+					<div id="meta-work-links" class="meta-overview__links" hidden></div>
+				</article>
+				<article class="meta-overview__panel">
+					<p id="label-meta-db" class="meta-overview__eyebrow">DB情報</p>
+					<h2 id="meta-db-title" class="meta-overview__title">-</h2>
+					<p id="meta-db-era" class="meta-overview__sub muted" hidden></p>
+					<p id="meta-db-summary" class="meta-overview__summary" hidden></p>
+					<img id="meta-db-image" class="meta-overview__cover" alt="" hidden>
+				</article>
+			</div>
+		</section>
+
+		<!-- キャラクター一覧表示セクション -->
+		<section id="list-view" class="card">
+			<h2 id="label-list-title">キャラクター一覧</h2>
+			<!-- グリッドレイアウトによるキャラクターリスト -->
+			<div id="list" class="grid-list" aria-live="polite"></div>
+			<!-- 空状態メッセージ -->
+			<div id="list-empty" class="muted" hidden>
+				該当するキャラクターが見つかりませんでした。
+			</div>
+		</section>
+
+		<!-- キャラクター詳細表示セクション -->
+		<section id="detail-view" class="card" hidden>
+			<div class="detail-header">
+				<!-- 一覧へ戻るボタン -->
+				<button id="btn-back" class="ghost">← 一覧へ戻る</button>
+				<!-- 詳細タイトル -->
+				<h2 id="detail-title">-</h2>
+				<!-- データ内容の誤り報告リンク（GitHub Issues 連携、表示中のキャラ情報を事前入力） -->
+				<a
+					id="btn-report-issue"
+					class="ghost detail-header__report"
+					href="#"
+					target="_blank"
+					rel="noopener noreferrer"
+					hidden>⚠ データの誤りを報告</a>
+			</div>
+			<!-- 詳細コンテンツエリア -->
+			<div id="detail"></div>
+		</section>
+	</main>
+
+	<!-- 画像ギャラリー拡大表示用ライトボックス -->
+	<div id="image-lightbox" class="image-lightbox" hidden aria-hidden="true">
+		<div
+			id="image-lightbox-dialog"
+			class="image-lightbox__dialog"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="image-lightbox-title">
+			<h2 id="image-lightbox-title" class="sr-only">画像拡大表示</h2>
+			<button
+				id="image-lightbox-close"
+				class="image-lightbox__close"
+				type="button"
+				aria-label="画像ポップアップを閉じる">
+				×
+			</button>
+			<figure class="image-lightbox__figure">
+				<div class="image-lightbox__image-frame">
+					<img
+						id="image-lightbox-image"
+						class="image-lightbox__image"
+						src=""
+						alt="" />
+				</div>
+				<figcaption
+					id="image-lightbox-caption"
+					class="image-lightbox__caption"
+					hidden></figcaption>
+			</figure>
+		</div>
+	</div>
+
+	<!-- サイトフッター：著作権表示 -->
+	<footer class="site-footer">
+		<small>©ラジアン(柏木主税) / ©RadianN_kswg</small>
+	</footer>
+
+	<!-- メインアプリケーションスクリプト（ES6モジュール） -->
+	<script type="module">
+		const version = (
+			window.__CHARACTERS_ASSET_VERSION__ ||
+			document.querySelector('meta[name="asset-version"]')?.content ||
+			""
+		).trim();
+		const scriptPath = version
+			? `./characters.js?v=${encodeURIComponent(version)}`
+			: "./characters.js";
+		import(scriptPath).catch((error) => {
+			console.error('Characters module failed to load:', error);
+			const overlay = document.querySelector('#loading-indicator');
+			const message = overlay?.querySelector('.loading-message');
+			if (message) message.textContent = `初期化エラー: ${error?.message || error}`;
+		});
+	</script>
+</body>
+
+</html>

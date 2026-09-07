@@ -1,0 +1,2295 @@
+// ==================================================
+// 創作キャラクター・キャラシートページ用スタイルシート
+// 100BeautiesLab Creations DB (Web) - pages/characters.html 用
+// ==================================================
+
+// CSS カスタムプロパティ（デザインシステムの基盤）
+\:root
+	// カラーパレット（紺×水色 近代サイエンスファンタジー）
+	--bg: #070b16 /* 背景色（最深ネイビー） */
+	--bg-deep: #05080f /* さらに深い背景（グラデ下端） */
+	--fg: #e9f3ff /* 前景色（青みのある明色） */
+	--muted: #9fb6d6 /* ミュート色（青グレー） */
+	--card: #0f1830 /* カード背景色（紺） */
+	--panel: rgba(18, 29, 58, 0.72) /* ガラス質パネル */
+	--accent: #5fd6ff /* アクセント色（水色／アクア） */
+	--accent-bright: #9be9ff /* 明るい水色（ハイライト） */
+	--accent-2: #9a8cff /* セカンダリアクセント（魔術的バイオレット） */
+	--azure: #3a86e0 /* 紺寄りブルー */
+	--glow: rgba(95, 214, 255, 0.5) /* 水色グロー */
+	--border: #1d2a4a /* ボーダー色（紺） */
+	--border-strong: rgba(120, 190, 255, 0.42) /* 発光ボーダー */
+	--success: #2bd4a0 /* 成功色（アクアグリーン） */
+	--warning: #f7b733 /* 警告色（アンバー） */
+	--error: #ff5d6c /* エラー色（コーラルレッド） */
+
+	// スペーシングシステム
+	--spacing-xs: 4px /* 最小スペース */
+	--spacing-sm: 8px /* 小スペース */
+	--spacing-md: 12px /* 中スペース */
+	--spacing-lg: 16px /* 大スペース */
+	--spacing-xl: 24px /* 特大スペース */
+	--spacing-2xl: 32px /* 最大スペース */
+
+	// ボーダー半径システム
+	--border-radius-sm: 6px /* 小さい角丸 */
+	--border-radius-md: 8px /* 中角丸 */
+	--border-radius-lg: 12px /* 大角丸 */
+	--border-radius-xl: 16px /* 特大角丸 */
+
+	// フォントサイズシステム
+	--font-size-xs: 12px /* 最小フォント */
+	--font-size-sm: 14px /* 小フォント */
+	--font-size-base: 16px /* 基本フォント */
+	--font-size-lg: 18px /* 大フォント */
+	--font-size-xl: 20px /* 特大フォント */
+	--font-size-2xl: 24px /* 見出し中 */
+	--font-size-3xl: 32px /* 見出し大 */
+
+	// 行高システム
+	--line-height-tight: 1.25 /* 密な行高 */
+	--line-height-normal: 1.5 /* 標準行高 */
+	--line-height-relaxed: 1.75 /* ゆったり行高 */
+
+	// レスポンシブブレークポイント
+	--breakpoint-sm: 640px /* スマートフォン境界 */
+	--breakpoint-md: 768px /* タブレット境界 */
+	--breakpoint-lg: 1024px /* デスクトップ境界 */
+	--breakpoint-xl: 1280px /* 大画面境界 */
+
+	// シャドウシステム（奥行き表現）
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2) /* 軽いシャドウ */
+	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3) /* 中シャドウ */
+	--shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4) /* 大シャドウ */
+	--shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.5) /* 最大シャドウ */
+
+// ==================================================
+// 基本リセットとベーススタイル
+// ==================================================
+
+// ボックスサイジングの統一
+*
+	box-sizing: border-box
+
+// HTML・BODY の基本設定
+html, body
+	margin: 0
+	padding: 0
+	background: var(--bg)
+	color: var(--fg)
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif
+	font-size: var(--font-size-base)
+	line-height: var(--line-height-normal)
+
+// 紺グラデーション背景＋微細グリッド/星屑のサイエンスファンタジー質感
+body
+	min-height: 100vh
+	background: radial-gradient(1100px 620px at 78% -8%, rgba(58, 134, 224, 0.22), transparent 60%), radial-gradient(900px 560px at 8% 4%, rgba(95, 214, 255, 0.13), transparent 55%), radial-gradient(1200px 900px at 50% 120%, rgba(154, 140, 255, 0.12), transparent 60%), linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%)
+	background-attachment: fixed
+
+body::before
+	content: ""
+	position: fixed
+	inset: 0
+	z-index: 0
+	pointer-events: none
+	background-image: linear-gradient(rgba(120, 180, 255, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(120, 180, 255, 0.045) 1px, transparent 1px), radial-gradient(circle, rgba(180, 225, 255, 0.6) 0.6px, transparent 0.7px)
+	background-size: 46px 46px, 46px 46px, 170px 170px
+	background-position: 0 0, 0 0, 12px 28px
+	opacity: 0.28
+
+// 背景テクスチャより前面にコンテンツを出す
+body > *
+	position: relative
+	z-index: 1
+
+body.lightbox-open
+	overflow: hidden
+
+.sr-only
+	position: absolute
+	width: 1px
+	height: 1px
+	padding: 0
+	margin: -1px
+	overflow: hidden
+	clip: rect(0, 0, 0, 0)
+	white-space: nowrap
+	border: 0
+
+// ==================================================
+// レスポンシブコンテナシステム
+// ==================================================
+
+.container
+	width: 100%
+	max-width: 1200px
+	margin: 0 auto
+	padding: 0 var(--spacing-md)
+
+// タブレット以上でのパディング調整
+@media (min-width: 640px)
+	.container
+		padding: 0 var(--spacing-lg)
+
+// デスクトップでのパディング調整
+@media (min-width: 1024px)
+	.container
+		padding: 0 var(--spacing-xl)
+
+// ==================================================
+// タイポグラフィシステム
+// ==================================================
+
+// 見出し共通スタイル
+h1, h2, h3, h4, h5, h6
+	margin: 0
+	line-height: var(--line-height-tight)
+	font-weight: 600
+
+// 主見出し（h1）
+h1
+	font-size: var(--font-size-3xl)
+
+@media (min-width: 768px)
+	h1
+		font-size: 36px
+
+// 副見出し（h2）
+h2
+	font-size: var(--font-size-2xl)
+
+@media (min-width: 768px)
+	h2
+		font-size: 28px
+
+// セクション見出し（h3）
+h3
+	font-size: var(--font-size-xl)
+
+// サブセクション見出し（h4）
+h4
+	font-size: var(--font-size-lg)
+
+p
+	margin: 0 0 var(--spacing-md)
+	line-height: var(--line-height-normal)
+
+/* Typography improvements - Already defined above, removing duplicates
+
+a
+	color: var(--accent)
+	text-decoration: none
+	transition: color 0.2s ease
+
+	&:hover
+		color: var(--accent-2)
+
+	&:focus
+		outline: 2px solid var(--accent)
+		outline-offset: 2px
+		border-radius: var(--border-radius-sm)
+
+.muted
+	color: var(--muted)
+
+/* Enhanced Loading and Error Overlays
+
+.loading-overlay, .error-overlay
+	position: fixed
+	top: 0
+	left: 0
+	right: 0
+	bottom: 0
+	background: rgba(11, 12, 16, 0.9)
+	display: none
+
+	/* Initially hidden
+	align-items: center
+	justify-content: center
+	z-index: 1000
+	-webkit-backdrop-filter: blur(4px)
+	backdrop-filter: blur(4px)
+
+.loading-overlay.show, .error-overlay.show
+	display: flex
+
+.loading-content, .error-content
+	background: var(--card)
+	border: 1px solid var(--border)
+	border-radius: var(--border-radius-lg)
+	padding: var(--spacing-xl)
+	text-align: center
+	max-width: 400px
+	box-shadow: var(--shadow-xl)
+	margin: var(--spacing-md)
+
+@media (min-width: 768px)
+	.loading-content, .error-content
+		margin: 0
+
+.loading-spinner
+	width: 40px
+	height: 40px
+	border: 3px solid var(--border)
+	border-top: 3px solid var(--accent)
+	border-radius: 50%
+	animation: spin 1s linear infinite
+	margin: 0 auto var(--spacing-lg)
+
+@keyframes spin
+	0%
+		transform: rotate(0deg)
+
+	100%
+		transform: rotate(360deg)
+
+.loading-message
+	color: var(--muted)
+	font-size: var(--font-size-sm)
+
+.error-title
+	color: var(--error)
+	font-size: var(--font-size-lg)
+	font-weight: 600
+	margin-bottom: var(--spacing-md)
+
+.error-message
+	color: var(--muted)
+	font-size: var(--font-size-sm)
+	margin-bottom: var(--spacing-lg)
+
+.error-actions
+	display: flex
+	gap: var(--spacing-md)
+	justify-content: center
+
+/* Enhanced Button System
+
+.btn
+	display: inline-flex
+	align-items: center
+	justify-content: center
+	padding: var(--spacing-sm) var(--spacing-lg)
+	border: 1px solid transparent
+	border-radius: var(--border-radius-md)
+	font-size: var(--font-size-sm)
+	font-weight: 500
+	text-decoration: none
+	cursor: pointer
+	transition: all 0.2s ease
+	min-height: 40px
+
+	/* Primary button
+	/* Secondary button
+	/* Ghost button
+	/* Error button
+	/* Size variants
+
+	&:focus
+		outline: 2px solid var(--accent)
+		outline-offset: 2px
+
+	&.btn-primary
+		background: var(--accent)
+		color: white
+
+		&:hover
+			background: var(--accent-2)
+			transform: translateY(-1px)
+			box-shadow: var(--shadow-md)
+
+	&.btn-secondary
+		background: var(--card)
+		color: var(--fg)
+		border-color: var(--border)
+
+		&:hover
+			background: var(--border)
+			transform: translateY(-1px)
+			box-shadow: var(--shadow-md)
+
+	&.btn-ghost
+		background: transparent
+		color: var(--accent)
+		border-color: var(--accent)
+
+		&:hover
+			background: rgba(55, 183, 195, 0.1)
+
+	&.btn-error
+		background: var(--error)
+		color: white
+
+		&:hover
+			background: #c0392b
+			transform: translateY(-1px)
+			box-shadow: var(--shadow-md)
+
+	&.btn-sm
+		padding: var(--spacing-xs) var(--spacing-md)
+		font-size: var(--font-size-xs)
+		min-height: 32px
+
+	&.btn-lg
+		padding: var(--spacing-md) var(--spacing-xl)
+		font-size: var(--font-size-base)
+		min-height: 48px
+		cursor: pointer
+		font-size: 14px
+		transition: background 0.2s ease
+
+	&:hover
+		background: #c0392b
+
+.site-header
+	padding: 16px 16px 8px
+	border-bottom: 1px solid var(--border)
+	position: sticky
+	top: 0
+	background: linear-gradient(180deg, rgba(13, 22, 46, 0.95), rgba(9, 15, 33, 0.82) 60%, rgba(7, 11, 22, 0))
+	-webkit-backdrop-filter: saturate(125%) blur(10px)
+	backdrop-filter: saturate(125%) blur(10px)
+	box-shadow: inset 0 2px 0 0 rgba(95, 214, 255, 0.35)
+	z-index: 2
+
+// サイトヘッダーの主見出しは白→水色のグラデーション文字にする
+.site-header h1
+	background: linear-gradient(120deg, #ffffff, #bfe7ff 55%, #8ec9ff)
+	-webkit-background-clip: text
+	background-clip: text
+	-webkit-text-fill-color: transparent
+	color: transparent
+
+h1
+	margin: 0 0 6px
+	font-size: 20px
+
+.lead
+	margin: 0
+	font-size: 12px
+	color: var(--muted)
+
+.container
+	max-width: 1200px
+	margin: 0 auto
+	padding: 12px
+
+.card
+	background: linear-gradient(180deg, rgba(95, 214, 255, 0.04), rgba(15, 24, 48, 0) 42%), var(--card)
+	border: 1px solid var(--border)
+	border-radius: 14px
+	padding: 14px
+	margin: 12px 0
+	box-shadow: 0 10px 30px rgba(3, 9, 24, 0.4)
+
+.card h2
+	position: relative
+	margin: 0 0 12px
+	padding: 0 0 8px 14px
+	font-size: 16px
+	color: #dff3ff
+	border-bottom: 1px solid var(--border)
+
+	// 左端に水色の発光バーを添える（サイエンスファンタジーのアクセント）
+	&::before
+		content: ""
+		position: absolute
+		left: 0
+		top: 1px
+		bottom: 9px
+		width: 4px
+		border-radius: 3px
+		background: linear-gradient(180deg, var(--accent), var(--azure))
+		box-shadow: 0 0 10px 1px var(--glow)
+
+/* Enhanced Form Controls
+
+.control-row
+	display: flex
+	gap: var(--spacing-md)
+	align-items: center
+	flex-wrap: wrap
+	margin-bottom: var(--spacing-md)
+
+	&.small
+		font-size: var(--font-size-xs)
+		gap: var(--spacing-sm)
+
+@media (max-width: 640px)
+	.control-row
+		flex-direction: column
+		align-items: stretch
+		gap: var(--spacing-sm)
+
+label
+	display: flex
+	gap: var(--spacing-sm)
+	align-items: center
+	color: var(--muted)
+	font-size: var(--font-size-sm)
+	font-weight: 500
+	white-space: normal
+	overflow-wrap: anywhere
+
+@media (max-width: 640px)
+	label
+		width: 100%
+
+/* Enhanced Form Inputs
+
+select
+	background: var(--card)
+	color: var(--fg)
+	border: 1px solid var(--border)
+	border-radius: var(--border-radius-md)
+	padding: var(--spacing-sm) var(--spacing-md)
+	min-width: 180px
+	font-size: var(--font-size-sm)
+	transition: all 0.2s ease
+
+input
+	&[type=search], &[type=text]
+		background: var(--card)
+		color: var(--fg)
+		border: 1px solid var(--border)
+		border-radius: var(--border-radius-md)
+		padding: var(--spacing-sm) var(--spacing-md)
+		min-width: 180px
+		font-size: var(--font-size-sm)
+		transition: all 0.2s ease
+
+textarea
+	background: var(--card)
+	color: var(--fg)
+	border: 1px solid var(--border)
+	border-radius: var(--border-radius-md)
+	padding: var(--spacing-sm) var(--spacing-md)
+	min-width: 180px
+	font-size: var(--font-size-sm)
+	transition: all 0.2s ease
+
+@media (max-width: 640px)
+	select
+		min-width: 100%
+		width: 100%
+
+	input
+		&[type=search], &[type=text]
+			min-width: 100%
+			width: 100%
+
+	textarea
+		min-width: 100%
+		width: 100%
+
+select:focus
+	outline: none
+	border-color: var(--accent)
+	box-shadow: 0 0 0 3px rgba(55, 183, 195, 0.1)
+
+input
+	&[type=search]:focus, &[type=text]:focus
+		outline: none
+		border-color: var(--accent)
+		box-shadow: 0 0 0 3px rgba(55, 183, 195, 0.1)
+
+textarea:focus
+	outline: none
+	border-color: var(--accent)
+	box-shadow: 0 0 0 3px rgba(55, 183, 195, 0.1)
+
+select:hover
+	border-color: var(--accent-2)
+
+input
+	&[type=search]:hover, &[type=text]:hover
+		border-color: var(--accent-2)
+
+textarea:hover
+	border-color: var(--accent-2)
+
+select::-moz-placeholder
+	color: var(--muted)
+	opacity: 0.7
+
+input
+	&[type=search]::-moz-placeholder, &[type=text]::-moz-placeholder
+		color: var(--muted)
+		opacity: 0.7
+
+textarea::-moz-placeholder, select::placeholder
+	color: var(--muted)
+	opacity: 0.7
+
+input
+	&[type=search]::placeholder, &[type=text]::placeholder
+		color: var(--muted)
+		opacity: 0.7
+
+textarea::placeholder
+	color: var(--muted)
+	opacity: 0.7
+
+.grow
+	flex: 1
+	min-width: 0
+
+	input
+		width: 100%
+		min-width: 260px
+
+@media (max-width: 640px)
+	.grow input
+		min-width: 100%
+
+/* Enhanced Grid System
+
+.grid-list
+	display: flex
+	flex-wrap: wrap
+	gap: var(--spacing-md)
+
+.grid-item
+	width: 100%
+
+@supports (display: grid)
+	.grid-list
+		display: grid
+		grid-template-columns: repeat(1, 1fr)
+
+	.grid-item
+		width: auto
+
+@media (min-width: 640px)
+	.grid-item
+		width: calc(50% - (var(--spacing-md) / 2))
+
+	@supports (display: grid)
+		.grid-list
+			grid-template-columns: repeat(2, 1fr)
+
+@media (max-width: 640px)
+	.grid-list
+		gap: var(--spacing-sm)
+
+	.grid-item
+		width: 100%
+
+@media (min-width: 1024px)
+	.grid-list
+		gap: var(--spacing-lg)
+
+	.grid-item
+		width: calc(33.333% - ((var(--spacing-lg) * 2) / 3))
+
+	@supports (display: grid)
+		.grid-list
+			grid-template-columns: repeat(3, 1fr)
+
+.grid-item
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+	padding: var(--spacing-md)
+	border: 1px solid var(--border)
+	border-radius: var(--border-radius-lg)
+	background: var(--card)
+	transition: all 0.2s ease
+
+	&:hover
+		transform: translateY(-2px)
+		box-shadow: var(--shadow-md)
+		border-color: var(--accent)
+
+/* Enhanced Typography for Content
+
+h3
+	margin: 0
+	font-size: var(--font-size-lg)
+	color: var(--fg)
+	font-weight: 600
+	line-height: var(--line-height-tight)
+
+.sub
+	font-size: var(--font-size-xs)
+	color: var(--muted)
+	line-height: var(--line-height-normal)
+
+.thumb
+	width: 100%
+	aspect-ratio: 4/3
+	-o-object-fit: cover
+	object-fit: cover
+	border-radius: 8px
+	border: 1px solid var(--border)
+	background: var(--card)
+	transition: opacity 0.3s ease
+
+	&:not([src]),
+	&[src=""],
+	&[src="#"]
+		background: var(--card)
+		border: 2px dashed var(--border)
+		display: flex
+		align-items: center
+		justify-content: center
+		color: var(--muted)
+		font-size: 12px
+		text-align: center
+
+		&::before
+			content: "画像なし"
+
+.meta
+	display: flex
+	gap: var(--spacing-sm)
+	flex-wrap: wrap
+	font-size: var(--font-size-xs)
+	color: var(--muted)
+	margin-bottom: var(--spacing-sm)
+
+/* Enhanced Chip System
+
+.chip
+	background: var(--card)
+	color: var(--accent)
+	border: 1px solid var(--border)
+	padding: var(--spacing-xs) var(--spacing-sm)
+	border-radius: var(--border-radius-sm)
+	font-size: var(--font-size-xs)
+	font-weight: 500
+	white-space: normal
+	overflow-wrap: anywhere
+	transition: all 0.2s ease
+
+	&:hover
+		background: var(--accent)
+		color: white
+		transform: translateY(-1px)
+		box-shadow: var(--shadow-sm)
+
+	&.primary
+		background: var(--accent)
+		color: white
+		border-color: var(--accent)
+
+	&.secondary
+		background: var(--accent-2)
+		color: white
+		border-color: var(--accent-2)
+
+	&.success
+		background: var(--success)
+		color: white
+		border-color: var(--success)
+
+	&.warning
+		background: var(--warning)
+		color: white
+		border-color: var(--warning)
+
+	&.error
+		background: var(--error)
+		color: white
+		border-color: var(--error)
+
+/* Chip variants
+
+.detail-header
+	display: flex
+	align-items: center
+	gap: 10px
+
+.detail-header h2
+	border: none
+	padding: 0
+	margin: 0
+	font-size: 18px
+
+	// .card h2 の発光バーは戻るボタン行のタイトルには付けない
+	&::before
+		display: none
+
+.ghost
+	background: transparent
+	color: var(--accent)
+	border: 1px solid var(--accent)
+	padding: 6px 10px
+	border-radius: 8px
+	cursor: pointer
+
+	&:hover
+		background: rgba(55, 183, 195, 0.1)
+
+.detail-header__report
+	margin-left: auto
+	text-decoration: none
+	white-space: nowrap
+	display: inline-block
+
+.control-row__issue-link
+	text-decoration: none
+	white-space: nowrap
+	display: inline-block
+
+.detail
+	display: block
+	gap: 16px
+	align-items: start
+
+// 幅がある環境では「画像（左） + 情報（右）」の2カラムにする
+@media (min-width: 768px)
+	.detail
+		display: flex
+		gap: 16px
+
+	.detail > :first-child
+		flex: 0 0 320px
+
+	.detail > :last-child
+		flex: 1 1 auto
+		min-width: 0
+
+	@supports (display: grid)
+		.detail
+			display: grid
+			grid-template-columns: 320px 1fr
+
+@media (min-width: 1024px)
+	.detail > :first-child
+		flex-basis: 380px
+
+	@supports (display: grid)
+		.detail
+			grid-template-columns: 380px 1fr
+
+// グリッド内の要素が内容で横に膨張しないようにする
+.detail > div
+	min-width: 0
+
+.poster
+	width: 100%
+	border-radius: 14px
+	border: 1px solid var(--border-strong)
+	background: radial-gradient(circle at 50% 36%, #15265a, #0a1226 72%)
+	-o-object-fit: cover
+	object-fit: cover
+	aspect-ratio: 4/3
+	box-shadow: 0 14px 34px rgba(3, 9, 24, 0.5), inset 0 0 28px rgba(95, 214, 255, 0.12)
+	transition: opacity 0.3s ease
+
+	&:not([src]),
+	&[src=""],
+	&[src="#"]
+		background: var(--card)
+		border: 2px dashed var(--border)
+		display: flex
+		align-items: center
+		justify-content: center
+		color: var(--muted)
+		font-size: 14px
+		text-align: center
+
+		&::before
+			content: "メイン画像なし"
+
+.kv
+	margin-bottom: var(--spacing-sm)
+
+/* Enhanced Typography for Names and Content
+
+.name
+	font-size: var(--font-size-2xl)
+	font-weight: 800
+	letter-spacing: 0.01em
+	line-height: var(--line-height-tight)
+	// キャラ名は白→水色グラデーションのヒーロー見出し
+	background: linear-gradient(120deg, #ffffff, #c9ecff 52%, #94c9ff)
+	-webkit-background-clip: text
+	background-clip: text
+	-webkit-text-fill-color: transparent
+	color: transparent
+	margin-bottom: var(--spacing-xs)
+
+@media (min-width: 768px)
+	.name
+		font-size: 28px
+
+.name-en
+	font-size: var(--font-size-sm)
+	color: var(--muted)
+	line-height: var(--line-height-normal)
+	font-weight: 400
+
+.row
+	display: flex
+	flex-wrap: wrap
+	gap: var(--spacing-sm)
+	margin-top: var(--spacing-sm)
+
+// クイックステータス（キャラ紹介ヒーロー帯の要約タイル / characters.js が生成）
+.detail-quickstats
+	display: grid
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
+	gap: 10px
+	margin: var(--spacing-md) 0 var(--spacing-lg)
+
+.detail-stat
+	padding: 10px 12px
+	border-radius: 10px
+	background: rgba(8, 14, 30, 0.55)
+	border: 1px solid var(--border)
+
+.detail-stat__label
+	font-size: 11px
+	color: var(--muted)
+	letter-spacing: 0.04em
+	margin-bottom: 3px
+	overflow-wrap: anywhere
+
+.detail-stat__value
+	font-size: 15px
+	color: #eaf5ff
+	overflow-wrap: anywhere
+
+.section
+	margin: var(--spacing-md) 0
+
+.section--collapsible
+	border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border))
+	border-radius: var(--border-radius-md)
+	padding: var(--spacing-sm) var(--spacing-md)
+	background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--card)) 0%, var(--card) 100%)
+
+	&[open]
+		box-shadow: var(--shadow-sm)
+
+	& > summary
+		list-style: none
+		cursor: pointer
+		display: flex
+		align-items: center
+		justify-content: space-between
+		gap: var(--spacing-sm)
+		margin: 0
+
+		&::-webkit-details-marker
+			display: none
+
+		&::after
+			content: "▾"
+			color: var(--muted)
+			font-size: var(--font-size-sm)
+			line-height: 1
+			transition: transform 0.2s ease, color 0.2s ease
+
+		&:hover::after
+			color: var(--accent)
+
+		&:focus-visible
+			outline: 2px solid var(--accent)
+			outline-offset: 3px
+			border-radius: var(--border-radius-sm)
+
+	&:not([open]) > summary::after
+		transform: rotate(-90deg)
+
+	& > summary h3
+		margin: 0
+
+.section__body
+	margin-top: var(--spacing-sm)
+
+h3
+	font-size: var(--font-size-sm)
+	color: var(--accent)
+	margin: 0 0 var(--spacing-sm)
+	font-weight: 600
+
+/* Enhanced Image Gallery
+
+.image-gallery
+	margin-bottom: var(--spacing-lg)
+
+h4
+	font-size: var(--font-size-sm)
+	color: var(--accent)
+	margin: 0 0 var(--spacing-sm)
+	font-weight: 600
+
+.image-grid
+	display: flex
+	flex-wrap: wrap
+	gap: var(--spacing-sm)
+
+.image-item
+	width: calc(50% - (var(--spacing-sm) / 2))
+
+@supports (display: grid)
+	.image-grid
+		display: grid
+		grid-template-columns: repeat(2, 1fr)
+
+	.image-item
+		width: auto
+
+@media (min-width: 640px)
+	.image-item
+		width: calc(33.333% - ((var(--spacing-sm) * 2) / 3))
+
+	@supports (display: grid)
+		.image-grid
+			grid-template-columns: repeat(3, 1fr)
+
+@media (min-width: 768px)
+	.image-grid
+		gap: var(--spacing-md)
+
+	.image-item
+		width: calc(25% - ((var(--spacing-md) * 3) / 4))
+
+	@supports (display: grid)
+		.image-grid
+			grid-template-columns: repeat(4, 1fr)
+
+@media (min-width: 1024px)
+	.image-item
+		width: calc(20% - ((var(--spacing-md) * 4) / 5))
+
+	@supports (display: grid)
+		.image-grid
+			grid-template-columns: repeat(5, 1fr)
+
+.image-item
+	border: 1px solid var(--border)
+	border-radius: var(--border-radius-md)
+	overflow: hidden
+	transition: all 0.3s ease
+	background: var(--card)
+
+	&:hover
+		transform: translateY(-4px)
+		box-shadow: var(--shadow-lg)
+		border-color: var(--accent)
+
+	img
+		width: 100%
+		height: auto
+		display: block
+		border-radius: var(--border-radius-md)
+		transition: transform 0.3s ease
+
+.image-zoom-trigger
+	position: relative
+	display: block
+	width: 100%
+	height: 100%
+	padding: 0
+	border: 0
+	border-radius: inherit
+	overflow: hidden
+	background: transparent
+	color: inherit
+	text-align: inherit
+	cursor: zoom-in
+
+	&:focus-visible
+		outline: 2px solid var(--accent)
+		outline-offset: -2px
+
+	img
+		display: block
+		width: 100%
+		pointer-events: none
+
+.image-zoom-hint
+	position: absolute
+	right: var(--spacing-sm)
+	bottom: var(--spacing-sm)
+	padding: 4px 8px
+	border-radius: 999px
+	background: rgba(11, 12, 16, 0.82)
+	color: var(--fg)
+	font-size: var(--font-size-xs)
+	font-weight: 600
+	letter-spacing: 0.04em
+	box-shadow: var(--shadow-sm)
+	pointer-events: none
+
+/* Enhanced Image Styling
+
+.poster
+	width: 100%
+	height: auto
+	display: block
+	border-radius: var(--border-radius-md)
+	transition: transform 0.3s ease
+
+.image-item:hover img
+	transform: scale(1.05)
+
+.caption
+	padding: 4px 6px
+	font-size: 11px
+	color: var(--muted)
+	background: #0f1320
+	border-top: 1px solid rgba(255, 255, 255, 0.06)
+
+/* Enhanced image display styles for Phase 1
+
+.thumb.placeholder, .poster.placeholder
+	display: flex
+	align-items: center
+	justify-content: center
+	background: var(--card)
+	border: 2px dashed var(--border)
+	color: var(--muted)
+	font-size: 12px
+	text-align: center
+
+.thumb.placeholder
+	width: 100%
+	aspect-ratio: 4/3
+	min-height: 100px
+
+.poster.placeholder
+	width: 100%
+	aspect-ratio: 4/3
+	min-height: 200px
+
+.no-images
+	padding: 20px
+	text-align: center
+	color: var(--muted)
+	background: var(--card)
+	border: 1px solid var(--border)
+	border-radius: 8px
+
+/* Enhanced chip styles
+
+.chip.accent
+	background: var(--accent)
+	color: white
+	font-weight: 600
+
+.meta .chip
+	margin-right: 4px
+	margin-bottom: 4px
+
+/* Image loading improvements
+
+.image-item img
+	transition: opacity 0.3s ease
+
+	&[loading=lazy]
+		opacity: 0.7
+
+		&:loaded
+			opacity: 1
+
+/* Image gallery improvements
+
+.image-grid
+	display: flex
+	flex-wrap: wrap
+	gap: 8px
+	margin-bottom: 16px
+
+.image-item
+	width: calc(50% - 4px)
+
+@supports (display: grid)
+	.image-grid
+		display: grid
+		grid-template-columns: repeat(2, 1fr)
+
+	.image-item
+		width: auto
+
+@media (min-width: 640px)
+	.image-item
+		width: calc(33.333% - ((8px * 2) / 3))
+
+	@supports (display: grid)
+		.image-grid
+			grid-template-columns: repeat(3, 1fr)
+
+@media (min-width: 768px)
+	.image-item
+		width: calc(25% - 6px)
+
+	@supports (display: grid)
+		.image-grid
+			grid-template-columns: repeat(4, 1fr)
+
+@media (min-width: 1024px)
+	.image-item
+		width: calc(20% - 6.4px)
+
+	@supports (display: grid)
+		.image-grid
+			grid-template-columns: repeat(5, 1fr)
+
+.image-more button
+	background: var(--accent-2)
+	color: white
+	border: none
+	padding: 8px 16px
+	border-radius: 6px
+	cursor: pointer
+	font-size: 12px
+	transition: background 0.2s ease
+
+	&:hover
+		background: #8a5fff
+
+.kv-table
+	border-collapse: collapse
+	border: 1px solid var(--border)
+	width: 100%
+	table-layout: auto
+
+th, td
+	border-collapse: collapse
+	border: 1px solid var(--border)
+	font-size: 13px
+	vertical-align: top
+	overflow-wrap: anywhere
+
+th
+	text-align: left
+	width: 140px
+	color: #bcd6f2
+	font-weight: 500
+	padding: 8px 10px
+	background: rgba(8, 14, 30, 0.6)
+	white-space: normal
+	overflow-wrap: anywhere
+	word-break: normal
+
+@media (min-width: 768px)
+	th
+		width: 160px
+
+td
+	padding: 6px
+
+.bilingual-lines-grid
+	display: grid
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+	gap: 12px
+	align-items: start
+
+.bilingual-lines
+	min-width: 0
+	display: grid
+	gap: 4px
+	overflow-wrap: anywhere
+
+.bilingual-lines--jp
+	padding-right: 4px
+	border-right: 1px solid rgba(255, 255, 255, 0.08)
+
+.bilingual-lines--en
+	padding-left: 4px
+	color: var(--muted)
+
+.bilingual-lines__line
+	line-height: 1.45
+
+@media (max-width: 639px)
+	.bilingual-lines-grid
+		gap: 8px
+
+.pill
+	display: inline-flex
+	gap: 6px
+	align-items: center
+	padding: 4px 10px
+	border-radius: 999px
+	border: 1px solid var(--border-strong)
+	background: rgba(95, 214, 255, 0.08)
+	color: var(--accent-bright)
+	font-size: 12px
+
+// Index ルート単位の集約ピル（例: Logic / LogicAlt のサブフィールドを 1 ピルにまとめる）
+.pill--index-group
+	flex-wrap: wrap
+	row-gap: 2px
+
+// 集約ピルの先頭に出す Index ルートラベル（例: 論理/ロジック）
+.pill__group-label
+	font-weight: 600
+	padding-right: 6px
+	border-right: 1px solid var(--border-strong)
+	white-space: nowrap
+
+// サブフィールド情報のコンテナ（1 ユニット扱いにして、改行はルートラベルとの間を優先させる）
+.pill__group-items
+	display: inline-flex
+	flex-wrap: wrap
+	gap: 6px
+	row-gap: 2px
+	align-items: center
+
+// 集約ピル内のサブフィールド項目（例: ロジック番号: 55ID1）
+.pill__group-item
+	white-space: nowrap
+
+.pill__group-item + .pill__group-item::before
+	content: "・"
+	margin-right: 2px
+	color: var(--muted)
+
+.tag
+	display: inline-block
+	padding: 3px 8px
+	border-radius: 6px
+	border: 1px solid var(--border)
+	background: rgba(8, 14, 30, 0.6)
+	font-size: 12px
+	color: #b6d8e1
+
+// _DBLink タグ内のクロスワーク参照先の創作名（作品タイトル）併記
+.tag .dblink-work
+	margin-left: 4px
+	font-size: 11px
+	color: var(--muted)
+
+.kv-grid
+	display: flex
+	flex-wrap: wrap
+	gap: 8px
+
+.kv-grid > *
+	width: 100%
+
+@supports (display: grid)
+	.kv-grid
+		display: grid
+		grid-template-columns: repeat(1, 1fr)
+
+	.kv-grid > *
+		width: auto
+
+@media (min-width: 768px)
+	.kv-grid > *
+		width: calc(50% - 4px)
+
+	@supports (display: grid)
+		.kv-grid
+			grid-template-columns: repeat(2, 1fr)
+
+@media (min-width: 1280px)
+	.kv-grid > *
+		width: calc(33.333% - ((8px * 2) / 3))
+
+	@supports (display: grid)
+		.kv-grid
+			grid-template-columns: repeat(3, 1fr)
+
+/* Utility Classes
+
+.small
+	font-size: var(--font-size-xs)
+
+/* Enhanced Site Footer
+
+.site-footer
+	padding: var(--spacing-xl) var(--spacing-md)
+	border-top: 1px solid var(--border)
+	color: var(--muted)
+	text-align: center
+	background: var(--card)
+
+/* Enhanced Animation System
+@keyframes fadeIn
+	from
+		opacity: 0
+		transform: translateY(20px)
+
+	to
+		opacity: 1
+		transform: translateY(0)
+
+@keyframes slideIn
+	from
+		opacity: 0
+		transform: translateX(-20px)
+
+	to
+		opacity: 1
+		transform: translateX(0)
+
+@keyframes pulse
+	0%, 100%
+		transform: scale(1)
+
+	50%
+		transform: scale(1.05)
+
+/* Animation classes
+
+.fade-in
+	animation: fadeIn 0.5s ease-out
+
+.slide-in
+	animation: slideIn 0.3s ease-out
+
+.pulse
+	animation: pulse 2s infinite
+
+/* Smooth scrolling
+
+html
+	scroll-behavior: smooth
+
+/* Reduce motion for accessibility
+@media (prefers-reduced-motion: reduce)
+	*
+		animation-duration: 0.01ms !important
+		animation-iteration-count: 1 !important
+		transition-duration: 0.01ms !important
+
+		&::before, &::after
+			animation-duration: 0.01ms !important
+			animation-iteration-count: 1 !important
+			transition-duration: 0.01ms !important
+
+	html
+		scroll-behavior: auto
+
+/* Focus management for accessibility
+
+.skip-link
+	position: absolute
+	top: -40px
+	left: 6px
+	background: var(--accent)
+	color: white
+	padding: var(--spacing-sm) var(--spacing-md)
+	text-decoration: none
+	border-radius: var(--border-radius-md)
+	z-index: 1000
+
+	&:focus
+		top: 6px
+
+// ==================================================
+// 一覧画面のレスポンシブ補正
+// ==================================================
+
+html, body
+	max-width: 100%
+
+body
+	overflow-x: hidden
+
+.site-header
+	padding: clamp(12px, 3vw, 20px)
+
+	h1
+		overflow-wrap: anywhere
+
+.lead
+	overflow-wrap: anywhere
+
+	code
+		white-space: normal
+		overflow-wrap: anywhere
+
+.container
+	width: min(100%, 1200px)
+	padding: clamp(12px, 3vw, 24px)
+
+#app, .card, #list-view, #detail-view, .controls
+	min-width: 0
+
+.card
+	padding: clamp(12px, 2.5vw, 18px)
+	overflow: hidden
+
+.controls .control-row
+	align-items: flex-end
+	min-width: 0
+
+	> *
+		min-width: 0
+
+.controls .control-row:not(.small) label
+	display: flex
+	flex: 1 1 180px
+	flex-direction: column
+	align-items: stretch
+	gap: 6px
+	min-width: 0
+	white-space: normal
+
+.controls .control-row:not(.small) .grow
+	flex: 2 1 320px
+
+.controls .control-row.small
+	align-items: center
+
+.controls .control-row.small label
+	display: inline-flex
+	flex: 1 1 220px
+	align-items: center
+	gap: var(--spacing-sm)
+	min-width: 0
+	white-space: normal
+
+.controls .control-row.small .ghost
+	flex: 0 1 auto
+	max-width: 100%
+	white-space: normal
+
+.controls .control-row.small .lang-toggle
+	min-width: 0
+	font-weight: 400
+	letter-spacing: 0.02em
+	display: inline-flex
+	align-items: center
+	gap: 5px
+
+body[data-lang] .controls .control-row.small .lang-toggle
+	border-color: color-mix(in srgb, var(--accent) 30%, var(--border))
+
+.lang-toggle__label
+	font-size: var(--font-size-xs, 11px)
+	color: var(--muted)
+	font-weight: 400
+	letter-spacing: 0.01em
+	white-space: nowrap
+
+.lang-toggle__opts
+	display: inline-flex
+	align-items: center
+	gap: 0
+
+.lang-toggle__sep
+	color: var(--muted)
+	font-weight: 400
+	font-size: 0.9em
+	opacity: 0.5
+	padding: 0 1px
+
+.lang-toggle__opt
+	font-weight: 700
+	font-size: var(--font-size-sm, 13px)
+	opacity: 0.35
+	transition: opacity 0.15s, color 0.15s
+
+body[data-lang='jp'] .lang-toggle .lang-toggle__opt[data-opt='jp'],
+body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
+	opacity: 1
+	color: var(--accent)
+
+.meta-overview
+	padding: clamp(12px, 2.5vw, 18px)
+
+.meta-overview__grid
+	display: grid
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))
+	gap: var(--spacing-lg)
+
+.meta-overview__panel
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+	padding: var(--spacing-md)
+	border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border))
+	border-radius: var(--border-radius-lg)
+	background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, var(--card)) 0%, var(--card) 100%)
+
+.meta-overview__eyebrow
+	margin: 0
+	font-size: var(--font-size-xs)
+	letter-spacing: 0.08em
+	text-transform: uppercase
+	color: var(--accent)
+
+.meta-overview__title
+	margin: 0
+	font-size: var(--font-size-xl)
+	color: #d7f9ff
+
+.meta-overview__sub,
+.meta-overview__summary
+	margin: 0
+	white-space: pre-wrap
+
+.meta-overview__summary
+	color: var(--muted)
+
+.meta-overview__cover
+	margin-top: var(--spacing-sm)
+	max-width: 100%
+	max-height: 220px
+	width: auto
+	border-radius: var(--border-radius-md)
+	object-fit: contain
+	align-self: flex-start
+
+// 公式リンク（Works_OfficialLinks）をチップ状の外部リンクとして並べる
+.meta-overview__links
+	display: flex
+	flex-wrap: wrap
+	gap: var(--spacing-sm)
+	margin-top: var(--spacing-xs)
+
+.meta-overview__link
+	display: inline-flex
+	align-items: center
+	gap: 0.35em
+	padding: 0.3em 0.75em
+	border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border))
+	border-radius: var(--border-radius-md)
+	background: color-mix(in srgb, var(--accent) 10%, var(--card))
+	color: var(--accent)
+	font-size: var(--font-size-sm)
+	text-decoration: none
+	transition: background 0.15s ease, border-color 0.15s ease
+	&::before
+		content: "🔗"
+		font-size: 0.9em
+	&:hover,
+	&:focus-visible
+		background: color-mix(in srgb, var(--accent) 20%, var(--card))
+		border-color: var(--accent)
+		text-decoration: underline
+
+.controls select,
+.controls input[type=search],
+.controls input[type=text],
+.controls textarea
+	width: 100%
+	min-width: 0
+	max-width: 100%
+
+.controls input[type=checkbox]
+	flex: 0 0 auto
+
+@media (max-width: 767px)
+	.controls .control-row
+		flex-direction: column
+		align-items: stretch
+
+	.controls .control-row.small
+		align-items: stretch
+
+	.controls .control-row:not(.small) label,
+	.controls .control-row.small label,
+	.controls .control-row.small .ghost
+		width: 100%
+		flex-basis: auto
+
+	.controls .control-row.small .ghost
+		justify-content: center
+
+#list.grid-list
+	width: 100%
+	margin: 0
+	display: flex
+	flex-wrap: wrap
+	align-items: stretch
+	gap: clamp(12px, 2vw, 16px)
+
+#list.grid-list > .grid-item
+	width: 100%
+	max-width: 100%
+	min-width: 0
+	flex: 1 1 100%
+	height: 100%
+
+@media (min-width: 700px)
+	#list.grid-list > .grid-item
+		flex-basis: calc(50% - 8px)
+		width: calc(50% - 8px)
+
+@media (min-width: 1080px)
+	#list.grid-list > .grid-item
+		flex-basis: calc(33.333% - 10.67px)
+		width: calc(33.333% - 10.67px)
+
+@supports (display: grid)
+	#list.grid-list
+		display: grid
+		grid-template-columns: 1fr
+
+	#list.grid-list > .grid-item
+		width: auto
+		flex-basis: auto
+
+	@media (min-width: 700px)
+		#list.grid-list
+			grid-template-columns: repeat(2, 1fr)
+
+	@media (min-width: 1080px)
+		#list.grid-list
+			grid-template-columns: repeat(3, 1fr)
+
+#list.grid-list .grid-item
+	display: flex
+	flex-direction: column
+	justify-content: flex-start
+	gap: var(--spacing-sm)
+
+#list.grid-list .thumb
+	display: block
+	width: 100%
+	max-width: 100%
+	min-height: 180px
+	aspect-ratio: 4/3
+	object-fit: cover
+
+@media (min-width: 1080px)
+	#list.grid-list .thumb
+		min-height: 200px
+
+#list.grid-list h3,
+#list.grid-list .sub,
+#list.grid-list .meta,
+#list.grid-list .chip
+	min-width: 0
+	overflow-wrap: anywhere
+
+#list.grid-list .meta
+	align-content: flex-start
+
+#list.grid-list .chip
+	max-width: 100%
+	white-space: normal
+
+#list-empty
+	padding: var(--spacing-md) 0
+
+.detail-header
+	flex-wrap: wrap
+
+@media (max-width: 767px)
+	.detail-header
+		align-items: stretch
+
+	.detail-header .ghost
+		width: 100%
+		text-align: center
+
+.detail > :first-child
+	width: 100%
+
+.detail .image-gallery
+	width: 100%
+	margin-top: var(--spacing-md)
+
+.detail .image-grid
+	width: 100%
+	display: flex
+	flex-wrap: wrap
+	align-items: stretch
+	gap: clamp(10px, 2vw, 14px)
+	margin-bottom: var(--spacing-md)
+
+.detail .image-item
+	display: flex
+	flex-direction: column
+	width: 100%
+	max-width: 100%
+	min-width: 0
+	flex: 1 1 100%
+
+.detail .image-item .image-zoom-trigger
+	flex: 1 1 auto
+	min-height: 0
+
+.detail .image-item img
+	width: 100%
+	height: auto
+	aspect-ratio: 4/3
+	object-fit: cover
+	display: block
+
+.detail .image-more
+	width: 100%
+	display: flex
+	align-items: center
+	justify-content: center
+	padding: var(--spacing-md)
+	border: 1px dashed var(--border)
+	border-radius: var(--border-radius-md)
+	background: rgba(255, 255, 255, 0.02)
+
+.image-lightbox
+	position: fixed
+	inset: 0
+	display: flex
+	align-items: center
+	justify-content: center
+	padding: clamp(16px, 4vw, 32px)
+	background: rgba(5, 8, 12, 0.88)
+	opacity: 0
+	pointer-events: none
+	transition: opacity 0.24s ease
+	z-index: 1200
+	-webkit-backdrop-filter: blur(10px)
+	backdrop-filter: blur(10px)
+
+	&:not([hidden])
+		opacity: 1
+		pointer-events: auto
+
+.image-lightbox__dialog
+	position: relative
+	width: min(100%, 1040px)
+	max-height: 100%
+	overflow: auto
+	overscroll-behavior: contain
+	padding: clamp(14px, 2vw, 20px)
+	border: 1px solid rgba(255, 255, 255, 0.08)
+	border-radius: clamp(16px, 2vw, 22px)
+	background: linear-gradient(180deg, rgba(18, 21, 27, 0.98), rgba(11, 12, 16, 0.96))
+	box-shadow: var(--shadow-xl)
+
+.image-lightbox__close
+	position: absolute
+	top: 10px
+	right: 10px
+	width: 40px
+	height: 40px
+	display: inline-flex
+	align-items: center
+	justify-content: center
+	border: 1px solid rgba(255, 255, 255, 0.14)
+	border-radius: 999px
+	background: rgba(255, 255, 255, 0.08)
+	color: var(--fg)
+	font-size: 24px
+	line-height: 1
+	cursor: pointer
+	transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease
+
+	&:hover
+		background: rgba(255, 255, 255, 0.14)
+		border-color: rgba(255, 255, 255, 0.28)
+		transform: scale(1.04)
+
+	&:focus-visible
+		outline: 2px solid var(--accent)
+		outline-offset: 2px
+
+.image-lightbox__figure
+	margin: 0
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-md)
+	min-width: 0
+
+.image-lightbox__image-frame
+	display: flex
+	align-items: center
+	justify-content: center
+	min-width: 0
+	min-height: 0
+	max-height: min(80vh, 900px)
+	overflow: hidden
+	border-radius: var(--border-radius-lg)
+	background: rgba(255, 255, 255, 0.03)
+
+.image-lightbox__image
+	display: block
+	width: auto
+	height: auto
+	max-width: 100%
+	max-height: min(74vh, 860px)
+	object-fit: contain
+	border-radius: var(--border-radius-md)
+	box-shadow: var(--shadow-lg)
+
+.image-lightbox__caption
+	color: var(--fg)
+	font-size: var(--font-size-sm)
+	line-height: var(--line-height-relaxed)
+	word-break: break-word
+
+.detail-tag-grid
+	width: 100%
+	display: flex
+	flex-wrap: wrap
+	align-items: stretch
+	gap: 8px
+
+	> *
+		width: 100%
+		min-width: 0
+
+	.tag
+		display: block
+		min-height: 100%
+		width: 100%
+		max-width: 100%
+		overflow-wrap: anywhere
+
+		a
+			display: inline
+
+@media (min-width: 640px)
+	.detail-tag-grid--double > *
+		width: calc(50% - 4px)
+
+	.detail-tag-grid--triple > *
+		width: calc(50% - 4px)
+
+@supports (display: grid)
+	.detail-tag-grid
+		display: grid
+		grid-template-columns: 1fr
+
+		> *
+			width: auto
+
+	@media (min-width: 640px)
+		.detail-tag-grid--double,
+		.detail-tag-grid--triple
+			grid-template-columns: repeat(2, 1fr)
+
+// streamingActivitySection などで summary テキストをプロズとして表示するブロック
+.detail-prose
+	width: 100%
+	margin-top: 4px
+
+	.detail-prose__label
+		font-size: 11px
+		color: #7a9ab5
+		margin: 0 0 4px
+		font-weight: 600
+
+	.detail-prose__body
+		margin: 0
+		font-size: 13px
+		white-space: pre-wrap
+		overflow-wrap: anywhere
+
+@media (min-width: 480px)
+	.detail .image-item
+		flex-basis: calc(50% - 7px)
+		width: calc(50% - 7px)
+
+@supports (display: grid)
+	.detail .image-grid
+		display: grid
+		grid-template-columns: 1fr
+
+	.detail .image-item
+		width: auto
+		flex-basis: auto
+
+	@media (min-width: 480px)
+		.detail .image-grid
+			grid-template-columns: repeat(2, 1fr)
+
+@media (min-width: 1280px)
+	.detail > :first-child
+		flex-basis: 420px
+
+	@supports (display: grid)
+		.detail
+			grid-template-columns: 420px 1fr
+
+@media (max-width: 639px)
+	.image-lightbox
+		padding: 12px
+
+	.image-lightbox__dialog
+		padding: 48px 12px 12px
+
+	.image-lightbox__caption
+		font-size: var(--font-size-xs)
+
+// ===== Calling フィールド専用スタイル（lib/section-renders/calling.js）=====
+
+.calling-value
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+
+.calling-ctx
+	display: flex
+	flex-wrap: wrap
+	align-items: baseline
+	gap: 3px var(--spacing-sm)
+
+.calling-ctx--labeled
+	flex-direction: column
+	align-items: flex-start
+	gap: 3px
+
+.calling-ctx-label
+	font-size: var(--font-size-xs)
+	color: var(--muted)
+	font-style: italic
+
+.calling-ctx-cats
+	display: flex
+	flex-wrap: wrap
+	align-items: baseline
+	gap: 3px var(--spacing-sm)
+
+.calling-cat
+	display: inline-flex
+	flex-wrap: wrap
+	align-items: center
+	gap: 2px 1px
+
+.calling-sep-cat
+	color: var(--muted)
+	padding: 0 3px
+	user-select: none
+	font-size: var(--font-size-xs)
+
+.calling-sep-alt
+	color: var(--muted)
+	padding: 0 1px
+	user-select: none
+	font-size: var(--font-size-xs)
+
+.calling-tok
+	white-space: nowrap
+	font-size: var(--font-size-sm)
+	color: var(--fg)
+
+.calling-tok--ref
+	display: inline-block
+	padding: 0 5px
+	border-radius: 4px
+	background: color-m
+
+// ==================================================
+// キャラ紹介ヒーロー（静かな見出し帯）
+// .detail を縦積みにし、上部に控えめなヒーロー（ポートレート＋名前）、
+// 下に本文（ギャラリー＋各セクション）を全幅で並べる。
+// クラッタ低減のため発光は控えめ。視線は 画像 → 名前 → 本文 の順に誘導する。
+// ==================================================
+
+.detail
+	display: block
+
+.detail-hero
+	position: relative
+	display: grid
+	grid-template-columns: clamp(200px, 26%, 280px) 1fr
+	gap: clamp(16px, 2.2vw, 24px)
+	align-items: center
+	padding: clamp(14px, 2vw, 22px)
+	margin-bottom: var(--spacing-lg)
+	border: 1px solid var(--border)
+	border-radius: 16px
+	overflow: hidden
+	background: linear-gradient(180deg, rgba(95, 214, 255, 0.05), rgba(15, 24, 48, 0) 55%), var(--card)
+	box-shadow: var(--shadow-md)
+
+	// 上端アクセントは細く控えめに
+	&::after
+		content: ""
+		position: absolute
+		left: 0
+		right: 0
+		top: 0
+		height: 2px
+		background: linear-gradient(90deg, transparent, var(--accent) 40%, transparent)
+		opacity: 0.7
+
+.detail-hero__portrait
+	position: relative
+	align-self: center
+	width: 100%
+	aspect-ratio: 3/4
+	max-height: 360px
+	border-radius: 12px
+	overflow: hidden
+	border: 1px solid var(--border)
+	background: radial-gradient(circle at 50% 38%, #14224a, #0a1226 74%)
+
+	// 額装枠に画像を全体表示（切り抜き回避）で敷き込む
+	.poster
+		width: 100%
+		height: 100%
+		margin: 0
+		border: none
+		border-radius: 0
+		box-shadow: none
+		aspect-ratio: auto
+		object-fit: contain
+		object-position: center
+		background: transparent
+
+	.poster.placeholder
+		width: 100%
+		height: 100%
+		aspect-ratio: auto
+
+.detail-hero__main
+	display: flex
+	flex-direction: column
+	justify-content: center
+	gap: var(--spacing-sm)
+	min-width: 0
+
+	// 名前はバナー内で主役（ただし過大にしない）
+	.name
+		font-size: clamp(24px, 3.4vw, 34px)
+
+	// クイックステータス（明示時のみ）は名前直下に
+	.detail-quickstats
+		margin: 6px 0 0
+
+.detail-body
+	display: block
+	min-width: 0
+
+	.image-gallery
+		margin-top: 0
+
+// 詳細ヘッダーのタイトルはパンくず的に控えめにし、ヒーローの名前を唯一の主役にする
+.detail-header h2
+	font-size: 14px
+	font-weight: 500
+	color: var(--muted)
+
+// 画面が狭い時はポートレートを上に積む（1 カラム）
+@media (max-width: 720px)
+	.detail-hero
+		grid-template-columns: 1fr
+
+	.detail-hero__portrait
+		max-width: 280px
+		margin: 0 auto
+
+// ==================================================
+// 情報量バランス＆可読性の調整
+// 画像（ギャラリー/ポートレート）を抑えめにし、本文系フォントを一段大きく。
+// ==================================================
+
+// 詳細ギャラリーのサムネを小さめ・多列にして文章とのバランスを取る
+@supports (display: grid)
+	.detail .image-grid
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))
+		gap: 12px
+
+	.detail .image-item
+		width: auto
+		flex: none
+
+// ヒーローのポートレートをやや小さく（画像偏重を緩和）
+.detail-hero
+	grid-template-columns: clamp(170px, 22%, 232px) 1fr
+
+.detail-hero__portrait
+	max-height: 300px
+
+// 本文系の文字を読みやすく一段大きく
+.kv-table
+	font-size: 14px
+
+th, td
+	font-size: 14px
+
+th
+	color: #c7ddf5
+
+.detail-prose__body
+	font-size: 14px
+	line-height: 1.6
+
+.detail-prose__label
+	font-size: 12px
+
+.bilingual-lines__line
+	font-size: 13.5px
+	line-height: 1.55
+
+// セクション/ギャラリー見出しを少し大きく・はっきり
+.detail h3
+	font-size: 15px
+
+.detail h4
+	font-size: 14px
+
+// チップ/タグ/ピルもわずかに大きく
+.tag, .pill
+	font-size: 13px
+
+.chip
+	font-size: 13px
+
+// 基本情報テーブルの行間を少しゆったり（可読性）
+.kv-table th, .kv-table td
+	padding: 9px 11px
+
+// ==================================================
+// サイズ感の再調整（モックアップ準拠：画像・文字を一回り大きく、余白の間延びを解消）
+// ==================================================
+
+// ヒーローを大きめに（ポートレートと名前を主役サイズへ）
+.detail-hero
+	grid-template-columns: clamp(240px, 30%, 320px) 1fr
+	gap: clamp(20px, 2.5vw, 28px)
+	padding: clamp(18px, 2.4vw, 26px)
+
+.detail-hero__portrait
+	max-height: 380px
+
+.detail-hero__main .name
+	font-size: clamp(28px, 4vw, 40px)
+
+// ヒーロー内の要約タイルはやや大きめ・読みやすく
+.detail-hero .detail-quickstats
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))
+	gap: 12px
+
+// 詳細ギャラリーのサムネを一回り大きく（少数でも間延びしない範囲）
+@supports (display: grid)
+	.detail .image-grid
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))
+		gap: 14px
+
+// 本文系をもう一段読みやすく
+.kv-table, th, td
+	font-size: 15px
+
+.detail-prose__body
+	font-size: 15px
+	line-height: 1.65
+
+.detail h3
+	font-size: 16px
+
+.detail h4
+	font-size: 15px
+
+.detail-stat__value
+	font-size: 16px
+
+.detail-stat__label
+	font-size: 12px
+
+.bilingual-lines__line
+	font-size: 14px
+
+// VRM 3Dビューア（lib/section-renders/vrmViewer.js）
+// カード1件 = サムネイル（左）+ 起動ボタン/3Dステージ（右・起動後に表示）
+// モバイルでは縦積み、768px 以上でポスター画像の右隣に 3D ビューアを並べる
+.model-viewer-list
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-lg)
+
+.model-viewer
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+	max-width: 320px
+
+	@media (min-width: 768px)
+		flex-direction: row
+		align-items: flex-start
+		gap: var(--spacing-md)
+		max-width: 680px
+
+// ポスター画像カラム（左）
+.model-viewer__media
+	flex: 0 0 auto
+	width: 100%
+	min-width: 0
+
+	@media (min-width: 768px)
+		width: 320px
+
+// 起動ボタン・3Dステージ・ヒント・エラーのカラム（右）
+.model-viewer__body
+	display: flex
+	flex-direction: column
+	gap: var(--spacing-sm)
+	flex: 1 1 auto
+	min-width: 0
+
+	@media (min-width: 768px)
+		width: 320px
+
+.model-viewer__poster
+	width: 100%
+	height: auto
+	aspect-ratio: 1 / 1
+	object-fit: cover
+	display: block
+	border: 1px solid var(--border)
+	border-radius: var(--border-radius-md)
+	background: var(--card)
+
+.model-viewer__launch-btn
+	padding: var(--spacing-sm) var(--spacing-md)
+	border: 1px solid var(--border-strong)
+	border-radius: var(--border-radius-md)
+	background: var(--panel)
+	color: var(--fg)
+	font-size: var(--font-size-sm)
+	font-weight: 600
+	cursor: pointer
+	transition: all 0.2s ease
+
+	&:hover:not(:disabled)
+		border-color: var(--accent)
+		color: var(--accent-bright)
+
+	&:disabled
+		cursor: wait
+		opacity: 0.7
+
+.model-viewer__stage
+	width: 100%
+	aspect-ratio: 1 / 1
+	border: 1px solid var(--border-strong)
+	border-radius: var(--border-radius-md)
+	overflow: hidden
+	background: var(--bg-deep)
+	box-shadow: var(--glow) 0 0 16px
+
+	canvas
+		display: block
+
+.model-viewer__hint
+	font-size: var(--font-size-xs)
+	color: var(--muted)
+
+.model-viewer__error
+	font-size: var(--font-size-sm)
+	color: var(--error)
+
+// subFields 系エントリ共通レイアウト（lib/section-renders/appearanceDetail.js / tailsUnit.js など）
+// エントリ1件 = テキスト情報（左）+ 参考画像（右・小さめのサムネイル）
+// 幅が足りない場合は flex-wrap で参考画像がテキストの下に回り込む。
+// 新しい section renderer で参考画像付きエントリを描画する場合は、
+// field 固有クラス（BEM）に併せてこの共通クラスを付与すること。
+.subfield-entry
+	display: flex
+	flex-wrap: wrap
+	align-items: flex-start
+	gap: var(--spacing-sm) var(--spacing-md)
+	margin-bottom: 8px
+
+// テキスト情報カラム（ヘッダータグ・属性行・ノート）
+// flex-grow を切り、参考画像がテキストのすぐ右隣に付くようにする
+.subfield-entry__main
+	flex: 0 1 auto
+	min-width: 0
+	max-width: 100%
+
+// 参考画像カラム（右隣に小さく表示）
+.subfield-entry__reference-image
+	flex: 0 0 auto
+	width: 120px
+	max-width: 40%
+
+	// 詳細ビュー共通の .image-item（4/3 固定）より正方形サムネイルを優先する
+	.image-item img
+		aspect-ratio: 1 / 1

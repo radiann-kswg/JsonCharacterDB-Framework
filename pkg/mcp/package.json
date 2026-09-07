@@ -1,0 +1,23 @@
+{
+  "name": "creationsdb-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for 100BeautiesLab CreationsDB — GitHub Copilot Agent mode",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "creationsdb",
+    "100BeautiesLab"
+  ],
+  "license": "MIT"
+}
