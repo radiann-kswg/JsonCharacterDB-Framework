@@ -39,6 +39,7 @@
 
     "tests/baseArea.render.test.js",
     "tests/commons.secondaries.test.js",
+    "tests/data.facet-codes.test.js",
     "tests/data.shape.test.js",
     "tests/enrich.dblink.jump.merge.test.js",
     "tests/enrich.index-alias-dict.test.js",

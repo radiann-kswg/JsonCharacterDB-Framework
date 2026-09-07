@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Synced (2026-09-07) — 上流 `100BeautiesLab_CreationsDB` `e11412c` → `74cfc58`
+
+- **ベンダーブランチ `upstream/creationsdb` の初回接ぎ木を実施**。フォーク元の上流コミット `e11412c`
+  （2026-08-22）でベンダーブランチを作り `git merge -s ours` で履歴を接いだうえで、上流 `74cfc58`
+  （2026-09-07）まで進めて通常の 3-way merge を行った。中流が意図的に持つ差（`'sub'` セクション、
+  `$Def_Day` の `year`、`Works_Sample` 前提のテスト、CI の wall-clock 予算など）はコンフリクトなく温存。
+  以後は `npm run sync:update` → `git merge upstream/creationsdb` だけで追従できる。
+- 上流から取り込んだ機能（下流へも波及）:
+  - 相関図の圧縮ロケータ `?r=NTS/100BL`（`lib/relations-locator.js` / `pages/relations.js`）。
+    辞書行の `$display.facet.codeFrom` を `lib/graph/graph-facets.js` が読む。旧 `m` / `d` は読み取り互換
+  - キャラシートの短縮リンク `?b=NTS-57`（`lib/viewer-locator.js` / `pages/characters.js` / `#btn-copy-short`）
+  - `mapDbNameToImageDir` の `#Ref_Vocabulary` 追従と `Loc_` 素通し（`Works_Sample` の References 画像が解決できるようになった）
+  - `pages/relations.js` `loadAll()` が同名 `#List_*` を後勝ちで潰していたバグの修正
+  - `vrmViewer.js` のカメラフィット修正とサムネイル 404 フォールバック
+  - `specStats.js` の `SpecLevel` タググリッド描画
+  - `tools/deepl/build-glossary-source.mjs` の併記形ペアリング修正
+  - `tests/data.bodypart-enum.test.js`（`$EnumDef_DesignBodyPart` の不変条件。中流でも通る）
+- `.sync/upstream.json` の `exclude` に、上流の実データ（`Works_NumberTales` 等）を前提とするテスト 17 本と、
+  中流で意図的に書き換えている `docs/fork-sync.md` / `docs/deploy-howto.md` を追加。
+  `sync:check` の出力が「中流の意図的な差」だけになり、点検のノイズが消えた。
+- `vitest` を `^5.0.0` へ（上流と同じ。PR #4 と同内容）。50 ファイル 764 件 green。
+
 ### Added
 
 - **上流 `100BeautiesLab_CreationsDB` との同期の仕組みを実装**（正典: `docs/fork-sync.md`）。
