@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS works (
 
 CREATE TABLE IF NOT EXISTS dbs (
   work_key    TEXT NOT NULL,  -- '#Works_NumberTales'
-  db_key      TEXT NOT NULL,  -- '#DB_Primary' / '#Ref_Glossary'
+  db_key      TEXT NOT NULL,  -- '#DB_Primary' / '#Ref_Vocabulary'
   db_label    TEXT,
   db_label_en TEXT,
   db_layer    TEXT NOT NULL DEFAULT 'DataBases',

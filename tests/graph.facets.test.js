@@ -55,6 +55,16 @@ describe('collectFacets', () => {
 		expect(collectFacets(globalTypeDef).map(f => f.order)).toEqual([10, 30, 90]);
 	});
 
+	it('`codeFrom`（相関図 URL 用の辞書列）を宣言から取る。無ければ空文字', () => {
+		const def = { $DefType: [
+			{ hashTag: 'Belonging', $dict: 'Faction', $display: { facet: { codeFrom: 'Faction_Code' } } },
+			{ hashTag: 'Class', $dict: 'Class', $display: { facet: {} } }
+		] };
+		const [belonging, cls] = collectFacets(def);
+		expect(belonging.codeFrom).toBe('Faction_Code');
+		expect(cls.codeFrom).toBe('');
+	});
+
 	it('`path` / `maxGroups` / ラベルを宣言から取る', () => {
 		const [belonging, cls] = collectFacets(globalTypeDef);
 		expect(belonging.path).toBe('Faction');

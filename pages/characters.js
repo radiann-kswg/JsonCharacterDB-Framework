@@ -30,8 +30,13 @@ import {
 	assignByKeyPath,
 	parseIdxToken,
 	parseViewerLocator,
-	buildViewerQueryString
+	buildViewerQueryString,
+	SHORT_LOCATOR_PARAM,
+	parseShortLocator,
+	buildShortQueryString
 } from '../lib/viewer-locator.js';
+import { buildBadge, createDictCellLookup, getWorksCode } from '../lib/graph/graph-badge.js';
+import { resolveIndexDef, extractIndexPairs } from '../lib/graph/graph-model.js';
 import {
 	api,
 	fetchJSON,
@@ -304,24 +309,15 @@ function mapDbNameToImageDir(dbName, layer = '') {
 	if (layerStr === 'References') return `Ref_${rawName}`;
 	if (layerStr === 'Localization') return `Loc_${rawName}`;
 
+	// layer が渡らない経路のための最終フォールバック。上の DB_Layer 分岐が本来の解決経路で、
+	// ここは画像を実際に持つ資料系 DB だけを拾う（`Glossary` は `#Ref_Vocabulary` へ改名済み）。
+	// 素名だけでは一意に決まらない（`#Ref_Society` と `#Loc_Society` が併存する）ため、
+	// 表を増やさず layer を渡す側で解くこと。
 	const refMapping = {
-		Glossary: 'Ref_Glossary',
+		Vocabulary: 'Ref_Vocabulary',
 		Reference: 'Ref_Reference'
 	};
 	if (refMapping[rawName]) return refMapping[rawName];
-
-	const dbMapping = {
-		Primary: 'DB_Primary',
-		Secondary: 'DB_Secondary',
-		SemiPrimary: 'DB_SemiPrimary',
-		SelfSecondary: 'DB_SelfSecondary',
-		UnprocessedSecondary: 'DB_UnprocessedSecondary',
-		PrimaryDealer: 'DB_PrimaryDealer',
-		PrimaryMobs: 'DB_PrimaryMobs',
-		Proxy: 'DB_Proxy',
-		Mobs: 'DB_Mobs'
-	};
-	if (dbMapping[rawName]) return dbMapping[rawName];
 
 	return `DB_${rawName}`;
 }
@@ -4768,6 +4764,8 @@ function getUiCopyByLanguage(lang) {
 			listEmpty: 'No matching characters were found.',
 			back: '<- Back to list',
 			reportIssue: '⚠ Report a data issue',
+			copyShort: '🔗 Copy short link',
+			copiedShort: '✓ Copied',
 			featureIssue: '⚙ Suggest a site feature',
 			reset: 'Reset Cache/SW',
 			resetTitle: 'Reset caches and Service Worker, then reload.',
@@ -4791,6 +4789,8 @@ function getUiCopyByLanguage(lang) {
 		listEmpty: '該当するキャラクターが見つかりませんでした。',
 		back: '← 一覧へ戻る',
 		reportIssue: '⚠ データの誤りを報告',
+		copyShort: '🔗 短縮リンクをコピー',
+		copiedShort: '✓ コピーしました',
 		featureIssue: '⚙ サイト機能を提案',
 		reset: 'キャッシュ/SWリセット',
 		resetTitle: 'キャッシュとService Workerをリセットしてリロードします',
@@ -4822,6 +4822,7 @@ function applyStaticTextLanguage() {
 	setText('#list-empty', copy.listEmpty);
 	setText('#btn-back', copy.back);
 	setText('#btn-report-issue', copy.reportIssue);
+	setText('#btn-copy-short', copy.copyShort);
 	setText('#btn-feature-issue', copy.featureIssue);
 	setText('#btn-reset-sw', copy.reset);
 
@@ -8082,6 +8083,7 @@ function wireControls() {
 	const chkDebug = $('#chk-debug');
 	const btnLangToggle = $('#btn-lang-toggle');
 	const btnBack = $('#btn-back');
+	const btnCopyShort = $('#btn-copy-short');
 	const imageLightbox = $('#image-lightbox');
 	const imageLightboxClose = $('#image-lightbox-close');
 
@@ -8106,6 +8108,9 @@ function wireControls() {
 	}
 	if (window.__eventHandlers.backClick) {
 		btnBack.removeEventListener('click', window.__eventHandlers.backClick);
+	}
+	if (window.__eventHandlers.copyShortClick && btnCopyShort) {
+		btnCopyShort.removeEventListener('click', window.__eventHandlers.copyShortClick);
 	}
 	if (window.__eventHandlers.lightboxBackdropClick && imageLightbox) {
 		imageLightbox.removeEventListener('click', window.__eventHandlers.lightboxBackdropClick);
@@ -8160,6 +8165,20 @@ function wireControls() {
 		setQS({ num: '', idx: '', idxKey: '' });
 	};
 
+	window.__eventHandlers.copyShortClick = async () => {
+		const href = btnCopyShort?.dataset.href || '';
+		if (!href) return;
+		const copy = getUiCopyByLanguage(getCurrentPageLanguage());
+		try {
+			await navigator.clipboard.writeText(href);
+			btnCopyShort.textContent = copy.copiedShort;
+			setTimeout(() => { btnCopyShort.textContent = copy.copyShort; }, 1500);
+		} catch {
+			// clipboard API が使えない環境（非 HTTPS 等）では手動コピー用に表示する
+			window.prompt(copy.copyShort, href);
+		}
+	};
+
 	window.__eventHandlers.lightboxBackdropClick = (event) => {
 		if (event.target === imageLightbox) {
 			closeImageLightbox();
@@ -8187,6 +8206,9 @@ function wireControls() {
 		btnLangToggle.addEventListener('click', window.__eventHandlers.langToggleClick);
 	}
 	btnBack.addEventListener('click', window.__eventHandlers.backClick);
+	if (btnCopyShort) {
+		btnCopyShort.addEventListener('click', window.__eventHandlers.copyShortClick);
+	}
 	if (imageLightbox) {
 		imageLightbox.addEventListener('click', window.__eventHandlers.lightboxBackdropClick);
 	}
@@ -8314,6 +8336,123 @@ async function openDetail(rec) {
 	} catch {
 		if (rec.Num != null) setQS({ ...locatorBase, idx: String(rec.Num), idxKey: 'Num' });
 	}
+	updateShortLinkButton(rec);
+}
+
+/* ========================================================================
+   短縮リンク（インデックスバッジ直リンク: ?b=NTS-57[/Db]）
+   ======================================================================== */
+
+/**
+ * 作品 × DB のバッジ組み立てコンテキストを解決する
+ *
+ * @description バッジ規則は相関図と同じ `lib/graph/graph-badge.js`
+ * （`Works_Code` + `$IndexDef.$badge` の宣言駆動）。辞書束の合流順は `pages/relations.js` の
+ * `loadAll()` と揃え、`codeFrom` 参照（FLI の `Suit_Code` 等）を同じ結果にする。
+ * @param {string} workKey - 作品識別子
+ * @param {string} dbName - DB 名
+ * @returns {Promise<{worksCode: string, indexDef: Object|null, lookup: Function}>}
+ */
+async function loadBadgeContext(workKey, dbName) {
+	const [globalMeta, workMeta, workTypeDef] = await Promise.all([
+		fetchGlobalMeta(), fetchWorkMeta(workKey), fetchWorkTypeDef(workKey)
+	]);
+	const vars = {};
+	for (const src of [
+		globalMeta?.General?.$VarsDef, workMeta?.General?.$VarsDef,
+		workTypeDef?.$VarsDef, workTypeDef?.$VersDef, workMeta?.Dictionaries
+	]) {
+		if (!src || typeof src !== 'object') continue;
+		for (const [k, v] of Object.entries(src)) if (Array.isArray(v)) vars[k] = v;
+	}
+	const indexDef = resolveIndexDef(workTypeDef, dbName);
+	return {
+		worksCode: getWorksCode(globalMeta, normalizeWorkKey(workKey)),
+		indexDef,
+		lookup: createDictCellLookup(vars, indexDef)
+	};
+}
+
+/**
+ * レコードの作品コード付きバッジ（`NTS-57`）を返す
+ * @param {Object} rec - レコード
+ * @param {{worksCode: string, indexDef: Object|null, lookup: Function}} ctx - `loadBadgeContext()` の結果
+ * @returns {string} 組み立てられなければ空文字
+ */
+function recordBadge(rec, ctx) {
+	const pairs = extractIndexPairs(rec, ctx.indexDef);
+	if (!pairs) return '';
+	const { full } = buildBadge({
+		pairs, indexDef: ctx.indexDef, worksCode: ctx.worksCode, lookupDictCell: ctx.lookup, record: rec
+	});
+	return full && full !== ctx.worksCode ? full : '';
+}
+
+/**
+ * 短縮ロケータ（`?b=NTS-57[/Db]`）を圧縮ロケータ（work / db / idx / idxKey）へ解決し URL を書き換える
+ *
+ * @description DB 省略時は DB カタログ順に走査し、最初にバッジが一致した DB を採る。
+ * ponytail: 同一キャラの派生 DB（FLI `PrimaryDealer` / UBL `PrimaryPerformer` 等）は Primary と
+ * バッジが重なるため、生成側（`buildShortHref()`）がカタログ先頭以外の DB にだけ `/<Db>` を付けて区別する。
+ * 一致しなければ URL は触らず通常の初期表示へ進む。
+ * @param {string} raw - `b` パラメータの値
+ */
+async function resolveShortLocator(raw) {
+	const { badge, db } = parseShortLocator(raw);
+	const code = badge.split('-')[0];
+	if (!code) return;
+	const globalMeta = await fetchGlobalMeta();
+	const workId = Object.keys(globalMeta?.CreationWorks || {})
+		.find((key) => getWorksCode(globalMeta, key) === code);
+	if (!workId) {
+		console.warn('⚠️ Unknown Works_Code in short locator:', raw);
+		return;
+	}
+	const dbNames = db ? [db] : (await listWorkDBs(workId)).map((d) => d.key);
+	for (const dbName of dbNames) {
+		const ctx = await loadBadgeContext(workId, dbName);
+		if (!ctx.indexDef) continue;
+		const res = await fetchDB(workId, dbName, { resolve: false });
+		const recs = filterPublicCharacterRecords(res?.records || []);
+		const target = recs.find((r) => recordBadge(r, ctx) === badge);
+		if (!target) continue;
+		const id = getIndexIdentifierFromRecord(target, ctx.indexDef, recs);
+		if (id) setQS({ work: workKeyForURL(workId), db: dbName, idx: id.value, idxKey: id.keyPath, num: '' });
+		return;
+	}
+	console.warn('⚠️ Character not found for short locator:', raw);
+}
+
+/**
+ * 表示中レコードの短縮リンク（`characters.html?b=NTS-57`）を組み立てる
+ * @param {string} workKey - 作品識別子
+ * @param {string} dbName - DB 名
+ * @param {Object} rec - レコード
+ * @returns {Promise<string>} 組み立てられなければ空文字
+ */
+async function buildShortHref(workKey, dbName, rec) {
+	const badge = recordBadge(rec, await loadBadgeContext(workKey, dbName));
+	if (!badge) return '';
+	const firstDb = (await listWorkDBs(workKey))[0]?.key || '';
+	return `${location.origin}${location.pathname}${buildShortQueryString(badge, dbName === firstDb ? '' : dbName)}`;
+}
+
+/**
+ * 詳細ヘッダの「短縮リンクをコピー」ボタンを、表示中レコードの短縮リンクで更新する
+ * @param {Object} rec - 表示中レコード
+ */
+function updateShortLinkButton(rec) {
+	const btn = $('#btn-copy-short');
+	if (!btn) return;
+	btn.hidden = true;
+	const state = window.__CHAR_STATE__;
+	buildShortHref(state.workId, state.db, rec).then((href) => {
+		// 解決中に別レコードへ移っていたら捨てる
+		if (!href || state.currentDetailRecord !== rec) return;
+		btn.dataset.href = href;
+		btn.title = href;
+		btn.hidden = false;
+	}).catch(() => {});
 }
 
 /**
@@ -8329,6 +8468,11 @@ async function main() {
 
 	// リロードで流れたSW失敗ログを、初期化前に再掲（引用できるようにする）
 	replayRememberedSwInitError();
+
+	// 短縮ロケータ（?b=NTS-57）は直後の setQS({ lang }) で URL から消えるため、先に退避する。
+	// 正規形 `c` が同時にあるときは `c` を優先し、`b` は無視する
+	const initialParams = new URLSearchParams(location.search);
+	const shortLocator = initialParams.has(VIEWER_LOCATOR_PARAM) ? '' : (initialParams.get(SHORT_LOCATOR_PARAM) || '');
 
 	const startTime = performance.now();
 	console.log('🚀 キャラクターブラウザアプリケーションを初期化中...');
@@ -8363,6 +8507,15 @@ async function main() {
 		stepStart = performance.now();
 		await ensureApiSW();
 		console.log(`✅ Service Worker を ${(performance.now() - stepStart).toFixed(2)}ms で初期化`);
+
+		// 短縮ロケータを圧縮ロケータ（work / db / idx）へ解決してから通常経路へ合流する
+		if (shortLocator) {
+			try {
+				await resolveShortLocator(shortLocator);
+			} catch (error) {
+				console.warn('⚠️ Short locator resolution failed:', error?.message || error);
+			}
+		}
 
 		// ステップ3: 作品リストの入力
 		stepStart = performance.now();

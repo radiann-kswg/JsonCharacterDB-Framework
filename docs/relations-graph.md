@@ -9,10 +9,13 @@
 
 ## URL パラメータ
 
-- m: マップ種別（own/shared）
-- d: ドリルパス（/ 区切り）
+- r: 圧縮ロケータ `[<map>/]<Works_Code>/<段の値...>`（例: `r=NTS`, `r=NTS/100BL`, `r=shared/FLI/M`）。
+  map は own / shared（own は省略）。作品は `Works_Code`（`NTS`。短縮ID `NumberTales` も読める）。
+  段の値は軸の `$display.facet.codeFrom` が指す辞書列の code（例: `Suit_Code` → `M`）、宣言や辞書列が無ければ生値。
+  未設定グループは `-`。文法は lib/relations-locator.js、値の解決は relations.js の resolveLocators()
+- m / d: 旧形式（マップ種別 / ドリルパス）。読み取りのみ互換、生成しない
 - g: グルーピング軸
-- f: フォーカスノード
+- f: フォーカスノード。インデックスバッジ `NTS-57`（同じバッジのノードが他にあれば `NTS-57/Db`）。旧形式のノードキー（`|` 区切り）も読める
 - e: 非表示エッジ種別
 - q: 検索クエリ
 - lang: 表示言語

@@ -8,7 +8,7 @@
 	<meta
 		name="description"
 		content="/data の創作データベースを クライアント内API (/pages/v1 ほか) 経由で取得し、キャラシートとして表示します。" />
-	<meta name="asset-version" content="2026.08.15.8" />
+	<meta name="asset-version" content="2026.09.07.1" />
 	<!-- メインスタイルシート（SASS から自動生成） -->
 	<script>
 		(() => {
@@ -146,6 +146,8 @@
 				<button id="btn-back" class="ghost">← 一覧へ戻る</button>
 				<!-- 詳細タイトル -->
 				<h2 id="detail-title">-</h2>
+				<!-- 短縮リンク（インデックスバッジ直リンク ?b=NTS-57）をクリップボードへコピー -->
+				<button id="btn-copy-short" class="ghost" type="button" hidden>🔗 短縮リンクをコピー</button>
 				<!-- データ内容の誤り報告リンク（GitHub Issues 連携、表示中のキャラ情報を事前入力） -->
 				<a
 					id="btn-report-issue"
