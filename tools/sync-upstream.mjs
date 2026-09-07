@@ -13,6 +13,12 @@
  * 本スクリプトが行うのは **ベンダーブランチの更新と差分の報告だけ** です。
  * develop への merge は User が手動で実行します（勝手に作業ツリーを触りません）。
  *
+ * 差分の比較基準は「develop の履歴に取り込み済みの最新ベンダーコミット」です（HEAD ではない）。
+ * 下流が意図的に持つ差は報告されず、**上流で新しく変わってまだ取り込んでいないもの**だけが出ます。
+ * ベンダーコミットは commit-tree のトレーラ `Upstream-Repo:` で履歴から見つけるため、
+ * ローカルの `upstream/<name>` ブランチが無い fresh clone や CI（履歴つき checkout）でも動きます。
+ * 履歴にベンダーコミットが 1 つも無い（まだ接いでいない）リポジトリでは HEAD と比べます。
+ *
  * 使い方:
  *   node tools/sync-upstream.mjs --check    # 差分の点検のみ（ref を書き換えない / CI 向け・差分ありで exit 1）
  *   node tools/sync-upstream.mjs --update   # ベンダーブランチを更新し、merge コマンドを表示
@@ -187,9 +193,12 @@ function main() {
 		process.exit(2);
 	}
 
-	// 3. ベンダーツリーを組み立て、HEAD と比べる
+	// 3. ベンダーツリーを組み立て、「取り込み済みのベンダーコミット」と比べる
+	//    （履歴に無い＝まだ接いでいないリポジトリでは HEAD と比べる。従来動作）
 	const tree = buildVendorTree(ref, keep);
-	const raw = git(['diff', '--name-status', '-z', 'HEAD', tree]).split('\0').filter(Boolean);
+	const merged = lastMergedVendorCommit(repo);
+	const base = merged ?? 'HEAD';
+	const raw = git(['diff', '--name-status', '-z', base, tree]).split('\0').filter(Boolean);
 
 	const changes = [];
 	let downstreamOnly = 0;
@@ -197,8 +206,9 @@ function main() {
 		const status = raw[i];
 		const file = raw[i + 1];
 		if (file === undefined) break;
-		if (!keep.has(file)) {
-			// ベンダーツリーに無い＝下流だけが持つファイル。同期対象外なので無視する。
+		if (!merged && !keep.has(file)) {
+			// HEAD と比べているとき、ベンダーツリーに無い＝下流だけが持つファイル。同期対象外なので無視する。
+			// （ベンダーコミットと比べているときは両側とも同期対象だけなので、D は上流での削除／除外として報告する）
 			downstreamOnly += 1;
 			continue;
 		}
@@ -214,6 +224,9 @@ function main() {
 		targets: keep.size,
 		drift: changes.length,
 		downstreamOnly,
+		base: merged
+			? `取り込み済みベンダーコミット ${merged.slice(0, 7)}（上流 ${git(['log', '-1', '--format=%(trailers:key=Upstream-Commit,valueonly)', merged]).trim().slice(0, 7)}）`
+			: 'HEAD（履歴に取り込み済みベンダーコミットが無いため。docs/fork-sync.md §5 の接ぎ木が未実施）',
 	};
 	if (MARKDOWN) {
 		printMarkdown(header, changes, vendorBranch);
@@ -229,9 +242,23 @@ function main() {
 	process.exit(MODE === 'check' && changes.length > 0 ? 1 : 0);
 }
 
+/**
+ * develop の履歴に取り込み済みの最新ベンダーコミット（commit-tree のトレーラ `Upstream-Repo:` で判定）。
+ * ベンダーブランチ（ローカル ref）が無い fresh clone や CI でも、merge 済みの履歴から復元できる。
+ * @param {string} repo @returns {string|null}
+ */
+function lastMergedVendorCommit(repo) {
+	try {
+		return git(['rev-list', '-1', '--fixed-strings', `--grep=Upstream-Repo: ${repo}`, 'HEAD']) || null;
+	} catch {
+		return null;
+	}
+}
+
 function updateVendorBranch({ vendorBranch, tree, repo, branch, upstreamSha }) {
 	const exists = gitOk(['rev-parse', '--verify', `refs/heads/${vendorBranch}`]);
-	const parent = exists ? git(['rev-parse', `refs/heads/${vendorBranch}`]) : null;
+	// ローカルにブランチが無ければ、履歴上の取り込み済みベンダーコミットを親にして続きを作る
+	const parent = exists ? git(['rev-parse', `refs/heads/${vendorBranch}`]) : lastMergedVendorCommit(repo);
 
 	if (parent && git(['rev-parse', `${parent}^{tree}`]) === tree) {
 		console.log(`\nベンダーブランチ ${vendorBranch} は最新です（更新なし）。`);
@@ -276,11 +303,12 @@ function updateVendorBranch({ vendorBranch, tree, repo, branch, upstreamSha }) {
 function printText(h, changes, vendorBranch) {
 	console.log(`上流   : ${h.repo} @ ${h.branch} (${h.sha})`);
 	console.log(`同期対象: ${h.targets} ファイル`);
+	console.log(`比較基準: ${h.base}`);
 	console.log('');
 	if (changes.length === 0) {
-		console.log('差分なし。上流と同期できています。');
+		console.log('未取り込みの差分なし。上流と同期できています。');
 	} else {
-		console.log(`差分あり: ${h.drift} 件  (A=上流で新規 / M=内容差 / D=下流で削除済み)`);
+		console.log(`未取り込み: ${h.drift} 件  (A=上流で追加 / M=上流で変更 / D=上流で削除)`);
 		for (const c of changes) console.log(`  ${c.status.padEnd(3)}${c.file}`);
 		console.log('');
 		console.log('取り込み手順:');
@@ -295,12 +323,15 @@ function printText(h, changes, vendorBranch) {
 
 function printMarkdown(h, changes, vendorBranch) {
 	console.log(`**上流**: \`${h.repo}\` @ \`${h.branch}\` (\`${h.sha}\`)  `);
-	console.log(`**同期対象**: ${h.targets} ファイル / **差分**: ${h.drift} 件`);
+	console.log(`**同期対象**: ${h.targets} ファイル / **未取り込み**: ${h.drift} 件  `);
+	console.log(`**比較基準**: ${h.base}`);
 	console.log('');
 	if (changes.length === 0) {
-		console.log('差分なし。上流と同期できています。');
+		console.log('未取り込みの差分なし。上流と同期できています。');
 		return;
 	}
+	console.log('`A`=上流で追加 / `M`=上流で変更 / `D`=上流で削除');
+	console.log('');
 	console.log('| 状態 | ファイル |');
 	console.log('| --- | --- |');
 	const LIMIT = 100;

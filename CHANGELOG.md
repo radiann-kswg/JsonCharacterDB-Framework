@@ -23,6 +23,14 @@
   中流で意図的に書き換えている `docs/fork-sync.md` / `docs/deploy-howto.md` を追加。
   `sync:check` の出力が「中流の意図的な差」だけになり、点検のノイズが消えた。
 - `vitest` を `^5.0.0` へ（上流と同じ。PR #4 と同内容）。50 ファイル 764 件 green。
+- **`tools/sync-upstream.mjs` の差分比較基準を HEAD → 「develop の履歴に取り込み済みの最新ベンダーコミット」へ変更**。
+  従来は下流が意図的に持つ差（`'sub'` セクション等 11 件）が毎回 `M` として出続け、CI の
+  `upstream-sync-check` が永久に Issue を開いたままになる構造だった。以後は**上流で新しく変わって
+  まだ取り込んでいないものだけ**が出る（`D` は上流削除／`exclude` 追加）。ベンダーコミットは
+  commit-tree のトレーラ `Upstream-Repo:` で履歴から見つけるため、`upstream/<name>` ブランチが無い
+  fresh clone でも `sync:update` が初回プロンプトを出さず続きを作る（clone で動作確認済み）。
+  これに伴い `.github/workflows/upstream-sync-check.yml` の checkout を `fetch-depth: 0` に変更。
+  履歴にベンダーコミットが無い（未接ぎ木の）リポジトリでは従来どおり HEAD と比べる。
 
 ### Added
 

@@ -23,8 +23,12 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # 履歴つきで checkout する。差分の比較基準（取り込み済みベンダーコミット）を
+      # develop の履歴から探すため、--depth=1 では見つからない。
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -32,7 +36,7 @@ jobs:
           node-version: "22"
 
       # 上流は public なので anonymous clone で足りる（PAT 不要）。
-      # 履歴は不要なので --depth=1 で済ませ、スクリプトには --no-fetch を渡す。
+      # 上流側の履歴は不要なので --depth=1 で済ませ、スクリプトには --no-fetch を渡す。
       - name: Fetch upstream (shallow)
         run: |
           URL=$(node -p "require('./.sync/upstream.json').repo")
