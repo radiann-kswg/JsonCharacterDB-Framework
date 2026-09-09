@@ -1,0 +1,16 @@
+name: tmp perm probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -x
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "tmp perm probe" --body "probe" --label upstream-sync
