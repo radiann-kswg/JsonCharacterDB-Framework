@@ -59,7 +59,7 @@ jobs:
           DRIFT: ${{ steps.check.outputs.drift }}
         run: |
           set -euo pipefail
-          gh label create upstream-sync --color BFD4F2 --description "上流リポジトリとの同期" 2>/dev/null || true
+          gh label create upstream-sync --color BFD4F2 --description "上流リポジトリとの同期" || true
           NUMBER=$(gh issue list --label upstream-sync --state open --limit 1 --json number --jq '.[0].number // empty')
 
           if [ "$DRIFT" = "0" ]; then
