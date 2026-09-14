@@ -203,7 +203,7 @@ Node.js / Python / C# の 3 クライアントは同じ API サーフェスを�
 ```js
 await db.getIndexKey("NumberTales", "Primary"); // → "Num"
 await db.getIndexKey("FLInvestigator78", "Primary"); // → "Card.Suit"
-await db.getIndexKey("ShouArRiders", "Primary"); // → "BeastType.Beast"
+await db.getIndexKey("ShauErRiders", "Primary"); // → "BeastType.Beast"
 
 // $IndexDef_<DbNorm> サイドカーによる DB 単位の上書き
 await db.getIndexKey("DestinyFoxRecords"); // → "Unit"（作品既定）

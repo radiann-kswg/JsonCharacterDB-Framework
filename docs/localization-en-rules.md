@@ -301,7 +301,7 @@ he/she; [指示表現 or 敬称/参照形]; [*by name or 参照]
 | FL db_Primary         | 全件あり                                                                               |
 | FL db_PrimaryDealer   | 全件あり（2026-06-14 修正: `*のこ` / `~君` 各1件）                                     |
 | DestinyFoxRecords     | 全件あり（2026-06-15 修正: `(as Mr/Ms.~)` 注釈削除 2件）                               |
-| ShouArRiders          | 全件あり                                                                               |
+| ShauErRiders          | 全件あり                                                                               |
 | Proxies               | 全件あり（2026-06-15 修正: `(as Mr/Ms.~)` 注釈削除・`[by name]` → `[*by name]` 各1件） |
 | PastDivers            | 全件あり                                                                               |
 | SinisterChangingGirls | 全件あり（2026-06-15 修正: `[by name]` `*` 欠落 1件・`(as Mr/Ms.)` 注釈削除 1件）      |
@@ -552,7 +552,7 @@ NT db_SelfSecondary 等でよく使われる頻出パターン:
 - `EffectText_EN`: ランク説明の固定文。**レコード側ではなく辞書側**（`DataBases/db_meta.json` の `General.$VarsDef.$Def_ArcanumspecStats.$Def_EffectStats.#ListLink_EffectText[]`）に `EffectText` / `EffectText_EN` ペアとして定義される enum。レコードの `EffectText`（JP）は enum 値を参照する。固定訳の例: `危険`→`Dangerous` / `絶大`→`Tremendous` / `期待`→`Expected` / `希薄`→`Dilute` / `効果無`→`No Benefit` / `逆効果`→`Counterproductive`。新訳は追加せず、既存 enum に従う。
 - `For79thDealerCalling_EN` / `For80thDealerCalling_EN`: ForMasterCalling_EN と同形式
 
-### 4-3. ShouArRiders
+### 4-3. ShauErRiders
 
 - `BeastspecName_EN`: 獣の属性を英訳した固有名詞
 - `BeastspecAbout_EN`: NumerospecAbout_EN と同形式

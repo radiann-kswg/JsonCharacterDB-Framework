@@ -95,7 +95,7 @@ const ISSUE_REPORT_REPO = 'radiann-kswg/100BeautiesLab_CreationsDB';
 const ISSUE_REPORT_WORK_LABELS = {
 	NumberTales: 'ナンバーテールズ (NumberTales)',
 	FLInvestigator78: '運命線探偵78 (FLInvestigator78)',
-	ShouArRiders: '獣爾騎兵 (ShouArRiders)',
+	ShauErRiders: '獣爾騎兵 (ShauErRiders)',
 	UnibyteLive: 'ハンカクライブ (UnibyteLive)',
 	SinisterChangingGirls: '豹変系女子 (SinisterChangingGirls)',
 	UnauthedLogica: 'アンオースドロジカ (UnauthedLogica)',
@@ -529,7 +529,8 @@ function getQS() {
 	}
 
 	return {
-		work: p.get('work') || locator.work || '',
+		// 旧綴り別名の解決を含む正規化を read 側にも適用する（lib/viewer-locator.js の LEGACY_WORK_ALIASES）
+		work: workKeyForURL(p.get('work') || locator.work || ''),
 		db: p.get('db') || locator.db || '',
 		num: legacyNum,
 		// 汎用インデックス直リンク（作品ごとの $IndexDef に対応）
@@ -680,9 +681,8 @@ async function fetchDB(workKey, dbName, { resolve = true, debug = false } = {}) 
  */
 function normalizeWorkKey(id) {
 	if (!id) return id;
-	if (id.startsWith('#Works_')) return id;
-	if (id.startsWith('Works_')) return `#${id}`;
-	return `#Works_${id}`;
+	// 旧綴り別名（lib/viewer-locator.js の LEGACY_WORK_ALIASES: ShouArRiders → ShauErRiders）も含めて正規化する
+	return `#Works_${workKeyForURL(id)}`;
 }
 
 /**
@@ -4372,7 +4372,7 @@ function dialogueBodyText(text) {
 }
 
 // 旧作品「Works_Proxies」直リンク互換: 統合先(Works_DestinyFoxRecords)へ読み替える
-const LEGACY_WORK_DIR_ALIASES = { Proxies: 'Works_DestinyFoxRecords' };
+const LEGACY_WORK_DIR_ALIASES = { Proxies: 'Works_DestinyFoxRecords', ShouArRiders: 'Works_ShauErRiders' };
 
 /**
  * 作品IDから物理ディレクトリ名を解決する。

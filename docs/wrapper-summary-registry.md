@@ -57,7 +57,7 @@
 `lib/section-renders/` 配下の IIFE ファイルで登録（`characters.js` から import されたタイミングで追加）:
 - `relationSection` — `RelationTo_*` suffix フィールドのリレーション表示（`lib/section-renders/relation.js`）
 - `statsSection` — 汎用 Stats 系表示（`lib/section-renders/abilityStats.js` 等）
-- `specStatsSection` — `*specStats`（モチーフ能力の特性）の汎用表示（`lib/section-renders/specStats.js`）。`EffectStats` / `SafetyLevel` / `SpecLevel` を共通ヘルパーで同じタググリッドへ描き、残り（`*specAbout` / `*specName` / `SpecialPattern` / `Artifact` / `MotifCommentaries` 等）を `buildObjectChildBlocks` へ委譲する。NumberTales `NumerospecStats` / PastDivers `ChronospecStats` / ShouArRiders `BeastspecStats` が共用（旧 `numSpecSection` / `chronoSpecSection` は完全に同一実装だったため 2026-08-20 に統合。ShouArRiders は旧 `statsSection` から移行）
+- `specStatsSection` — `*specStats`（モチーフ能力の特性）の汎用表示（`lib/section-renders/specStats.js`）。`EffectStats` / `SafetyLevel` / `SpecLevel` を共通ヘルパーで同じタググリッドへ描き、残り（`*specAbout` / `*specName` / `SpecialPattern` / `Artifact` / `MotifCommentaries` 等）を `buildObjectChildBlocks` へ委譲する。NumberTales `NumerospecStats` / PastDivers `ChronospecStats` / ShauErRiders `BeastspecStats` が共用（旧 `numSpecSection` / `chronoSpecSection` は完全に同一実装だったため 2026-08-20 に統合。ShauErRiders は旧 `statsSection` から移行）
 - `arcanumSpecSection` — FLInvestigator78 `ArcanumspecStats` 専用（`lib/section-renders/arcanumSpec.js`）。`specStatsSection` に `SpecType` の kvTable を足した派生（`SpecLevel` タグは 2026-09-02 に汎用側へ移したため共通）
 - `thisMastersSection` — ThisMasters (`$Def_ThisMastersEntry[]`) 表示（`lib/section-renders/thisMasters.js`）
 - `dbLinkSection` — `*_DBLink` suffix フィールドのキャラクターリンク参照表示（`lib/section-renders/dblink.js`）

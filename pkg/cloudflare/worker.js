@@ -80,8 +80,17 @@ function toWorkKey(workId) {
   else if (raw.startsWith("Works_")) normalized = `#${raw}`;
   else                               normalized = `#Works_${raw}`;
   const m = normalized.match(/^#Works_([A-Za-z0-9_]+)$/);
-  return m ? `#Works_${m[1]}` : null;
+  if (!m) return null;
+  // 旧綴り互換（ShouArRiders → ShauErRiders）: D1 の works/dbs/records キーは現行綴りのみ
+  return `#Works_${LEGACY_WORK_ID_ALIASES[m[1]] || m[1]}`;
 }
+
+/**
+ * 旧綴りの作品ID → 現行綴り（獣爾騎兵: ShouArRiders → ShauErRiders）
+ * `lib/sw-common.js` / `lib/data-common.js` / `lib/viewer-locator.js` の同種テーブルと同期させること。
+ * @type {Record<string, string>}
+ */
+const LEGACY_WORK_ID_ALIASES = { ShouArRiders: "ShauErRiders" };
 
 /**
  * '#Works_XXX' → 'Works_XXX'（ファイルシステムパス用、既定導出）

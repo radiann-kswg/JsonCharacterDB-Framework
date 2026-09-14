@@ -48,7 +48,14 @@ const _DEFAULT_REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../
  * `lib/sw-common.js` / `lib/data-common.js` の同名テーブルと同期させること。
  * @type {Record<string, string>}
  */
-const LEGACY_WORK_DIR_ALIASES = { Proxies: 'Works_DestinyFoxRecords' };
+const LEGACY_WORK_DIR_ALIASES = { Proxies: 'Works_DestinyFoxRecords', ShouArRiders: 'Works_ShauErRiders' };
+
+/**
+ * 旧綴りの作品ID → 現行綴り（獣爾騎兵: ShouArRiders → ShauErRiders）。
+ * toWorkKey() の正規化時点で読み替え、db_meta / API の現行キーへ揃える。
+ * @type {Record<string, string>}
+ */
+const LEGACY_WORK_ID_ALIASES = { ShouArRiders: 'ShauErRiders' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // エラー型
@@ -121,7 +128,8 @@ function toWorkKey(id) {
     : raw.startsWith('Works_') ? `#${raw}`
     : `#Works_${raw}`;
   const m = normalized.match(/^#Works_([A-Za-z0-9_]+)$/);
-  return m ? `#Works_${m[1]}` : null;
+  // 旧綴り互換（ShouArRiders → ShauErRiders）
+  return m ? `#Works_${LEGACY_WORK_ID_ALIASES[m[1]] || m[1]}` : null;
 }
 
 /**
@@ -930,7 +938,7 @@ export class CreationsDBClient {
    *
    * 例:
    * - NumberTales/Primary（`$type` 文字列）→ `{ folderKey:'Num', fileKey:'Num', splitFolder:false }`
-   * - ShouArRiders/Primary（配列・link 無し）→ `{ folderKey:'BeastType.Beast', fileKey:'BeastType.Beast', splitFolder:false }`
+   * - ShauErRiders/Primary（配列・link 無し）→ `{ folderKey:'BeastType.Beast', fileKey:'BeastType.Beast', splitFolder:false }`
    * - FLInvestigator78/PrimaryDealer（配列・Num に link）→ `{ folderKey:'Card.Suit', fileKey:'Card.Num', splitFolder:true }`
    *
    * @param {string} workId

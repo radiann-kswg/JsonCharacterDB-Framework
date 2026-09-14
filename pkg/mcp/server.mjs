@@ -139,7 +139,7 @@ const TOOLS = [
           description:
             'インデックスフィールド名（ドット記法可）。省略時はスキーマ ($IndexDef / $IndexDef_<DB名>) から' +
             '自動解決されるため、通常は指定不要。作品ごとに異なる（NumberTales → "Num", ' +
-            'FLInvestigator78 → "Card.Suit", ShouArRiders → "BeastType.Beast"）。' +
+            'FLInvestigator78 → "Card.Suit", ShauErRiders → "BeastType.Beast"）。' +
             "どのキーが使われるかは get_index_key ツールで確認できる。",
         },
       },
