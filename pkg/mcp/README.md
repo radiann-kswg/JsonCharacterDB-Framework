@@ -93,7 +93,7 @@ MCP サーバーは起動時にリポジトリルートを特定します。以�
 |------|-----------------|
 | NumberTales | `Num` |
 | FLInvestigator78 | `Card.Suit` |
-| ShouArRiders | `BeastType.Beast` |
+| ShauErRiders | `BeastType.Beast` |
 | DestinyFoxRecords | `Unit`（ただし `Proxy` DB のみ `Generation`） |
 
 `get_record` の `idxKey` を省略すればスキーマ（`$IndexDef`）から自動解決されるため、通常は指定不要です。

@@ -159,12 +159,12 @@ describe('DataFetcher のリクエストスコープ・メモ化', () => {
 	});
 
 	it('失敗（404）も同一スコープ内では再試行しない', async () => {
-		const missing = new Set(['/data/Works_ShouArRiders/References/db_meta.json']);
+		const missing = new Set(['/data/Works_ShauErRiders/References/db_meta.json']);
 		const { calls, fetcher } = createFetcher({ missing });
 
 		fetcher.beginRequestScope();
-		await expect(fetcher.fetchJSON('/data/Works_ShouArRiders/References/db_meta.json')).rejects.toThrow();
-		await expect(fetcher.fetchJSON('/data/Works_ShouArRiders/References/db_meta.json')).rejects.toThrow();
+		await expect(fetcher.fetchJSON('/data/Works_ShauErRiders/References/db_meta.json')).rejects.toThrow();
+		await expect(fetcher.fetchJSON('/data/Works_ShauErRiders/References/db_meta.json')).rejects.toThrow();
 		fetcher.endRequestScope();
 
 		expect(calls).toHaveLength(1);

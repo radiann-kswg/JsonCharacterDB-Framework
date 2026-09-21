@@ -11,6 +11,7 @@ CreationsDB クライアント実装
 - ``Works_Dir`` / ``Works_Shared`` オーバーライド（共通資料の疑似作品）
 - ``$IndexDef`` / ``$IndexDef_<DbNorm>`` によるインデックスキーのスキーマ駆動解決
 - 旧作品名エイリアス（``Proxies`` → ``Works_DestinyFoxRecords``）
+- 旧綴りの作品IDエイリアス（``ShouArRiders`` → ``ShauErRiders``）
 
 未対応（SW 専用。Cloudflare Workers 版と同じスコープ）:
 
@@ -40,7 +41,15 @@ _DEFAULT_REPO_ROOT: str = str(Path(__file__).resolve().parent.parent.parent.pare
 
 # 旧作品名 → 現行ディレクトリ名のエイリアス表。
 # lib/sw-common.js / lib/data-common.js / pkg/nodejs の同名テーブルと同期させること。
-_LEGACY_WORK_DIR_ALIASES: dict[str, str] = {'Proxies': 'Works_DestinyFoxRecords'}
+_LEGACY_WORK_DIR_ALIASES: dict[str, str] = {
+    'Proxies': 'Works_DestinyFoxRecords',
+    'ShouArRiders': 'Works_ShauErRiders',
+}
+
+# 旧綴りの作品ID → 現行綴り（獣爾騎兵: ShouArRiders → ShauErRiders）。
+# ``_to_work_key()`` の正規化時点で読み替え、db_meta の現行キーへ揃える。
+# lib/sw-common.js / lib/data-common.js / pkg/cloudflare / pkg/nodejs の同名テーブルと同期させること。
+_LEGACY_WORK_ID_ALIASES: dict[str, str] = {'ShouArRiders': 'ShauErRiders'}
 
 
 class CreationsDBNotFoundError(LookupError):
@@ -80,7 +89,11 @@ def _to_work_key(work_id: str) -> Optional[str]:
     else:
         normalized = f'#Works_{raw}'
     m = re.match(r'^#Works_([A-Za-z0-9_]+)$', normalized)
-    return f'#Works_{m.group(1)}' if m else None
+    if not m:
+        return None
+    bare = m.group(1)
+    # 旧綴り互換（ShouArRiders → ShauErRiders）
+    return f'#Works_{_LEGACY_WORK_ID_ALIASES.get(bare, bare)}'
 
 
 def _resolve_work_dir_name(work_id: str) -> str:

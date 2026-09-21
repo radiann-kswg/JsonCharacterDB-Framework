@@ -171,7 +171,25 @@ Windows のワークツリーは `.gitattributes` の `* text=auto` ＋ `core.au
 ## 対象レコード
 
 `ConversationPattern` が充填済み（6 テキスト項目のいずれかが非空、または `DialogueExamples` に非空要素）の
-レコードのみ生成します。非充填レコードはスキップします。
+レコードのみ生成します。判定は次節の enrich 補填**後**の値で行い、非充填レコードはスキップします。
+
+## 不足フィールドの補填（`$enrich: true` の `*_DBLink`）
+
+生成対象レコードに空のフィールドがある場合、`db_type.json` で `$enrich: true` を宣言した `*_DBLink`
+（＝同一存在への参照。例 `AnotherRegions_DBLink` / `SameModels_DBLink`）の参照先から穴埋めします。規則は
+`lib/data-common.js` の enrich（`mergeFromLinkedRecord`）に合わせています。
+
+- 空（`undefined` / `null` / `''` / `[]`）のフィールドだけを埋め、既存値と `hideText` マスクは上書きしない。
+- 画像系（`*Image*` / `*PNG*`）と `_` 始まりの内部キーはマージ対象外。
+- 別作品への参照では、**対象作品の typedef（グローバル + 作品 `$DefType`）に宣言済みのトップレベル項目**だけを
+  持ち込む（例: NumberTales の零零が豹変系女子を参照しても `Drc` は入らない）。
+- 参照先は `$Def_DBLinkRef` のインデックス条件で解決し、条件に `null` を含む場合は **1 件一致のみ**採用。
+  複数エントリがあるときは先頭の解決済みエントリのみ。
+- 補填件数は `plan` / `--write` のサマリ行（`enriched=N`）に出ます。
+
+> 補填は**生成対象の判定より前**に行います。`ConversationPattern` 自体が参照先にしか無いケース
+> （豹変系女子 `SCG-S` → アンオースドロジカ `notModel/Q`）があるためです。このため、自分の DB に
+> CP を持たないレコードも、同一存在の参照先が CP を持っていれば生成対象になります。
 
 ## 符号化フィールドのデコード
 
