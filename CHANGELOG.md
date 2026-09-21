@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Synced (2026-09-21) — 上流 `100BeautiesLab_CreationsDB` `74cfc58` → `5e8fc7e`
+
+- 21 ファイルをコンフリクトなしで取り込み（`lib/data-common.js` / `pages/characters.js` は
+  中流のローカル差分と行が離れており `ort` が自動解決）。**52 ファイル 769 件 green**。
+- 上流から取り込んだ機能（下流へも波及）:
+  - **獣爾騎兵の旧綴り作品ID 別名解決を全経路へ横展開**（`ShouArRiders` → `ShauErRiders`）。
+    `lib/sw-common.js` `DataUtils.toWorkKey()` / `lib/data-common.js` `normalizeLegacyWorkKey()`（新設）/
+    `lib/viewer-locator.js` `parseViewerLocator()` / `pages/characters.js` `getQS()` `normalizeWorkKey()` /
+    `pkg/cloudflare` `pkg/nodejs` `pkg/python` `pkg/csharp` の 4 クライアント。シグネチャは不変。
+    **エイリアス表は SSOT を持たず 7 ファイルへ独立に書かれているため、今後の改名時は同時更新すること**
+  - `tools/build-roleplay-prompts.mjs` の enrich 補填。`$enrich: true` を宣言した `*_DBLink` の参照先から
+    生成対象レコードの空フィールドを穴埋めする（規則は `lib/data-common.js` `mergeFromLinkedRecord()` に準拠）。
+    補填件数はサマリ行の `enriched=N` に出力
+  - `tools/clean-cache.mjs`（新規）— `.cache/` 直下の古いエントリを掃除するユーティリティ。
+    ディレクトリは**配下で最も新しい mtime** を代表値に取る。plan がデフォルトで、削除は `--write` 時のみ
+  - `tests/clean-cache.test.js`（新規・`os.tmpdir()` 上で完結）
+- `.sync/upstream.json` の `exclude` に、上流の実データを前提とする新規テスト 2 本を追加
+  （`tests/legacy-shauer-work-alias.test.js` / `tests/pkg.client-alias-parity.test.js`）。
+  どちらも `data/Works_ShauErRiders` や `db_meta.json` の `CreationWorks` の実在を要求するため、
+  `Works_Sample` しか持たない中流では通らない。既に除外済みの `tests/legacy-work-alias.test.js`（Proxies 版）/
+  `tests/pkg.nodejs.test.js` と同じ性質。**対応する `lib/**` `pkg/**` の修正自体は取り込んでいる**。
+- 未対応（判断待ち）: 上流 `package.json` が追加した `cache:clean` / `cache:clean:write` スクリプトは
+  `package.json` が同期対象外のため降りてこない。`tools/clean-cache.mjs` は直叩きで動く。
+- 点検レポート: [`_work_in_progress/2026-09-21_upstream-sync.md`](./_work_in_progress/2026-09-21_upstream-sync.md)
+
 ### Synced (2026-09-07) — 上流 `100BeautiesLab_CreationsDB` `e11412c` → `74cfc58`
 
 - **ベンダーブランチ `upstream/creationsdb` の初回接ぎ木を実施**。フォーク元の上流コミット `e11412c`
