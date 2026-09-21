@@ -48,10 +48,12 @@
     "tests/image-dir-mapping.test.js",
     "tests/keyedDialogue.render.test.js",
     "tests/legacy-work-alias.test.js",
+    "tests/legacy-shauer-work-alias.test.js",
     "tests/migrate-common.test.js",
     "tests/pages.characters.ui-output.test.js",
     "tests/pages.characters.url-params.test.js",
     "tests/pkg.nodejs.test.js",
+    "tests/pkg.client-alias-parity.test.js",
     "tests/private-commons-order.test.js",
     "tests/section-renders.relation.test.js"
   ]
