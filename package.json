@@ -27,7 +27,9 @@
     "deepl:build-quickref": "node tools/deepl/build-copilot-quickref.mjs",
     "deepl:sync-glossary": "npm run deepl:build-glossary && node tools/deepl/sync-glossary.mjs",
     "deepl:eval": "node tools/deepl/evaluate-translations.mjs",
-    "deepl:draft": "node tools/deepl/draft-translate.mjs"
+    "deepl:draft": "node tools/deepl/draft-translate.mjs",
+    "cache:clean": "node tools/clean-cache.mjs",
+    "cache:clean:write": "node tools/clean-cache.mjs --write"
   },
   "devDependencies": {
     "glob": "^13.0.6",

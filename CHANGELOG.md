@@ -23,8 +23,8 @@
   どちらも `data/Works_ShauErRiders` や `db_meta.json` の `CreationWorks` の実在を要求するため、
   `Works_Sample` しか持たない中流では通らない。既に除外済みの `tests/legacy-work-alias.test.js`（Proxies 版）/
   `tests/pkg.nodejs.test.js` と同じ性質。**対応する `lib/**` `pkg/**` の修正自体は取り込んでいる**。
-- 未対応（判断待ち）: 上流 `package.json` が追加した `cache:clean` / `cache:clean:write` スクリプトは
-  `package.json` が同期対象外のため降りてこない。`tools/clean-cache.mjs` は直叩きで動く。
+- `package.json` は同期対象外のため、上流と同じ `cache:clean` / `cache:clean:write` スクリプトを手で追加した
+  （`tools/clean-cache.mjs` の呼び出し口。上流とパリティを保つ）。
 - 点検レポート: [`_work_in_progress/2026-09-21_upstream-sync.md`](./_work_in_progress/2026-09-21_upstream-sync.md)
 
 ### Synced (2026-09-07) — 上流 `100BeautiesLab_CreationsDB` `e11412c` → `74cfc58`
