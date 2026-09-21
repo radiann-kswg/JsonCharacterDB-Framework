@@ -89,6 +89,111 @@ export function getByPath(obj, dotpath) {
 	return cur;
 }
 
+/** `$Def_DBLinkRef` エントリのうち、インデックス条件ではない予約キー */
+const DBLINK_SENTINEL = new Set(['_DB', '_Work', 'label_JP', 'label_EN', 'hashTag']);
+
+/**
+ * typedef を走査し、`$enrich: true` を持つ `*_DBLink` フィールド名を集める。
+ * `$enrich: true` は「同一存在への参照」＝参照先の同名フィールドで穴埋めしてよい宣言。
+ * @param {...any} typeDefs - グローバル/作品の `db_type.json`
+ * @returns {Set<string>}
+ */
+export function collectEnrichLinkFields(...typeDefs) {
+	const set = new Set();
+	const walk = (node) => {
+		if (!node || typeof node !== 'object') return;
+		if (Array.isArray(node)) { node.forEach(walk); return; }
+		if (typeof node.hashTag === 'string' && node.hashTag.endsWith('_DBLink') && node.$enrich === true) set.add(node.hashTag);
+		Object.values(node).forEach(walk);
+	};
+	typeDefs.forEach(walk);
+	return set;
+}
+
+/**
+ * typedef の `$DefType` から宣言済みトップレベル項目名を集める（cross-work 穴埋めの許可リスト）。
+ * @param {...any} typeDefs
+ * @returns {Set<string>}
+ */
+export function collectDeclaredTopLevelKeys(...typeDefs) {
+	const set = new Set();
+	for (const t of typeDefs) {
+		for (const e of Array.isArray(t?.$DefType) ? t.$DefType : []) {
+			if (typeof e?.hashTag === 'string') set.add(e.hashTag);
+		}
+	}
+	return set;
+}
+
+/** enrich の空値判定（`lib/data-common.js` mergeFromLinkedRecord と同一規則） */
+const isEnrichEmpty = (v) => v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
+
+/** ネストインデックスの subset 一致（`null` は明示 null との一致） */
+function indexSubsetMatch(recVal, q) {
+	if (q === null || q === undefined) return recVal === null || recVal === undefined;
+	if (typeof q === 'object') {
+		if (!recVal || typeof recVal !== 'object') return false;
+		return Object.keys(q).every((k) => indexSubsetMatch(recVal[k], q[k]));
+	}
+	return recVal !== null && recVal !== undefined && String(recVal) === String(q);
+}
+
+/**
+ * `$Def_DBLinkRef` エントリの参照先レコードを 1 件解決する。
+ * @param {any} entry - `{ _Work?, _DB?, <IndexKey>: <値> }`
+ * @param {string} work - 参照元の作品（`_Work` 省略時の既定）
+ * @param {string} db - 参照元の DB（`_DB` 省略時の既定）
+ * @param {(w:string,d:string)=>Promise<any[]>} loadRecords
+ * @returns {Promise<any|null>}
+ */
+async function resolveLinkedRecord(entry, work, db, loadRecords) {
+	if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+	const conds = Object.entries(entry).filter(([k]) => !DBLINK_SENTINEL.has(k) && !k.startsWith('_'));
+	if (!conds.length) return null;
+
+	const records = await loadRecords(entry._Work || work, entry._DB || db);
+	const matched = records.filter((r) => r && conds.every(([k, q]) => indexSubsetMatch(r[k], q)));
+	// null 条件を含む場合は曖昧一致を避け 1 件一致のみ採用（SW enrich と同じ）
+	const hasNull = conds.some(([, q]) => JSON.stringify(q ?? null).includes('null'));
+	return hasNull ? (matched.length === 1 ? matched[0] : null) : (matched[0] ?? null);
+}
+
+/**
+ * `$enrich: true` の `*_DBLink` 参照先から、空フィールドだけを穴埋めしたレコードを返す。
+ *
+ * @description
+ *   同名フィールドが空（`undefined` / `null` / `''` / `[]`）のときだけ埋め、既存値・`hideText`
+ *   マスクは上書きしない（`lib/data-common.js` の enrich と同じ規則）。画像系と `_` 始まりの
+ *   内部キーは対象外。別作品への参照では、対象作品の schema に宣言済みの項目だけを持ち込む。
+ * @param {any} record
+ * @param {{work:string, db:string, fields:Set<string>, loadRecords:(w:string,d:string)=>Promise<any[]>, declaredKeys?:Set<string>}} ctx
+ * @returns {Promise<any>} 穴埋め済みレコード（補填が無ければ元のレコード）
+ */
+export async function enrichRecordFromLinks(record, { work, db, fields, loadRecords, declaredKeys = null }) {
+	if (!record || typeof record !== 'object' || !fields?.size) return record;
+	let out = record;
+	for (const field of fields) {
+		const raw = record[field];
+		if (!raw) continue;
+		for (const entry of Array.isArray(raw) ? raw : [raw]) {
+			const linked = await resolveLinkedRecord(entry, work, db, loadRecords);
+			if (!linked) continue;
+			const crossWork = !!entry._Work && entry._Work !== work;
+			for (const [k, v] of Object.entries(linked)) {
+				if (k.startsWith('_') || isEnrichEmpty(v)) continue;
+				if (/PNG/i.test(k) || k.includes('Image')) continue; // 画像は別 DB から持ち込まない
+				if (crossWork && declaredKeys && !declaredKeys.has(k)) continue;
+				const cur = out[k];
+				if (!isEnrichEmpty(cur)) continue;
+				if (out === record) out = { ...record };
+				out[k] = v;
+			}
+			break; // 先頭の解決済みエントリのみ採用（SW enrich と同じ）
+		}
+	}
+	return out;
+}
+
 /**
  * ファイル/ディレクトリ名に使えない文字をアンダースコアへ置換する。
  * @param {any} s
@@ -403,6 +508,15 @@ async function main() {
 	const lang = args.lang === 'en' ? 'en' : 'jp';
 	const client = new CreationsDBClient();
 	const globalMeta = await client.getMeta();
+	const globalType = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'data', 'db_type.json'), 'utf8'));
+
+	// `*_DBLink` 参照先 DB のレコードを作品横断で使い回す（同じ DB を何度も読まないため）
+	const recordsCache = new Map();
+	const loadRecords = (w, d) => {
+		const key = `${w}/${d}`;
+		if (!recordsCache.has(key)) recordsCache.set(key, client.getRecords(w, d).catch(() => []));
+		return recordsCache.get(key);
+	};
 
 	const mode = args.reconcile
 		? 'reconcile'
@@ -413,7 +527,7 @@ async function main() {
 				: args.check
 					? 'check'
 					: 'plan';
-	const report = { mode, lang, generated: [], unchanged: [], reconciled: [], adopted: [], noPrivate: 0, noCpSkip: 0, errors: [] };
+	const report = { mode, lang, generated: [], unchanged: [], reconciled: [], adopted: [], noPrivate: 0, noCpSkip: 0, enriched: 0, errors: [] };
 	let exitCode = 0;
 
 	const worksList = await client.listWorks();
@@ -428,6 +542,10 @@ async function main() {
 		const tpl = fs.readFileSync(tplPath, 'utf8');
 		let workMeta = null;
 		try { workMeta = await client.getWorkMeta(workShort); } catch { workMeta = null; }
+		let workType = null;
+		try { workType = await client.getWorkType(workShort); } catch { workType = null; }
+		const enrichFields = collectEnrichLinkFields(globalType, workType);
+		const declaredKeys = collectDeclaredTopLevelKeys(globalType, workType);
 
 		let dbs = [];
 		try { dbs = await client.listDBs(workShort); } catch { dbs = []; }
@@ -440,10 +558,22 @@ async function main() {
 			const pathRoles = await client.resolveIndexPathRoles(workShort, dbShort);
 			const seenPaths = new Map();
 
-			for (const rec of records) {
-				if (!hasFilledConversationPattern(rec)) { report.noCpSkip++; continue; }
-				const idVal = getByPath(rec, pathRoles.fileKey);
+			for (const baseRec of records) {
+				const idVal = getByPath(baseRec, pathRoles.fileKey);
 				if (args.id && String(idVal) !== args.id) continue;
+
+				// 不足フィールドを `$enrich: true` の `*_DBLink`（同一存在）から補填。
+				// ConversationPattern 自体が参照先にしか無いケース（豹変系女子 → アンオースドロジカ）が
+				// あるため、生成対象の判定より前に行う。
+				let rec = baseRec;
+				try {
+					rec = await enrichRecordFromLinks(baseRec, { work: workShort, db: dbShort, fields: enrichFields, loadRecords, declaredKeys });
+				} catch (e) {
+					report.errors.push({ work: workShort, db: dbShort, id: String(idVal), type: 'enrich', message: String(e?.message || e) });
+					exitCode = 1;
+				}
+				if (!hasFilledConversationPattern(rec)) { report.noCpSkip++; continue; }
+				if (rec !== baseRec) report.enriched++;
 
 				const outPath = computeOutputPath(outputRoot, dbShort, rec, pathRoles);
 				const relOut = path.relative(REPO_ROOT, outPath).replace(/\\/g, '/');
@@ -553,7 +683,7 @@ async function main() {
 			if (a.sections.length) console.log(`         sections: ${a.sections.join(', ')}`);
 		}
 	} else {
-		console.log(`[roleplay] mode=${report.mode} lang=${lang}  changed=${report.generated.length} unchanged=${report.unchanged.length} noCP=${report.noCpSkip} errors=${report.errors.length}`);
+		console.log(`[roleplay] mode=${report.mode} lang=${lang}  changed=${report.generated.length} unchanged=${report.unchanged.length} enriched=${report.enriched} noCP=${report.noCpSkip} errors=${report.errors.length}`);
 		for (const g of report.generated) {
 			console.log(`  ${g.wrote ? 'WROTE ' : 'PLAN  '}[${g.action}] ${g.path} (${g.bytes}B)`);
 			if (g.sections && g.sections.length) console.log(`         sections: ${g.sections.join(', ')}`);

@@ -25,6 +25,7 @@ using Newtonsoft.Json.Linq;
 //   - Works_Dir / Works_Shared オーバーライド（共通資料の疑似作品）
 //   - $IndexDef / $IndexDef_<DbNorm> によるインデックスキーのスキーマ駆動解決
 //   - 旧作品名エイリアス（Proxies → Works_DestinyFoxRecords）
+//   - 旧綴りの作品IDエイリアス（ShouArRiders → ShauErRiders）
 // 未対応（SW 専用。Cloudflare Workers 版と同じスコープ）:
 //   - _DBLink / _Jump の参照解決 enrich
 
@@ -120,6 +121,17 @@ namespace CreationsDB
         private static readonly Dictionary<string, string> LegacyWorkDirAliases = new()
         {
             { "Proxies", "Works_DestinyFoxRecords" },
+            { "ShouArRiders", "Works_ShauErRiders" },
+        };
+
+        /// <summary>
+        /// 旧綴りの作品ID → 現行綴り（獣爾騎兵: ShouArRiders → ShauErRiders）。
+        /// <see cref="ToWorkKey"/> の正規化時点で読み替え、db_meta の現行キーへ揃える。
+        /// lib/sw-common.js / lib/data-common.js / pkg/cloudflare / pkg/nodejs / pkg/python の同名テーブルと同期させること。
+        /// </summary>
+        private static readonly Dictionary<string, string> LegacyWorkIdAliases = new()
+        {
+            { "ShouArRiders", "ShauErRiders" },
         };
 
         /// <summary>英数字とアンダースコアのみ許可するトークン検証</summary>
@@ -147,7 +159,10 @@ namespace CreationsDB
             else if (raw.StartsWith("Works_")) normalized = $"#{raw}";
             else                               normalized = $"#Works_{raw}";
             var m = Regex.Match(normalized, @"^#Works_([A-Za-z0-9_]+)$");
-            return m.Success ? $"#Works_{m.Groups[1].Value}" : null;
+            if (!m.Success) return null;
+            var bare = m.Groups[1].Value;
+            // 旧綴り互換（ShouArRiders → ShauErRiders）
+            return LegacyWorkIdAliases.TryGetValue(bare, out var current) ? $"#Works_{current}" : $"#Works_{bare}";
         }
 
         /// <summary>

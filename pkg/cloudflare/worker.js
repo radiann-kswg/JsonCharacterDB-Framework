@@ -68,6 +68,14 @@ function capitalize(s) {
 }
 
 /**
+ * 旧綴りの作品ID → 現行綴り（獣爾騎兵: ShouArRiders → ShauErRiders）
+ * `lib/viewer-locator.js` / `lib/sw-common.js` / `lib/data-common.js` / `pkg/nodejs` / `pkg/python` /
+ * `pkg/csharp` の同種テーブルと同期させること（`tests/pkg.client-alias-parity.test.js` が検査する）。
+ * @type {Record<string, string>}
+ */
+const LEGACY_WORK_ID_ALIASES = { ShouArRiders: "ShauErRiders" };
+
+/**
  * 作品 ID を '#Works_<Name>' 形式に正規化
  * @param {string} workId
  * @returns {string|null}
@@ -84,13 +92,6 @@ function toWorkKey(workId) {
   // 旧綴り互換（ShouArRiders → ShauErRiders）: D1 の works/dbs/records キーは現行綴りのみ
   return `#Works_${LEGACY_WORK_ID_ALIASES[m[1]] || m[1]}`;
 }
-
-/**
- * 旧綴りの作品ID → 現行綴り（獣爾騎兵: ShouArRiders → ShauErRiders）
- * `lib/sw-common.js` / `lib/data-common.js` / `lib/viewer-locator.js` の同種テーブルと同期させること。
- * @type {Record<string, string>}
- */
-const LEGACY_WORK_ID_ALIASES = { ShouArRiders: "ShauErRiders" };
 
 /**
  * '#Works_XXX' → 'Works_XXX'（ファイルシステムパス用、既定導出）

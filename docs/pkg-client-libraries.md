@@ -186,7 +186,8 @@ Node.js / Python / C# の 3 クライアントは同じ API サーフェスを�
 | root フォールバック                    | `DataBases/` を持たない作品の `db_meta.json` / `db_type.json` を直下から読む              |
 | `$IndexDef` / `$IndexDef_<DbNorm>`     | インデックスキーをスキーマから解決（DB 単位の上書きを含む）                              |
 | `DB_Label` / `DB_Label_EN` / `DB_Image` | DB カタログ情報の pass-through                                                           |
-| 旧作品名エイリアス                     | `Proxies` → `Works_DestinyFoxRecords`                                                    |
+| 旧作品名エイリアス                     | `Proxies` → `Works_DestinyFoxRecords`（ディレクトリ解決のみ読み替え）                    |
+| 旧綴りの作品IDエイリアス               | `ShouArRiders` → `ShauErRiders`（作品ID正規化とディレクトリ解決の両方を読み替え）        |
 
 ### 未対応（Service Worker 専用）
 
@@ -311,3 +312,4 @@ npx vitest run tests/pkg.nodejs.test.js
 | 2026-06-02 | `pkg/` 全 5 パッケージを新規実装（Node.js / Python / C# / Cloudflare Workers / MCP）                                                                                                  |
 | 2026-06-02 | コンストラクタの `repoRoot` 引数を省略可能化（サブモジュール配置時に自動解決）                                                                                                        |
 | 2026-07-13 | FS クライアント 4 種（Node.js / Python / C# / MCP）を本体 DB 機構へ追従。`Works_Hidden` / `DB_Hidden` の直接アクセス遮断、`Works_Dir` オーバーライド、`$IndexDef` のスキーマ駆動解決、旧作品名エイリアス、JP/EN 命名、`_Secondaries` の完全一致規則、`isPrivate` フィルタ順序の修正。`tests/pkg.nodejs.test.js` を新設 |
+| 2026-09-14 | 旧綴りの作品IDエイリアス（`ShouArRiders` → `ShauErRiders`）を Python / C# へ追従（Node.js / Cloudflare は PR #34 で対応済み、MCP は Node.js クライアント経由で自動追従）。エイリアス表の言語横断パリティを `tests/pkg.client-alias-parity.test.js` で機械検査するようにした |
