@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Synced (2026-09-28) — 上流 `100BeautiesLab_CreationsDB` `5e8fc7e` → `3a645ff`
+
+- 6 ファイルをコンフリクトなしで取り込み。**52 ファイル 769 件 green**（テストファイルは 1 件も降りてこないため件数不変）。
+  同 `## [Unreleased]` の `### Changed (2026-09-28)` で `docs/api-sw-spec.md` / `docs/schema-meta-processing.md` を
+  上流版へ先行追従させたため、この merge では docs が差分に現れず**対象は 8 件 → 6 件**になった。
+- 上流から取り込んだ機能（下流へも波及）:
+  - **cross-work enrich の 2 段ガード**（`lib/data-common.js`）。`$enrich: true` の `*_DBLink`
+    （`$Def_DBLinkRef`）経路に meta ガードを追加し、参照元作品の `db_meta.json($DetailLayout)`
+    （`headerPills` + `basicFields` + `subFields`、`$alt` 代替キーとベース名 ↔ `_JP`/`_EN` 展開を含む）に
+    列挙された項目だけを持ち込む。従来は typedef ガードだけで、グローバル `data/db_type.json($DefType)` を
+    含むため実質「全項目許可」となり `$DetailLayout` 未宣言の項目まで流れ込んでいた。
+    `$DetailLayout` を持たない作品は従来どおりスキップ（欠損耐性）。
+  - **`$enrich: false` を enrich 禁止宣言として一般化**。従来は `*_DBLink` の解決可否のみに作用していたが、
+    通常フィールドにも適用され、同一 Work / cross-work の双方に効く。
+  - `mergeFromLinkedRecord()` の meta 許可リストを `subFieldKeys` → `allowKeys` へ一本化し、
+    ルート `_DBLink` 経路にも `fieldEntriesByKey` を渡すようにした。`stripLangSuffix()` を新設。
+  - **キャラクター一覧の進捗グループ並び替え**（`pages/characters.js` `renderList()` / `.sass` / `.css` / `.html`）。
+    `$DefType` の `$display.listOrder` を宣言したフィールドの辞書（`$EnumDef_<field>`）順に並べ、
+    `isListTop: true` 以外はコードごとの `<details class="list-group">`（既定は閉じる）へ入れる。
+    `pages/characters.html` の `asset-version` は `2026.09.24.3` へ。
+- `tools/build-roleplay-prompts.mjs` の `enrichRecordFromLinks()` は同じ enrich 規則を独立実装しており、
+  **上流でも今回の 2 段ガードへ未追従**。正典（`docs/api-sw-spec.md` §8.2）は先に上流仕様へ揃えてあるが、
+  実装の追従は上流の修正を待つ（下流で直すと次回同期で跳ね返るため）。
+- ローカル差分は全て温存された（`lib/data-common.js` の `'sub'` セクション、`pages/characters.js` の
+  `$DefType` フォールバック・画像 null ガード・`$DetailLayout.headerPills` の二重表示抑止）。
+- `sync:check` = **0 件 / exit 0**。
+- 点検レポート: [`_work_in_progress/2026-09-28_upstream-sync.md`](./_work_in_progress/2026-09-28_upstream-sync.md)
+
 ### Changed (2026-09-28) — `Progress` へ `$display.listOrder` を宣言し、docs を上流 `3a645ff` へ先行追従
 
 - **`data/db_type.json` の `Progress.$display` へ `"listOrder": true` を宣言し、`data/db_meta.json` の
