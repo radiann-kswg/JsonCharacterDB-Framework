@@ -1771,6 +1771,36 @@ body[data-lang=en] .lang-toggle .lang-toggle__opt[data-opt=en] {
   gap: var(--spacing-sm);
 }
 
+#list.grid-list > details.list-group {
+  grid-column: 1/-1;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+#list.grid-list > details.list-group > summary {
+  cursor: pointer;
+  padding: var(--spacing-sm) 0;
+  font-weight: 600;
+}
+
+#list.grid-list > details.list-group > .grid-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(12px, 2vw, 16px);
+  margin-top: var(--spacing-sm);
+}
+
+@media (min-width: 700px) {
+  #list.grid-list > details.list-group > .grid-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1080px) {
+  #list.grid-list > details.list-group > .grid-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 #list.grid-list .thumb {
   display: block;
   width: 100%;

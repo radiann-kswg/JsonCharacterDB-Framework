@@ -243,6 +243,12 @@
   - 表示上の従属関係のヒント
 - `tagSpace`
   - タグ系の見せ方の補助
+- `listOrder`
+  - `true` のとき、そのフィールドをキャラクター一覧の並び順キーにする（並び順の実体は `$EnumDef_<hashTag>` の辞書行側に置く）
+  - 辞書行の `isListTop` は 3 値: `true` = 1 つのグループにまとめて最上位（折りたたまない）/ `null`・未指定 = 中間 / `false` = 末尾
+  - 同じ段の中は辞書行の `listOrderNum`（小さいほど前）。未指定なら辞書の宣言順
+  - `isListTop: true` 以外はコードごとの `<details class="list-group">`（既定は閉じる / summary はラベル＋件数）へ入る。辞書に無いコードは末尾
+  - 同順位内は元の並び（番号順）を保つ。現在は `Progress`（`data/db_type.json`）が唯一の宣言
 - `wrapper`
   - 特殊 summary formatter を shared registry へ委譲するための識別子
 - `index`

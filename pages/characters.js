@@ -5448,6 +5448,80 @@ async function renderList(records, workId, onOpen, imageFields = null) {
 
 	const filteredRecords = records.filter(r => matchFilter(r, filter));
 
+	// 一覧の並び順: typedef で `$display.listOrder` を宣言したフィールドの辞書（$EnumDef_<field>）宣言を見る
+	// - `isListTop` は 3 値: true = 同一グループとして最上位（折りたたまない） / null(未指定) = 中間 / false = 末尾
+	// - 同じ段の中は `listOrderNum`（小さいほど前）。未指定なら辞書の宣言順
+	// - `isListTop: true` 以外はコードごとの折りたたみグループへ。辞書に無いコードは末尾
+	// - 同順位は元の並び（番号順）を保つ（sort は安定）
+	const listOrder = (() => {
+		const field = Object.keys(fieldDisplayMap).find(k => !k.includes('.') && fieldDisplayMap[k]?.listOrder);
+		if (!field) return null;
+		const rows = (globalThis.TypeResolver?.collectVarsDefRoots(globalDefType, metaForLookup) || [])
+			.map(root => root?.[`$EnumDef_${field}`])
+			.find(v => v && typeof v === 'object' && !Array.isArray(v));
+		if (!rows) return null;
+		const TIER_SPAN = 10000;
+		const UNKNOWN_WEIGHT = 3 * TIER_SPAN;
+		const order = new Map();
+		const tops = new Set();
+		let seq = 0;
+		for (const row of Object.values(rows)) {
+			const code = String(row?.[field] ?? '').trim();
+			if (!code || order.has(code)) continue;
+			const dictIndex = seq++;
+			const tier = row?.isListTop === true ? 0 : (row?.isListTop === false ? 2 : 1);
+			if (tier === 0) tops.add(code);
+			const num = Number(row?.listOrderNum);
+			order.set(code, tier * TIER_SPAN + (Number.isFinite(num) ? num : dictIndex));
+		}
+		if (!order.size) return null;
+		const codeOf = (r) => String(r?.[field] ?? '').trim();
+		return {
+			field,
+			rank: (r) => {
+				const code = codeOf(r);
+				if (tops.has(code)) return -1;
+				return order.get(code) ?? UNKNOWN_WEIGHT;
+			},
+			// 最上位グループと進捗未設定は畳まずにそのまま並べる
+			groupOf: (r) => {
+				const code = codeOf(r);
+				return (!code || tops.has(code)) ? '' : code;
+			}
+		};
+	})();
+	if (listOrder) filteredRecords.sort((a, b) => listOrder.rank(a) - listOrder.rank(b));
+
+	const groupCounts = new Map();
+	if (listOrder) {
+		for (const r of filteredRecords) {
+			const g = listOrder.groupOf(r);
+			if (g) groupCounts.set(g, (groupCounts.get(g) || 0) + 1);
+		}
+	}
+
+	/**
+	 * 進捗タグごとの折りたたみグループを #list へ追加し、カードの追加先を返す（既定は閉じる）
+	 * @param {string} code - 辞書コード（例: 'notProceeded'）
+	 * @returns {HTMLElement} グループ内のカードコンテナ
+	 */
+	const appendListGroup = (code) => {
+		const label = formatValueForDisplay(code, {}, metaForLookup, globalDefType, {
+			display: fieldDisplayMap[listOrder.field] || null,
+			schemaType: '$EnumDef|$EnumDef_withAbout',
+			fieldKey: listOrder.field
+		}) || code;
+		const inner = el('div', { class: 'grid-list' });
+		list.appendChild(el('details', { class: 'list-group' }, [
+			el('summary', {}, [`${String(label).replace(/\n/g, ' / ')}（${groupCounts.get(code) || 0}）`]),
+			inner
+		]));
+		return inner;
+	};
+
+	let currentGroupKey = '';
+	let currentGroup = null;
+
 	for (let i = 0; i < filteredRecords.length; i++) {
 		const r = filteredRecords[i];
 		shown++;
@@ -5569,7 +5643,12 @@ async function renderList(records, workId, onOpen, imageFields = null) {
 			chipEls.length ? el('div', { class: 'meta' }, chipEls) : null
 		]);
 
-		list.appendChild(item);
+		const groupKey = listOrder ? listOrder.groupOf(r) : '';
+		if (groupKey !== currentGroupKey) {
+			currentGroupKey = groupKey;
+			currentGroup = groupKey ? appendListGroup(groupKey) : null;
+		}
+		(currentGroup || list).appendChild(item);
 
 		// Progressive rendering: update UI every 5 items for better perceived performance
 		if (shouldShowProgress && i % 5 === 0) {
