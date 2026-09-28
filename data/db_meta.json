@@ -682,67 +682,86 @@
         "#Progress_Yet": {
           "Progress": "notProceeded",
           "Progress_JP": "未着手",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": false
         },
         "#Progress_Tentative": {
           "Progress": "stillTentative",
           "Progress_JP": "現状は仮公開(アルファリリース)",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": null,
+          "listOrderNum": 5
         },
         "#Progress_Unprofiled": {
           "Progress": "unprofiled",
           "Progress_JP": "プロフィール公開は無し",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": true
         },
         "#Progress_Creating": {
           "Progress": "nowCreating",
           "Progress_JP": "制作中",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": null,
+          "listOrderNum": 2
         },
         "#Progress_Secret": {
           "Progress": "unreleased",
           "Progress_JP": "公開待ち",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": true
         },
         "#Progress_BetaReleased": {
           "Progress": "released(beta)",
           "Progress_JP": "公開済み(ベータリリース)",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": true
         },
         "#Progress_Released": {
           "Progress": "released",
           "Progress_JP": "公開済み",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": true
         },
         "#Progress_Recreating": {
           "Progress": "nowRecreating",
           "Progress_JP": "再制作中",
-          "isForSecondary": false
+          "isForSecondary": false,
+          "isListTop": null,
+          "listOrderNum": 1
         },
         "#Progress_Founded": {
           "Progress": "founded",
           "Progress_JP": "確認済み",
-          "isForSecondary": true
+          "isForSecondary": true,
+          "isListTop": null,
+          "listOrderNum": 4
         },
         "#Progress_Accepted": {
           "Progress": "accepted",
           "Progress_JP": "公認済み",
-          "isForSecondary": true
+          "isForSecondary": true,
+          "isListTop": true
         },
         "#Progress_Remaking": {
           "Progress": "accepted\nnowRemaking",
           "Progress_JP": "公認済み\nこちらで再制作中",
-          "isForSecondary": true
+          "isForSecondary": true,
+          "isListTop": null,
+          "listOrderNum": 3
         },
         "#Progress_Remaded": {
           "Progress": "accepted\nremadeReleased",
           "Progress_JP": "公認済み\nこちらからも公開済み",
-          "isForSecondary": true
+          "isForSecondary": true,
+          "isListTop": true
         },
         "#Progress_Archived": {
           "Progress": "archived",
           "Progress_JP": "更新停止",
-          "isForSecondary": null
+          "isForSecondary": null,
+          "isListTop": null,
+          "listOrderNum": 6
         }
       },
       "$Def_AbilityStats": {

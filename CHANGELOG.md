@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Changed (2026-09-28) — `Progress` へ `$display.listOrder` を宣言し、docs を上流 `3a645ff` へ先行追従
+
+- **`data/db_type.json` の `Progress.$display` へ `"listOrder": true` を宣言し、`data/db_meta.json` の
+  `$EnumDef_Progress` 13 行へ `isListTop`（3 値）/ `listOrderNum` を追加した。**
+  上流 `100BeautiesLab_CreationsDB` の同名宣言と値・キー順まで一致させてある（照合済み）。
+  `listOrder` はデータ側の宣言が無いと完全に無効なため、これを入れるまでフレームワークの
+  一覧グルーピング機能は本リポジトリで動作しなかった。
+  - `isListTop: true` = 1 つのグループとして最上位（畳まない）/ `null`・未指定 = 中間 / `false` = 末尾
+  - 同じ段の中は `listOrderNum`（小さいほど前。未指定は辞書の宣言順）
+  - `Works_Sample` の 2 レコードはいずれも `Progress: "released"`（最上位段）なので、
+    **一覧の見え方は従来と変わらない**。折りたたみグループは生成されない
+- **`docs/api-sw-spec.md` / `docs/schema-meta-processing.md` を上流 `3a645ff` 版へ差し替えた**
+  （`$display.listOrder` の使用方法、cross-work enrich の 2 段ガード（typedef + meta）、
+  `$enrich: false` を enrich 禁止宣言として一般化した仕様）。
+  - どちらも同期対象かつ**未取り込み 8 件に含まれる**ため、独自の文言を書くと merge で同じ行が衝突する。
+    差し替え前の内容が上流 `5e8fc7e` 版とバイト単位で一致していることを確認したうえで上流版をそのまま当てたので、
+    **結果は `git merge upstream/creationsdb` が生成するツリーと完全に同一**（index の blob OID が
+    `upstream/creationsdb` 側と一致）。merge 時に差分として現れず衝突しない
+  - `tools/build-roleplay-prompts.mjs` の `enrichRecordFromLinks()` は同じ enrich 規則を独立実装しており、
+    上流でも**今回の 2 段ガードへ未追従**。ドキュメント側（正典）を先に上流仕様へ揃えたうえで、
+    実装の追従は上流の修正を待つ（下流で直すと次回同期で跳ね返るため）
+  - **注意**: ドキュメントだけ先行しているため、`git merge upstream/creationsdb` が済むまでは
+    `lib/data-common.js` / `pages/characters.js` の実装が記載に追いついていない
+- 検証: `npm test` = 52 files / 769 tests green / `npm run data:order:check` = exit 0
+- 点検レポート: [`_work_in_progress/2026-09-28_upstream-sync.md`](./_work_in_progress/2026-09-28_upstream-sync.md)
+
 ### Synced (2026-09-21) — 上流 `100BeautiesLab_CreationsDB` `74cfc58` → `5e8fc7e`
 
 - 21 ファイルをコンフリクトなしで取り込み（`lib/data-common.js` / `pages/characters.js` は

@@ -475,6 +475,7 @@ DB全体の代表画像（`DB_Image`、§3.3/§5.2参照）も、この疑似作
 - `{ hideText: '...' }` は意図的マスクなので上書きしません
 - 別 DB から画像フィールドは埋めません
 - 別作品からの `_DBLink` では、対象作品の schema に宣言されたトップレベル項目だけを取り込みます
+- typedef で `$enrich: false` を宣言したフィールドは、参照先から一切穴埋めしません（enrich 禁止宣言。同一 Work / cross-work の両方に効きます）
 - `_Jump` の `_Search` は 1 件一致だけ採用し、曖昧一致はスキップします
 - `_Jump` の参照先は「自前の `_DBLink`（`$Def_DBLinkRef` 形式）→ ルート `_DBLink` → `$enrich: true` の `*_DBLink`」の順に決まります。
   つまり `AnotherRegions_DBLink` などで参照先を書いてあるレコードは、`_Jump` 側へ `_DBLink` を重複して書かなくても同じ相手を引けます
@@ -516,6 +517,23 @@ typedef で `$enrich: true` を宣言した `*_DBLink` suffix フィールド（
 - クエリ側の null は「参照先レコード側も null/undefined」の明示マッチとして扱います
 - null 入りインデックスは複数レコードに一致し得るため、**1 件一致のみ採用**し、複数一致・0 件はスキップします
 - null を含まないインデックスの照合は従来どおり（先頭一致採用・null は不一致扱い）です
+
+#### cross-work 時の 2 段ガード（typedef + meta）
+
+`_Work` が参照元と異なるエントリのマージは、次の両方を満たすトップレベル項目だけを持ち込みます。
+
+1. **typedef**: 参照元作品の `db_type.json($DefType)` + グローバル `data/db_type.json($DefType)` に宣言済み
+2. **meta**: 参照元作品の `db_meta.json` の `$DetailLayout`（`headerPills` / `basicFields` / `subFields`）に列挙済み
+   （`$alt` の代替キーも、primary が列挙されていれば同じ枠で許可）
+
+どちらの照合もベース名 ↔ `_JP` / `_EN` を相互に展開して行います。グローバル typedef が
+`FirstPersonCalling` のように suffix 無しで宣言し、実データが `FirstPersonCalling_JP` / `_EN` を
+使うケースがあるためです。
+
+typedef 宣言だけだとグローバル宣言の全項目（`Summary_JP` / `ColorPalette` / `RelationNotes_JP` など）が
+通ってしまうため、**参照元作品の meta が「表示する」と宣言した項目だけ**へ絞ります。
+参照元作品に `$DetailLayout` が無い場合は meta ガードをスキップします（欠損耐性）。
+特定のフィールドを作品横断で一律に禁止したいときは、typedef 側へ `$enrich: false` を宣言します。
 
 ### 8.3 `_DBCrossLinkPath`（画像フィールド専用のDB/Work横断パス参照）
 

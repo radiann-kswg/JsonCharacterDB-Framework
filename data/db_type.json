@@ -13,6 +13,7 @@
       "$display": {
         "section": "basic",
         "tagSpace": "creatorProgress",
+        "listOrder": true,
         "facet": { "order": 40 }
       }
     },
