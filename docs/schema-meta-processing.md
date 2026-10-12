@@ -318,7 +318,7 @@
   "#Dict_SymphonyXVI": {
     "keyField": "Class",
     "compatListKey": "#List_Class",
-    "scopeField": { "Belonging": "シンフォニー.XVI(ゼクズィン)" }
+    "scopeField": { "Belonging": "シンフォニー.XVI" }
   }
   ```
 - 辞書本体（`dict_*.json`）側には行ごとにタグを書きません。`scopeField` の内容は、読み込み時（`lib/sw-common.js` の `readDictionaryBundle()` / `pages/characters.js` の `fetchDirectDictionaryBundle()` / テストの `loadDictionaryBundle()`）に辞書の全行へ自動合成されます（行が同名キーを既に持つ場合は行の値を優先）。

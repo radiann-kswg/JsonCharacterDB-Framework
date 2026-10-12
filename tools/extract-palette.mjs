@@ -1182,16 +1182,21 @@ export function extractSolidColors(images, opt = {}) {
     }
     if (!counted) return [];
 
+    // 以降は数万色 × マージ済み色数の総当たりになるため（RGBA 書き出しの素材は 1 枚で
+    // 2.6 万色ある）、HEX 文字列を介さず整数 RGB の二乗距離で比べる。判定は colorDistance() と同値。
+    const sq = (/** @type {number[]} */ a, /** @type {number[]} */ b) =>
+        (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+    const excludeRgb = exclude.map(hexToRgb);
     const rows = [...hist]
         .sort((a, b) => b[1] - a[1])
-        .map(([key, count]) => ({ hex: toHex((key >> 16) & 255, (key >> 8) & 255, key & 255), count }))
-        .filter(row => !exclude.some(e => colorDistance(e, row.hex) <= SOLID_EXCLUDE_TOL));
+        .map(([key, count]) => ({ rgb: [(key >> 16) & 255, (key >> 8) & 255, key & 255], count }))
+        .filter(row => !excludeRgb.some(e => sq(e, row.rgb) <= SOLID_EXCLUDE_TOL ** 2));
 
     // 同じ塗りのアンチエイリアス縁を、面積の大きい色へ吸収する（面積降順に貪欲マージ）
-    /** @type {Array<{hex: string, count: number}>} */
+    /** @type {Array<{rgb: number[], count: number}>} */
     const merged = [];
     for (const row of rows) {
-        const dup = merged.find(m => colorDistance(m.hex, row.hex) <= SOLID_MERGE_TOL);
+        const dup = merged.find(m => sq(m.rgb, row.rgb) <= SOLID_MERGE_TOL ** 2);
         if (dup) dup.count += row.count;
         else merged.push({ ...row });
     }
@@ -1202,7 +1207,7 @@ export function extractSolidColors(images, opt = {}) {
         .sort((a, b) => b.count - a.count)
         .filter(m => m.count / counted >= minRatio)
         .slice(0, SOLID_TOP)
-        .map(m => ({ hex: m.hex, ratio: Number((m.count / counted).toFixed(4)), count: m.count }));
+        .map(m => ({ hex: toHex(...m.rgb), ratio: Number((m.count / counted).toFixed(4)), count: m.count }));
 }
 
 // ────────────────────────────────────────────────────────────────────────────

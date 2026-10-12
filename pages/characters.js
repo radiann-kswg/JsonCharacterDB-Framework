@@ -1113,7 +1113,7 @@ async function fetchGlobalDefType() {
 					? info.dictFile.trim()
 					: `dict_${derivedName}.json`;
 
-				// scopeField（例: { "Belonging": "シンフォニー.XVI(ゼクズィン)" }）は辞書ファイル1本まるごとに
+				// scopeField（例: { "Belonging": "シンフォニー.XVI" }）は辞書ファイル1本まるごとに
 				// 適用される条件のため、行ごとに手書きせず読み込み時に全行へ合成する（行側の値があれば行を優先）
 				const scopeCondition = (info.scopeField && typeof info.scopeField === 'object' && !Array.isArray(info.scopeField))
 					? info.scopeField
@@ -3001,7 +3001,7 @@ function mergeVarsDefLayers(...sources) {
 /**
  * Dictionaries カタログ（#Dict_*）から、指定した辞書リストキーに対応する scopeField 条件を探す
  * - scopeField は「その辞書ファイル1本まるごとが、どのフィールド＝値のキャラクター向けか」を
- *   宣言する任意プロパティ（例: { "Belonging": "シンフォニー.XVI(ゼクズィン)" }）。
+ *   宣言する任意プロパティ（例: { "Belonging": "シンフォニー.XVI" }）。
  *   行ごとの手書きタグは不要で、読み込み時（sw-common.js / characters.js 双方のローダー）に
  *   辞書の全行へ自動合成される。
  * @param {Object|null} dictionariesCatalog - metaForLookup.Dictionaries

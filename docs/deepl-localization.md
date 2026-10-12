@@ -117,7 +117,7 @@ npm run deepl:sync-glossary          # -- --dry-run で対象だけ確認も可
 npm run deepl:eval -- --fields Summary,Character --work Works_NumberTales --limit 25
 ```
 
-`.cache/deepl/eval-report.md` に「既存 EN」「DeepL 訳」を類似度の低い順で並べる。**乖離＝誤りではない**（文体・意訳の揺れが大半）。採否は人間が判断し、必要な修正は `localization-en-rules.md` の規則（キー順序・上書き条件）に従って手作業で反映する。
+`.cache/deepl/eval-report.md` に「既存 EN」「DeepL 訳」を類似度の低い順で並べる。**乖離＝誤りではない**（文体・意訳の揺れが大半）。採否は人間が判断し、必要な修正は `localization-en-rules.md` の規則（キー順序・上書き条件）に従って手作業で反映する。このレポートを入力に、用語・命名由来・文芸表現まで含めてエージェントに校正案を出させるときは Skill **`localize-proofread`**（[`.claude/skills/localize-proofread/SKILL.md`](../.claude/skills/localize-proofread/SKILL.md)）を使う。
 
 ### 3-4. キャラ文脈（GenderType・呼称）を踏まえた下書き翻訳をしたいとき
 
@@ -175,6 +175,7 @@ cp .env.example .env
 | スクリプト（Node） | `tools/deepl/`（`build-glossary-source` / `sync-glossary` / `evaluate-translations` / `draft-translate` / `deepl-client`） |
 | スクリプト（Python） | [`tools/deepl_py/`](../tools/deepl_py/README.md)（`draft_translate.py` / `deepl_client.py` / `pronoun_normalize.py`） |
 | Claude Skill（`field_EN` 新規挿入・少数レコードの丁寧な翻訳） | [`.claude/skills/localize-en-draft/SKILL.md`](../.claude/skills/localize-en-draft/SKILL.md) |
+| Skill（既存英訳・辞書・キャラスト本文の校正、候補提示のみ） | [`.claude/skills/localize-proofread/SKILL.md`](../.claude/skills/localize-proofread/SKILL.md) |
 | Copilot 英訳補助指示 | [`.github/instructions/localization-en.instructions.md`](../.github/instructions/localization-en.instructions.md) |
 | 固有名詞 早見表（生成物） | [`localization-glossary-quickref.md`](localization-glossary-quickref.md)（`npm run deepl:build-quickref`） |
 | 作業ログ | `_work_in_progress/2026-06-28_progress_deepl-localization.md` |
@@ -216,7 +217,7 @@ cp .env.example .env
 - **区切り**: 改行、または `/`（スラッシュ）。スラッシュは**空白の有無を問わず**検知するが、空白を伴わないスラッシュは「**値全体に空白を含まない**」場合に限って区切りとみなす。
   - 分割する: `Nekomata / Warcat`（空白あり）/ `LunaWolf/Warwolf`・`繁殖鼠/生体改造済みモルモット種族`（値全体に空白なし）
   - 分割しない（誤爆防止）: `Enigma Division, Demotion/Retrograde Research Department` — フレーズ途中の**複合語スラッシュ**。値に空白があり、かつスラッシュ前後に空白が無いため区切りとみなさない。
-- **JA→EN**: 分割した**先頭の断片**（本文中で実際に多用される略号・優先表記）を訳語として採用する。例: `創世期` → `WDCE.`（`the "World Development & Creation Era"` ではなく）。JP 側が併記形なら**すべての断片**をソースキーとして登録する（`繁殖鼠` / `生体改造済みモルモット種族` の双方から `ClonicMouse` へ）。
+- **JA→EN**: 分割した**先頭の断片**（本文中で実際に多用される略号・優先表記）を訳語として採用する。例: `創世紀` → `WDCE.`（`the "World Development & Creation Era"` ではなく）。JP 側が併記形なら**すべての断片**をソースキーとして登録する（`繁殖鼠` / `生体改造済みモルモット種族` の双方から `ClonicMouse` へ）。
 - **EN→JA**: 分割した**すべての断片**を個別のソースキーとして登録する。略号（`WDCE.`）・全文（`the "World Development & Creation Era"`）のどちらが本文中に出現しても同じ JP 用語へ解決できる。訳先 JP が併記形なら**先頭の断片**を採用する。
 - 併記の順序（どちらを先に書くか）が訳語選定に直結するため、新規に併記形を追加するときは**実際の本文中で優先的に使われる表記を先頭**に置く。
 
