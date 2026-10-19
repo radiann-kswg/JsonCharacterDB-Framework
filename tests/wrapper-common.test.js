@@ -67,6 +67,16 @@ describe('wrapper-common registry', () => {
 		expect(summary).toBe('第9創世紀3年 / 西暦2050年');
 	});
 
+	it('formats a pre-epoch era point (negative YearInEra) as 元前 / BCE', () => {
+		const registry = globalThis.CharacterValueWrapperRegistry;
+		const globalTypeDef = loadJson('data/db_type.json');
+		const point = { EraGen: 8, YearInEra: -1, byRealYear: 2045 };
+		const context = { schemaType: '$Def_StoryEra|#Null', defName: '$Def_StoryEra', typeSources: [globalTypeDef] };
+
+		expect(registry.formatWithRegisteredWrapper(point, context)).toBe('第8創世紀元前1年 / 西暦2045年');
+		expect(registry.formatWithRegisteredWrapper(point, { ...context, pageLang: 'en' })).toBe('Gen.8 BCE 1 / 2045 CE');
+	});
+
 	it('formats story era summaries from structured role-aware points', () => {
 		const registry = globalThis.CharacterValueWrapperRegistry;
 		const globalTypeDef = loadJson('data/db_type.json');

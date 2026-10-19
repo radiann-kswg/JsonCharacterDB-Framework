@@ -626,6 +626,7 @@ h3
 	background: var(--card)
 	transition: opacity 0.3s ease
 
+	// JS 側の placeholder div が「画像なし」テキストを持つため、CSS 側では装飾だけにする（二重表示防止）
 	&:not([src]),
 	&[src=""],
 	&[src="#"]
@@ -637,9 +638,6 @@ h3
 		color: var(--muted)
 		font-size: 12px
 		text-align: center
-
-		&::before
-			content: "画像なし"
 
 .meta
 	display: flex
@@ -790,9 +788,6 @@ h3
 		color: var(--muted)
 		font-size: 14px
 		text-align: center
-
-		&::before
-			content: "メイン画像なし"
 
 .kv
 	margin-bottom: var(--spacing-sm)
@@ -1580,6 +1575,7 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 		align-items: stretch
 
 	.controls .control-row:not(.small) label,
+	.controls .control-row:not(.small) .grow,
 	.controls .control-row.small label,
 	.controls .control-row.small .ghost
 		width: 100%
@@ -2003,10 +1999,10 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 .detail-hero
 	position: relative
 	display: grid
-	grid-template-columns: clamp(200px, 26%, 280px) 1fr
-	gap: clamp(16px, 2.2vw, 24px)
+	grid-template-columns: clamp(240px, 30%, 320px) 1fr
+	gap: clamp(20px, 2.5vw, 28px)
 	align-items: center
-	padding: clamp(14px, 2vw, 22px)
+	padding: clamp(18px, 2.4vw, 26px)
 	margin-bottom: var(--spacing-lg)
 	border: 1px solid var(--border)
 	border-radius: 16px
@@ -2030,7 +2026,7 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 	align-self: center
 	width: 100%
 	aspect-ratio: 3/4
-	max-height: 360px
+	max-height: 380px
 	border-radius: 12px
 	overflow: hidden
 	border: 1px solid var(--border)
@@ -2063,7 +2059,7 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 
 	// 名前はバナー内で主役（ただし過大にしない）
 	.name
-		font-size: clamp(24px, 3.4vw, 34px)
+		font-size: clamp(28px, 4vw, 40px)
 
 	// クイックステータス（明示時のみ）は名前直下に
 	.detail-quickstats
@@ -2105,13 +2101,6 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 	.detail .image-item
 		width: auto
 		flex: none
-
-// ヒーローのポートレートをやや小さく（画像偏重を緩和）
-.detail-hero
-	grid-template-columns: clamp(170px, 22%, 232px) 1fr
-
-.detail-hero__portrait
-	max-height: 300px
 
 // 本文系の文字を読みやすく一段大きく
 .kv-table
@@ -2156,17 +2145,8 @@ th
 // サイズ感の再調整（モックアップ準拠：画像・文字を一回り大きく、余白の間延びを解消）
 // ==================================================
 
-// ヒーローを大きめに（ポートレートと名前を主役サイズへ）
-.detail-hero
-	grid-template-columns: clamp(240px, 30%, 320px) 1fr
-	gap: clamp(20px, 2.5vw, 28px)
-	padding: clamp(18px, 2.4vw, 26px)
-
-.detail-hero__portrait
-	max-height: 380px
-
-.detail-hero__main .name
-	font-size: clamp(28px, 4vw, 40px)
+// ヒーローのサイズ（ポートレート/名前）は .detail-hero 本体の宣言に集約済み。
+// ここで再宣言すると後勝ちで `@media (max-width: 720px)` の 1 カラム化を潰すので足さないこと。
 
 // ヒーロー内の要約タイルはやや大きめ・読みやすく
 .detail-hero .detail-quickstats

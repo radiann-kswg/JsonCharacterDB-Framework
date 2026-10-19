@@ -552,6 +552,14 @@
 - 1 つの年代について「創作内の紀年」と「現実年換算」を並列表現できるよう、`EraGen` / `YearInEra` と `byRealYear` を同居させます
 - `about_JP` / `about_EN` は、人手で整えた概要ラベルを優先表示したい場合の補助です
 
+#### 創世紀元年（`General.StoryEraEpochs`）と `YearInEra` の規約
+
+- 各創世紀の元年は、グローバル `data/db_meta.json` の `General.StoryEraEpochs` に `$Def_StoryEra[]`（`YearInEra: 1` の点）として宣言します（第6=1995 / 第7=2021 / 第8=2046 / 第9=2050）。
+- `YearInEra` は元年基準の相対年です: `byRealYear = 元年 + YearInEra - 1`（`YearInEra >= 1`）。元年より前は負数で表し、`-1` が元年の前年（元前1年）です。0 年は使いません（`byRealYear = 元年 + YearInEra`）。
+- 第8創世紀以降へ遷移しない作品があるため、同じ西暦を複数の `EraGen` で並記して構いません（例: 2046 = 第7創世紀26年 = 第8創世紀1年）。記載した `EraGen` ごとに相対年数が合っていれば良く、どの創世紀で数えるかは作品ごとの判断です。
+- `eraSummary`（`lib/wrapper-common.js`）は負の `YearInEra` を「第N創世紀元前M年」/「Gen.N BCE M」で表示します。
+- `tests/data.story-era.test.js` が、全 `StoryEra` 点（`_Secondaries[].StoryEra` 含む）の元年整合と、実年齢キャラクターの誕生年の一貫性を守ります。実年齢キャラクター = `Age` が数値（`hideText` 以外）で `BirthDay` に値があり、`ConceptAge` / `AnivDay`（年代に連動しない設定年齢・記念日）に値が無いレコード。`誕生年 = InEra.byRealYear - Age` を DB ごとに求め、`$enrich: true` の `*_DBLink`（同一人物の別作品 / 別 DB 参照）で結ばれた先（`Age` が数値で `ConceptAge` / `AnivDay` を持たないレコード）と一致することを確認します。
+
 UI 側は厳密構造より `about_JP` / `about_EN` を優先して整形表示します。
 `about_*` が未指定の場合は、現状の `pages/characters.js` では `InEra` を優先し、無ければ `FromEra` / `ToEra` から簡易 summary を自動生成します。
 

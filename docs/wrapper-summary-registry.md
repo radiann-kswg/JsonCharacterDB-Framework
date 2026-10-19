@@ -189,6 +189,7 @@ format(value, context);
 - `eraSummary`
   - 単点年代の整形を担当
   - `EraGen`, `YearInEra`, `byRealYear`, `about_*` を読む
+  - `YearInEra` が負数のときは元前として「第N創世紀元前M年」/「Gen.N BCE M」を出す（元年の規約は `docs/schema-meta-processing.md` §4.4）
 - `storyEraSummary`
   - `InEra`, `FromEra`, `ToEra` を見て、内部で `eraSummary` 相当の整形を並べて summary を作る
 

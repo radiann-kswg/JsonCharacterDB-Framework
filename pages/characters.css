@@ -662,9 +662,6 @@ h3 {
   font-size: 12px;
   text-align: center;
 }
-.thumb:not([src])::before, .thumb[src=""]::before, .thumb[src="#"]::before {
-  content: "画像なし";
-}
 
 .meta {
   display: flex;
@@ -821,9 +818,6 @@ h3 {
   color: var(--muted);
   font-size: 14px;
   text-align: center;
-}
-.poster:not([src])::before, .poster[src=""]::before, .poster[src="#"]::before {
-  content: "メイン画像なし";
 }
 
 .kv {
@@ -1706,6 +1700,7 @@ body[data-lang=en] .lang-toggle .lang-toggle__opt[data-opt=en] {
     align-items: stretch;
   }
   .controls .control-row:not(.small) label,
+  .controls .control-row:not(.small) .grow,
   .controls .control-row.small label,
   .controls .control-row.small .ghost {
     width: 100%;
@@ -2182,10 +2177,10 @@ body[data-lang=en] .lang-toggle .lang-toggle__opt[data-opt=en] {
 .detail-hero {
   position: relative;
   display: grid;
-  grid-template-columns: clamp(200px, 26%, 280px) 1fr;
-  gap: clamp(16px, 2.2vw, 24px);
+  grid-template-columns: clamp(240px, 30%, 320px) 1fr;
+  gap: clamp(20px, 2.5vw, 28px);
   align-items: center;
-  padding: clamp(14px, 2vw, 22px);
+  padding: clamp(18px, 2.4vw, 26px);
   margin-bottom: var(--spacing-lg);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -2209,7 +2204,7 @@ body[data-lang=en] .lang-toggle .lang-toggle__opt[data-opt=en] {
   align-self: center;
   width: 100%;
   aspect-ratio: 3/4;
-  max-height: 360px;
+  max-height: 380px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -2243,7 +2238,7 @@ body[data-lang=en] .lang-toggle .lang-toggle__opt[data-opt=en] {
   min-width: 0;
 }
 .detail-hero__main .name {
-  font-size: clamp(24px, 3.4vw, 34px);
+  font-size: clamp(28px, 4vw, 40px);
 }
 .detail-hero__main .detail-quickstats {
   margin: 6px 0 0;
@@ -2282,14 +2277,6 @@ body[data-lang=en] .lang-toggle .lang-toggle__opt[data-opt=en] {
     flex: none;
   }
 }
-.detail-hero {
-  grid-template-columns: clamp(170px, 22%, 232px) 1fr;
-}
-
-.detail-hero__portrait {
-  max-height: 300px;
-}
-
 .kv-table {
   font-size: 14px;
 }
@@ -2334,20 +2321,6 @@ th {
 
 .kv-table th, .kv-table td {
   padding: 9px 11px;
-}
-
-.detail-hero {
-  grid-template-columns: clamp(240px, 30%, 320px) 1fr;
-  gap: clamp(20px, 2.5vw, 28px);
-  padding: clamp(18px, 2.4vw, 26px);
-}
-
-.detail-hero__portrait {
-  max-height: 380px;
-}
-
-.detail-hero__main .name {
-  font-size: clamp(28px, 4vw, 40px);
 }
 
 .detail-hero .detail-quickstats {

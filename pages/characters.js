@@ -2399,12 +2399,13 @@ function buildFieldLabelMap(workTypeDef, globalTypeDef = {}) {
 	}
 
 	// EN ラベル逆引き補完:
-	// hashTag_JP のみで hashTag_EN を持たないエントリに対して、
+	// hashTag_JP のみで hashTag_EN を持たないエントリ（base / *_JP）に対して、
 	// 同名の _EN 兄弟エントリ（FormalName_EN など）の EN ラベルを逆引きして補完する
 	for (const key of Object.keys(labelMap)) {
 		if (key.startsWith('__en__')) continue;
 		if (labelMap[`__en__${key}`]) continue; // 既に EN ラベルがある
-		const enSiblingEnLabel = labelMap[`__en__${key}_EN`];
+		const base = key.replace(/_JP$/, '');
+		const enSiblingEnLabel = labelMap[`__en__${key}_EN`] || labelMap[`__en__${base}_EN`];
 		if (enSiblingEnLabel && typeof enSiblingEnLabel === 'string') {
 			labelMap[`__en__${key}`] = enSiblingEnLabel;
 		}
@@ -2881,6 +2882,8 @@ function buildTopLevelAliasMap(workTypeDef, globalTypeDef = {}) {
  * @returns {string} Localized label or fallback
  */
 function getFieldLabel(fieldName, labelMap, workMeta = null, globalDefType = null, fallback = null) {
+	// EN ラベルが無いときの最終手段: キー名の CamelCase を語に分ける（BasicInfo → Basic Info）
+	const camelToWords = (key) => String(key || '').replace(/_(JP|EN)$/, '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
 	const pickLocalized = (entry, key = '') => {
 		const lang = getCurrentPageLanguage();
 		if (lang === 'en' && key) {
@@ -2891,8 +2894,7 @@ function getFieldLabel(fieldName, labelMap, workMeta = null, globalDefType = nul
 			// EN ラベル未定義で JP ラベルが日本語の場合、フィールド名から _JP/_EN サフィックスを除去して英語表記として使う
 			const jpEntry = typeof entry === 'string' ? entry : '';
 			if (/[぀-ヿ㐀-鿿]/.test(jpEntry)) {
-				const cleanKey = String(key || '').replace(/_(JP|EN)$/, '').trim();
-				return cleanKey || key;
+				return camelToWords(key) || key;
 			}
 		}
 		return (typeof entry === 'string') ? entry : '';
@@ -2963,7 +2965,7 @@ function getFieldLabel(fieldName, labelMap, workMeta = null, globalDefType = nul
 
 	const fb = String(fallback || fieldName);
 	if (getCurrentPageLanguage() === 'en') {
-		return /[\u3040-\u30ff\u3400-\u9fff]/.test(fb) ? fieldName : fb;
+		return /[\u3040-\u30ff\u3400-\u9fff]/.test(fb) ? camelToWords(fieldName) : fb;
 	}
 	return fb;
 }
@@ -4765,7 +4767,21 @@ function getUiCopyByLanguage(lang) {
 			reset: 'Reset Cache/SW',
 			resetTitle: 'Reset caches and Service Worker, then reload.',
 			featureIssueTitle: 'Open GitHub Issue form for feature suggestions.',
-			langTitle: 'Switch page language to Japanese (日本語).'
+			langTitle: 'Switch page language to Japanese (日本語).',
+			openRelations: 'Open relations map',
+			noImage: 'No image',
+			gallery: 'Gallery',
+			noGalleryImages: 'No image data',
+			moreImages: 'Show {n} more images',
+			basicInfo: 'Basic Info',
+			profile: 'Profile',
+			specSection: 'Specs / Abilities',
+			relatedInfo: 'Related Info',
+			detail: 'Details',
+			privateTitle: 'Private',
+			privateBody: 'This character is private.',
+			loadingDetail: 'Loading details...',
+			close: 'Close'
 		};
 	}
 
@@ -4791,8 +4807,28 @@ function getUiCopyByLanguage(lang) {
 		resetTitle: 'キャッシュとService Workerをリセットしてリロードします',
 		featureIssueTitle: 'GitHub Issue の機能提案フォームを開きます。',
 		langTitle: '表示言語を英語 (English) へ切り替え',
+		openRelations: '相関図を開く',
+		noImage: '画像なし',
+		gallery: '画像ギャラリー',
+		noGalleryImages: '画像データがありません',
+		moreImages: 'さらに {n} 枚の画像を表示',
+		basicInfo: '基本情報',
+		profile: 'プロフィール/テキスト',
+		specSection: 'スペック/能力',
+		relatedInfo: '関連情報',
+		detail: '詳細',
+		privateTitle: '非公開',
+		privateBody: 'このキャラクターは非公開です。',
+		loadingDetail: '詳細情報を読み込んでいます...',
+		close: '閉じる'
 	};
 }
+
+/**
+ * 現在のページ言語に対応した UI 文言テーブルを返す（描画時に都度評価する）
+ * @returns {ReturnType<typeof getUiCopyByLanguage>}
+ */
+const ui = () => getUiCopyByLanguage(getCurrentPageLanguage());
 
 function applyStaticTextLanguage() {
 	const lang = getCurrentPageLanguage();
@@ -4820,6 +4856,7 @@ function applyStaticTextLanguage() {
 	setText('#btn-copy-short', copy.copyShort);
 	setText('#btn-feature-issue', copy.featureIssue);
 	setText('#btn-reset-sw', copy.reset);
+	setText('#btn-open-relations', copy.openRelations);
 
 	const searchInput = $('#search-input');
 	if (searchInput) searchInput.placeholder = copy.searchPlaceholder;
@@ -5637,7 +5674,7 @@ async function renderList(records, workId, onOpen, imageFields = null) {
 				alt: `${title} thumbnail`,
 				src: img,
 				loading: 'lazy' // Add lazy loading for performance
-			}) : el('div', { class: 'thumb placeholder' }, ['画像なし']),
+			}) : el('div', { class: 'thumb placeholder' }, [ui().noImage]),
 			el('h3', {}, [title]),
 			sub ? el('div', { class: 'sub' }, [sub]) : null,
 			chipEls.length ? el('div', { class: 'meta' }, chipEls) : null
@@ -5808,9 +5845,9 @@ async function buildDetailImageSection(workId, rec, dbName, imageFields, ctx) {
 			src: poster,
 			alt: `${getRecordPrimaryTitle(rec) || 'Character'} poster`,
 			loading: 'lazy'
-		}) : el('div', { class: 'poster placeholder' }, ['画像なし']),
+		}) : el('div', { class: 'poster placeholder' }, [ui().noImage]),
 		galleryImages.length > 0 ? el('div', { class: 'image-gallery' }, [
-			el('h4', {}, [getFieldLabel('Gallery', fieldLabelMap, metaForLookup, globalDefType, '画像ギャラリー')]),
+			el('h4', {}, [getFieldLabel('Gallery', fieldLabelMap, metaForLookup, globalDefType, ui().gallery)]),
 			el('div', { class: 'image-grid' }, galleryImages.slice(0, 6).map(imgData => // Limit initial images for performance
 				createGalleryImageItem(imgData)
 			).concat(
@@ -5822,14 +5859,14 @@ async function buildDetailImageSection(workId, rec, dbName, imageFields, ctx) {
 								loadMoreImages(workId, rec, imageFields, dbName, fieldLabelMap, workMeta, globalDefType, currentLayerName)
 									.catch((e) => console.warn('⚠️ Failed to load more images:', e));
 							}
-						}, [`さらに ${galleryImages.length - 6} 枚の画像を表示`])
+						}, [ui().moreImages.replace('{n}', String(galleryImages.length - 6))])
 					])
 				] : []
 			))
 		]) : el('div', { class: 'image-gallery' }, [
-			el('h4', {}, ['画像ギャラリー']),
+			el('h4', {}, [getFieldLabel('Gallery', fieldLabelMap, metaForLookup, globalDefType, ui().gallery)]),
 			el('div', { class: 'no-images', style: 'padding: 20px; text-align: center; color: var(--muted);' }, [
-				'画像データがありません'
+				ui().noGalleryImages
 			])
 		])
 	].filter(Boolean);
@@ -5855,18 +5892,18 @@ export async function renderDetail(workId, rec) {
 	const btnReportIssue = $('#btn-report-issue');
 
 	if (!isPublicCharacterRecord(rec)) {
-		$('#detail-title').textContent = '非公開';
+		$('#detail-title').textContent = ui().privateTitle;
 		const mount = $('#detail');
 		mount.textContent = '';
 		mount.appendChild(el('div', {
 			style: 'padding: 20px; text-align: center; color: var(--muted);'
-		}, ['このキャラクターは非公開です。']));
+		}, [ui().privateBody]));
 		if (btnReportIssue) btnReportIssue.hidden = true;
 		return;
 	}
 
 	const detailTitleBase = getRecordPrimaryTitle(rec);
-	$('#detail-title').textContent = detailTitleBase || '詳細';
+	$('#detail-title').textContent = detailTitleBase || ui().detail;
 	const mount = $('#detail');
 	mount.textContent = '';
 
@@ -5888,7 +5925,7 @@ export async function renderDetail(workId, rec) {
 		mount.textContent = '';
 		mount.appendChild(el('div', {
 			style: 'padding: 20px; text-align: center; color: var(--muted);'
-		}, ['詳細情報を読み込んでいます...']));
+		}, [ui().loadingDetail]));
 
 		// 描画に必要な typedef / meta / 各種マップをまとめて解決する（DOM 非依存・前段）
 		const renderCtx = await loadDetailRenderContext(workId, dbName, {
@@ -6296,7 +6333,7 @@ export async function renderDetail(workId, rec) {
 						const { value: v, usedKey } = getValueWithAlt(key);
 						if (v === null || v === undefined || v === '') continue;
 						nodes.push(el('span', { class: 'pill' }, [
-							getFieldLabel(usedKey || key, fieldLabelMap, workMeta, globalDefType, usedKey || key),
+							`${getFieldLabel(usedKey || key, fieldLabelMap, workMeta, globalDefType, usedKey || key)}: `,
 							formatValueForDisplay(v, fieldLabelMap, metaForLookup, globalDefType, {
 								schemaType: fieldTypeMap?.[usedKey || key] ?? null,
 								display: topLevelDisplayMap?.[usedKey || key] ?? null,
@@ -6358,13 +6395,14 @@ export async function renderDetail(workId, rec) {
 		})();
 
 		// basicFields のキー配列から、*_JP/_EN の同義ペアによる二重表示を抑止
+		// （*_JPReading は formatBilingualGroup が base 行へ「JP （読み）」としてマージ済みなので base と同一視する）
 		const normalizeBasicFieldKeys = (keys) => {
 			const out = [];
 			const seenBase = new Set();
 			for (const k of keys || []) {
 				if (!k || typeof k !== 'string') continue;
 				const info = parseLangSuffix(k);
-				const base = info ? info.base : k;
+				const base = info ? info.base : k.replace(/_JPReading$/, '');
 				if (seenBase.has(base)) continue;
 				out.push(base);
 				seenBase.add(base);
@@ -6434,9 +6472,24 @@ export async function renderDetail(workId, rec) {
 			return { value: formatFieldValue(labelKey, v), labelKey, sourceKey: key };
 		};
 
+		const basicFieldKeySet = new Set(normalizedBasicFieldKeys);
+		/**
+		 * `$alt` で別キーの値を借りて埋まった行は、貸し元が同じテーブルに居れば同じ値の重複なので出さない
+		 * （例: References の `Title` ← `Term_JP`。enrich 済みなら `_enrichment.altFallbacks`、未 enrich なら labelKey の差で判定）
+		 */
+		const isAltDuplicateRow = (it) => {
+			const af = rec?._enrichment?.altFallbacks || {};
+			const src = (it.labelKey !== it.sourceKey ? it.labelKey : '')
+				|| af[it.sourceKey] || af[`${it.sourceKey}_JP`] || af[`${it.sourceKey}_EN`] || '';
+			if (!src) return false;
+			const srcBase = parseLangSuffix(src)?.base || src;
+			return srcBase !== it.sourceKey && basicFieldKeySet.has(srcBase);
+		};
+
 		const basicFields = normalizedBasicFieldKeys
 			.map((key) => resolveBasicField(key))
-			.filter((it) => it && it.value); // Only show fields with values
+			.filter((it) => it && it.value) // Only show fields with values
+			.filter((it) => !isAltDuplicateRow(it));
 
 		// クイックステータス（ヒーロー帯）に出すキー集合。$DetailLayout.quickStats を明示した時のみ有効。
 		// 1 項目 1 箇所の原則: quickStats に出した項目は基本情報テーブルから除外する（重複表示の防止）。
@@ -6838,6 +6891,14 @@ export async function renderDetail(workId, rec) {
 				if (Array.isArray(alts)) {
 					for (const ak of alts) s.add(ak);
 				}
+			}
+
+			// enrich が `$alt` で他キーから借りて埋めた値（_enrichment.altFallbacks）は、
+			// 貸し元が表示済みなら同じ値の重複なので抑止する（例: References の Title ← Term_JP）
+			for (const [k, src] of Object.entries(rec?._enrichment?.altFallbacks || {})) {
+				if (typeof src !== 'string' || !src) continue;
+				const srcBase = parseLangSuffix(src)?.base || src;
+				if (s.has(src) || s.has(srcBase)) s.add(k);
 			}
 
 			// 互換/派生キーが混入する場合があるため、基本情報で表示したら抑止
@@ -7591,7 +7652,7 @@ export async function renderDetail(workId, rec) {
 
 		// basic セクションは「基本情報テーブル + スキーマで basic 指定された追加項目」をまとめて表示
 		const basicSection = el('div', { class: 'section' }, [
-			el('h3', {}, [getFieldLabel('BasicInfo', fieldLabelMap, workMeta, globalDefType, '基本情報')]),
+			el('h3', {}, [getFieldLabel('BasicInfo', fieldLabelMap, workMeta, globalDefType, ui().basicInfo)]),
 			basic,
 			basicExtraRows.length ? kvTable({}, basicExtraRows) : null,
 		].filter(Boolean));
@@ -7599,21 +7660,21 @@ export async function renderDetail(workId, rec) {
 		// スペック/能力: $display.section:'spec' の top-level フィールドのみ（ability/specStats は専用レンダラーがサブフィールドで表示）
 		const specSection = specRows.length
 			? el('div', { class: 'section' }, [
-				el('h3', {}, ['スペック/能力']),
+				el('h3', {}, [ui().specSection]),
 				kvTable({}, specRows),
 			].filter(Boolean))
 			: null;
 
+		// 共有言語の `Summary`（suffix 無し）も候補に入れる。無いと JP 表示で `Summary_EN` へ落ちて英文が混入する
 		const profileSummaryText = (() => {
 			const lang = getCurrentPageLanguage();
-			if (lang === 'en') return String(rec?.Summary_EN || rec?.Summary_JP || '').trim();
-			if (lang === 'jp') return String(rec?.Summary_JP || rec?.Summary_EN || '').trim();
-			return String(rec?.Summary_JP || rec?.Summary_EN || '').trim();
+			if (lang === 'en') return String(rec?.Summary_EN || rec?.Summary || rec?.Summary_JP || '').trim();
+			return String(rec?.Summary_JP || rec?.Summary || rec?.Summary_EN || '').trim();
 		})();
 		const includeSummaryInProfileSection = Boolean(profileSummaryText) && !isPromotedSubFieldKey('Summary');
 		const profileSection = (includeSummaryInProfileSection || profileItems.length)
 			? el('div', { class: 'section' }, [
-				el('h3', {}, [getFieldLabel('Profile', fieldLabelMap, workMeta, globalDefType, 'プロフィール/テキスト')]),
+				el('h3', {}, [getFieldLabel('Profile', fieldLabelMap, workMeta, globalDefType, ui().profile)]),
 				includeSummaryInProfileSection ? el('div', {}, [
 					el('div', { class: 'tag', style: 'margin-bottom: 6px;' }, [getFieldLabel('Summary', fieldLabelMap, workMeta, globalDefType, '概要')]),
 					preWrapText(profileSummaryText)
@@ -8004,7 +8065,7 @@ function renderReferenceConnectionsSection(rec, workId, workMeta, globalMeta, fi
 	if (!blocks.length) return null;
 
 	return el('div', { class: 'section' }, [
-		el('h3', {}, ['関連情報']),
+		el('h3', {}, [ui().relatedInfo]),
 		el('div', {}, blocks)
 	]);
 }
@@ -8708,7 +8769,7 @@ function showErrorMessage(title, error) {
 			el('button', {
 				class: 'error-dismiss',
 				onclick: () => document.querySelector('.error-overlay')?.remove()
-			}, ['閉じる'])
+			}, [ui().close])
 		])
 	]);
 
