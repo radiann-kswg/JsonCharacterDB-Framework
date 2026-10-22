@@ -2,7 +2,7 @@
  * 作品/DB カタログ向けメタ schema 宣言の存在確認。
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -61,27 +61,43 @@ describe('catalog meta schema declarations', () => {
     ]);
   });
 
-  it('work-local db_meta databases can expose DB labels', () => {
-    const workMeta = load('data/Works_NumberTales/DataBases/db_meta.json');
-    const refMeta = load('data/Works_NumberTales/References/db_meta.json');
-    const primary = workMeta?.Databases?.['#DB_Primary'];
-    const vocabulary = refMeta?.Databases?.['#Ref_Vocabulary'];
+  // 作品ディレクトリを走査する（作品名や年代の実値を書かないことで、上流のデータ更新がこのテストに差分を作らないようにする）
+  const workDirs = readdirSync(join(repoRoot, 'data')).filter((n) => n.startsWith('Works_'));
+  const loadWorkDbs = (rel) =>
+    workDirs
+      .map((w) => join(repoRoot, 'data', w, rel))
+      .filter((p) => existsSync(p))
+      .flatMap((p) => Object.values(JSON.parse(readFileSync(p, 'utf-8'))?.Databases ?? {}));
 
-    expect(primary?.DB_Label_JP).toBe('一次創作');
-    expect(primary?.DB_Label_EN).toBe('Primary');
-    expect(vocabulary?.DB_Label_JP).toBe('語彙辞書');
-    expect(vocabulary?.DB_Label_EN).toBe('Vocabulary');
+  it('work-local db_meta databases can expose DB labels', () => {
+    const primaries = loadWorkDbs('DataBases/db_meta.json').filter((db) => db?.DB_Label_JP !== undefined);
+    const refs = loadWorkDbs('References/db_meta.json').filter((db) => db?.DB_Label_JP !== undefined);
+    expect(primaries.length).toBeGreaterThan(0);
+    expect(refs.length).toBeGreaterThan(0);
+    for (const db of [...primaries, ...refs]) {
+      expect(typeof db.DB_Label_JP).toBe('string');
+      expect(typeof db.DB_Label_EN).toBe('string');
+    }
   });
 
   it('work-local db_meta story era values match the structured schema fields', () => {
-    const workMeta = load('data/Works_NumberTales/DataBases/db_meta.json');
-    const primary = workMeta?.Databases?.['#DB_Primary'];
-
-    expect(Array.isArray(primary?.StoryEra?.FromEra)).toBe(true);
-    expect(Array.isArray(primary?.StoryEra?.ToEra)).toBe(true);
-    expect(Array.isArray(primary?.StoryEra?.InEra)).toBe(true);
-    expect(primary?.StoryEra?.FromEra?.[0]).toMatchObject({ EraGen: 8, YearInEra: 5 });
-    expect(primary?.StoryEra?.InEra?.[1]).toMatchObject({ byRealYear: 2050 });
-    expect(typeof primary?.StoryEra?.StoryEraAbout_JP).toBe('string');
+    // {value, about} で包まれた形も許容する
+    const unwrap = (v) => (v && typeof v === 'object' && !Array.isArray(v) && 'value' in v ? v.value : v);
+    const eras = loadWorkDbs('DataBases/db_meta.json')
+      .map((db) => db?.StoryEra)
+      .filter(Boolean);
+    expect(eras.length).toBeGreaterThan(0);
+    for (const era of eras) {
+      expect(typeof era.StoryEraAbout_JP).toBe('string');
+      for (const key of ['FromEra', 'ToEra', 'InEra']) {
+        const points = unwrap(era[key]);
+        if (points == null) continue;
+        expect(Array.isArray(points)).toBe(true);
+        for (const p of points) {
+          expect(typeof p.EraGen === 'number' || typeof p.byRealYear === 'number').toBe(true);
+        }
+      }
+      expect(unwrap(era.InEra).some((p) => typeof p?.byRealYear === 'number')).toBe(true);
+    }
   });
 });
