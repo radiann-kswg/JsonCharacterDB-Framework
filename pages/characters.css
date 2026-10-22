@@ -1744,7 +1744,7 @@ body[data-lang=en] .lang-toggle .lang-toggle__opt[data-opt=en] {
     display: grid;
     grid-template-columns: 1fr;
   }
-  #list.grid-list > .grid-item {
+  #list.grid-list .grid-item {
     width: auto;
     flex-basis: auto;
   }

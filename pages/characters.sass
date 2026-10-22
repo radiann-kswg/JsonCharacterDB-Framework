@@ -1614,7 +1614,8 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 		display: grid
 		grid-template-columns: 1fr
 
-	#list.grid-list > .grid-item
+	// 折りたたみグループ内のカードにも効かせるため子孫セレクタ（直接子限定だと汎用 .grid-item の 50% 幅が残る）
+	#list.grid-list .grid-item
 		width: auto
 		flex-basis: auto
 
