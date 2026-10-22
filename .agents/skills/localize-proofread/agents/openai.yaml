@@ -1,0 +1,3 @@
+interface:
+  display_name: "Localize Proofread"
+  short_description: "Proofread existing EN / glossary / story text against JP and work concept; report only"

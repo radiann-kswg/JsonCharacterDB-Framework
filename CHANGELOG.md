@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Synced (2026-10-22) — 上流 `100BeautiesLab_CreationsDB` `3a645ff` → `2e8414d`
+
+- 18 ファイルを取り込み（コンフリクトは `tests/meta.catalog.schema.test.js` の 1 件のみ）。**52 ファイル 772 件 green**。
+- 上流から取り込んだ機能（下流へも波及）:
+  - cross-work enrich で `$alt` の primary に現 DB の値がある場合、参照先の代替キーを持ち込まない（`lib/data-common.js`）。
+  - キャラシート UI 改善（`pages/characters.*`、`asset-version` 更新）、`wrapper-common` の eraSummary 調整、
+    `tools/extract-palette.mjs` の改修、`docs/localization-en-rules.md` の全面改訂。
+- `tests/meta.catalog.schema.test.js` を **実データ非依存に書き換えた**（`data/Works_*` を走査し、作品名・年代の実値を
+  書かない）。上流がデータを更新するたびにコンフリクトしていた根本原因の解消。同じ内容を上流へも適用（上流 / 中流 / 下流で
+  同一ファイルになるので以後コンフリクトしない）。
+- `.sync/upstream.json` の `exclude` に `tests/data.story-era.test.js` を追加（上流の実データ暦 `General.StoryEraEpochs`
+  前提で、`Works_Sample` では通らない）。暦定義の柔軟化は Issue で追跡。
+- 上流の Skill `localize-proofread`（`.agents/skills/` + 生成物 `.claude/skills/`）を手動ミラーし、
+  `docs/deepl-localization.md` のリンク切れを解消。`agents:check` 一致。
+
 ### Synced (2026-09-28) — 上流 `100BeautiesLab_CreationsDB` `5e8fc7e` → `3a645ff`
 
 - 6 ファイルをコンフリクトなしで取り込み。**52 ファイル 769 件 green**（テストファイルは 1 件も降りてこないため件数不変）。
