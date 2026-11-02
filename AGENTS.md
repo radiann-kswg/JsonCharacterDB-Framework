@@ -154,6 +154,24 @@
 - **`ThisMasters._DBLink` のフォーマット**: `$Def_DBLinkRef` 形式を使用。`lib/section-renders/thisMasters.js` の `hydrateThisMastersLink` は SENTINEL_KEYS（`_DB / _Work / label_JP / label_EN`）を除いた最初のキーをインデックスとして動的解決します。
 - **画像以外のバイナリ資産（3Dモデル等）の追加パターン**: VRM 3Dアバター（`VRMs.corefolder_VRMPath`: `#VRMFilePath[]`）で確立したパターンとして、既存の `Images`/`ImageProcessor` パイプラインを流用・分岐で汚さず、専用型 + 専用 section-renderer（`$display.sectionWrapper`）+ client側専用URL構築ヘルパー（`pages/characters.js` の `buildTailsUnitImageUrl` 相当）で独立実装します。重い外部ライブラリ（three.js 等）が必要な場合は `pages/vendor/` に同梱（外部CDN非依存）し、ユーザー操作（ボタン押下等）まで動的 `import()` を遅延させます。詳細は `docs/wrapper-summary-registry.md` の `vrmViewerSection` / `docs/schema-meta-processing.md` の `#VRMFilePath` を参照してください。
 
+## GitHub Pages の軽量化・高速化（恒常対応）
+
+> 上流 `100BeautiesLab_CreationsDB` の 2026-11-02 の高速化対応（初回 17 秒 / 再訪 4〜11 秒 → 1 秒前後）で得た指標と仕組みを、以後の**すべての変更で維持する**ための節です。
+> 経緯・実測値は上流の `_work_in_progress/2026-11-02_progress_pages-load-time.md`、仕組みの詳細は `docs/api-sw-spec.md` §2.1 / §2.2。
+
+- **性能予算（受け入れ基準）**: SW がページを制御している 2 回目以降に、`pages/characters.html?c=Sample/Primary` と `pages/relations.html` のコンソール `🎉 Application initialization complete in Nms` が **1000ms 未満**。初回訪問（SW 登録込み）は 2 秒前後をベストエフォートとします。
+- **恒常対応の義務**: `lib/` / `pages/` / `svc/` / `api/` / SW を触る変更では、機能確認に加えて**ロード性能を退行させていないか**を確認対象に含めます。予算を悪化させる変更をやむを得ず入れる場合は、理由と計測値を `CHANGELOG.md` に書きます。
+- **計測してから直す**: 推測で最適化しません。本番またはローカルで「SW 発のネットワーク要求本数」「初期化時間」「CPU プロファイル」を測ってボトルネックを特定 → 最小修正 → 再計測、の順で進め、前後の数値を `_work_in_progress/` に残します（計測の一時出力は `.cache/`）。
+- **退行させない仕組み（データ取得）**:
+  - `data/**` の取得は `DataFetcher._fetchTextShared()`（進行中フェッチの束ね → Cache API の stale-while-revalidate → HTTP キャッシュ）を必ず経由します。`cache: 'no-store'` を戻したり、`DataFetcher` を迂回する直 `fetch` を足したりしません。
+  - 1 ロード内で同じ `data/**` JSON を SW が 2 回以上ネットワーク取得しないこと（`tests/sw.datafetcher-memo.test.js` が守る）。
+  - 共有するのは**本文文字列**まで、`DataFetcher.readDBShared()` の戻り値は**読み取り専用**です。取り出したレコードを変更・マージする場合は `structuredClone` 等で切り離します（`_Commons` の in-place 適用が共有元を汚すため）。
+  - `ensureApiSW()` の `reg.update()` は await しません。SW を介さない直読み経路は作りません。
+- **退行させない仕組み（CPU）**: レコード × field のホットパス（一覧描画・enrich・bootstrap）で、スキーマ木の再帰探索・`URLSearchParams` 生成・同一 JSON の再パースを繰り返しません。メモ化はオブジェクト同一性キーの `WeakMap` や「直近 1 件」に留め、TTL 付きの独自キャッシュ層は増やしません。
+- **鮮度の約束（変えるときは User 確認）**: `data/` push 後の最初のロードは旧データ（裏で更新）、次のロードから新データ。即時反映は UI の「キャッシュ/SWリセット」。この約束を変える変更は `docs/api-sw-spec.md` §2.2 と同時に更新します。
+- **保留中の手段（実測で足りないと示せたときだけ）**: JS モジュールの bundle 化、Cloudflare エッジキャッシュ（Cache Rule）は上流の 2026-11-02 の合意で見送り済みです。先回りで導入しません。
+- **上流との関係**: 本節は上流 `AGENTS.md` の同名節のミラーです。性能面の仕組みを変えたくなったら上流で直して同期で受け取ります（`docs/fork-sync.md`）。
+
 ## ブランチ運用方針
 
 ### `develop` ブランチ（コアドキュメント・主機能）
@@ -684,6 +702,7 @@ self.addEventListener("fetch", (event) => {
 - **Workers / R2 / D1 更新時**: `scripts/migrate.mjs` 再実行 → `wrangler deploy` → `<your-api-domain>/api/v1/works` で疎通確認
 - **UI 更新時**: ローカル HTTP サーバー上で主要ページ（例: `pages/characters.html`）の基本動作（取得・表示・検索）が成立すること
 - **指示書更新時**: 本ファイルを編集したら `npm run agents:build` で生成物を更新すること
+- **ロード性能**: SW / `lib/` / `pages/` を変更したら「GitHub Pages の軽量化・高速化（恒常対応）」の性能予算（2 回目以降 1000ms 未満）を割っていないこと
 - **変更履歴**: 重要な仕様変更は `CHANGELOG.md` へ追記
 - **作業ログ**: 公開可能な範囲で確認結果（成功/未実施/課題）を `./_work_in_progress/` に記録
 
