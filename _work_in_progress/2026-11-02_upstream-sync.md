@@ -166,3 +166,15 @@ git push                 # 中流 → その後 下流（下流は 3 ahead / beh
 - `AGENTS.md` は同期対象外（リポジトリの身元）なので手動ミラー。上流固有の参照（`NumberTales/Primary`・`r=NTS`・`_work_in_progress/` の経緯レポート）だけ
   本リポジトリ向けに言い換え、下流はさらに相関図なし・Pages 未公開時はローカル配信、と言い換えた。
 - `git push origin develop` は中流 → 下流の順で実行済み。push 後の `sync:check`（GitHub 基準）は両方 0 件。
+
+## 8. その5（同日・上流 `dc5e513` = 高速化 4 コミット分のコードレビュー修正）
+
+| 順 | リポジトリ | 内容 | 結果 |
+| --- | --- | --- | --- |
+| 1 | 中流 | `sync:update`（`52c1f24` → `dc5e513`）→ `git merge upstream/creationsdb` | コンフリクト 0 / 5 files / 54 files 787 tests green |
+| 2 | 下流 | 中流ローカル `develop`（`c552575`）を `--no-fetch --ref` で同期 → `git merge upstream/framework` | コンフリクト 0 / 5 files / 30 files 262 tests green |
+
+- 取り込んだ 5 件: `lib/sw-common.js`（裏再取得が 404 なら Cache API から消す）、`lib/data-common.js`（`cloneLinkedRecord` を `structuredClone` 1 行に）、
+  `tests/sw.datafetcher-memo.test.js`（404 で消えるケース）、新規 `tests/enrich.dblink-clone.test.js`（`_DBLink` 参照先の切り離し 2 ケース）、`docs/api-sw-spec.md` §2.2。
+- これで 2026-11-02 の軽量化・高速化（その1〜その4 ＋ レビュー修正）はいったん区切り。上流本番の 2 回目以降は characters 675/426ms、relations の bootstrap 437〜586ms。
+- `git push origin develop` は中流 → 下流の順で実行済み。push 後の `sync:check`（GitHub 基準）は両方 0 件。

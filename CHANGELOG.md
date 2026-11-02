@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Synced (2026-11-02 その5) — 上流 `100BeautiesLab_CreationsDB` `52c1f24` → `dc5e513`
+
+- 5 ファイルを取り込み（コンフリクト 0。`tests/enrich.dblink-clone.test.js` 新規）。**54 ファイル 787 件 green**。
+- 上流から取り込んだ内容（下流へも波及）: **fix: SW の裏再取得が 404 のとき Cache API から消す／`_DBLink` 参照先の切り離しをテストで固定**（上流 `dc5e513`。高速化 4 コミット分のコードレビューで出た 2 点）。
+  - `lib/sw-common.js` `_revalidateInBackground()`: 404 なら `cache.delete(url)`。`data/` から消した・改名した JSON が「キャッシュ/SWリセット」まで直リンクで居座り、`fileExists()` も true のままだった。ネットワーク失敗時は従来どおり残す。
+  - `lib/data-common.js` `cloneLinkedRecord()`: `structuredClone` 1 行に（JSON フォールバックは走らない）。
+  - `tests/sw.datafetcher-memo.test.js` に 404 で消えるケース、`tests/enrich.dblink-clone.test.js` に `resolveDbLinkSuffixRef` / `resolveDbLinkPrimaryRecord` の切り離し 2 ケース。`docs/api-sw-spec.md` §2.2 追記。
+- これで 2026-11-02 の軽量化・高速化対応（その1〜その4 ＋ レビュー修正）はいったん区切り。上流本番の 2 回目以降は characters 675/426ms、relations の bootstrap 437〜586ms で性能予算（1000ms 未満）内。
+
 ### Synced (2026-11-02 その4) — 上流 `100BeautiesLab_CreationsDB` `0b26d82` → `52c1f24`
 
 - 1 ファイル（`lib/sw-common.js`）を取り込み（コンフリクト 0）。**53 ファイル 784 件 green**。
