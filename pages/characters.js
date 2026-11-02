@@ -44,7 +44,7 @@ import {
 	ensureApiSW,
 	resetApiBase,
 	replayRememberedSwInitError
-} from '../lib/page-api-bridge.js?v=2026.08.15.8';
+} from '../lib/page-api-bridge.js?v=2026.11.02.1';
 import '../lib/wrapper-common.js';
 import '../lib/section-wrapper-common.js';
 import '../lib/basic-renders/calling-common.js';

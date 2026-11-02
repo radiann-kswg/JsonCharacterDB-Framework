@@ -286,8 +286,12 @@ function resolveFacetLabelPack(facet, value, record = null) {
 	try {
 		const workId = record?._relmapWorkId || '';
 		const meta = { General: { $VarsDef: state.varsDefByWork[workId] || {} } };
-		const pack = TR.resolveVarsDefLabelPack(facet.dict, value, state.globalTypeDef, meta, facet.dict, record);
-		return pack ? { jp: pack.jp, en: pack.en } : null;
+		// `$alt` で借りた値は借り先の辞書にしか無いので、借り元 → 借り先の順に引く
+		for (const dict of [facet.dict, ...(facet.alts || []).map(a => a.dict)]) {
+			const pack = TR.resolveVarsDefLabelPack(dict, value, state.globalTypeDef, meta, dict, record);
+			if (pack) return { jp: pack.jp, en: pack.en };
+		}
+		return null;
 	} catch {
 		return null;
 	}
@@ -402,12 +406,14 @@ function resolveWorkSegment(seg) {
  */
 function encodeDrillValue(level, value) {
 	if (value === UNSET_GROUP_KEY) return UNSET_SEGMENT;
-	if (!level?.codeFrom || !level?.dict) return value;
-	const lookup = createDictCellLookup(
-		state.varsDefByWork[scopeWorkId()] || {},
-		{ $type: [{ hashTag: level.key, $dict: level.dict }] }
-	);
-	return lookup(level.key, value, level.codeFrom) || value;
+	const varsDef = state.varsDefByWork[scopeWorkId()] || {};
+	// `$alt` で借りた値は借り先の辞書・code 列で引く
+	for (const { key, dict, codeFrom } of [{ key: level?.key, dict: level?.dict, codeFrom: level?.codeFrom }, ...(level?.alts || []).map(a => ({ ...a, key: a.path }))]) {
+		if (!codeFrom || !dict) continue;
+		const code = createDictCellLookup(varsDef, { $type: [{ hashTag: key, $dict: dict }] })(key, value, codeFrom);
+		if (code) return code;
+	}
+	return value;
 }
 
 /**
