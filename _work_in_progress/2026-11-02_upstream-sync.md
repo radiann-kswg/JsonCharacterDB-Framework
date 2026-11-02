@@ -151,3 +151,18 @@ git push                 # 中流 → その後 下流（下流は 3 ahead / beh
   `docs/api-sw-spec.md` と新規 `tests/data-common.reference-resolver.test.js`（SW / UI の CPU コスト削減。`readDBShared()` と各種メモ化）。
   上流 CHANGELOG の申し送りどおり `lib/` 3 ファイルと新規テストを対で取り込んだ。`_DBLink` マージの出力は不変。
 - `git push origin develop` は中流 → 下流の順で実行済み。push 後の `sync:check`（GitHub 基準）は両方 0 件。
+
+## 7. その4（同日・上流 `52c1f24` = 「GitHub Pages高速化 その４」）＋ AGENTS 恒常対応のミラー
+
+| 順 | リポジトリ | 内容 | 結果 |
+| --- | --- | --- | --- |
+| 1 | 中流 | `sync:update`（`0b26d82` → `52c1f24`）→ `git merge upstream/creationsdb`（`lib/sw-common.js` のみ） | コンフリクト 0 / 53 files 784 tests green |
+| 2 | 下流 | 中流ローカル `develop`（`6d232fa`）を `--no-fetch --ref` で同期 → `git merge upstream/framework` | コンフリクト 0 / 29 files 259 tests green |
+| 3 | 中流・下流 | `AGENTS.md` に上流の「GitHub Pages の軽量化・高速化（恒常対応）」節と確認事項「ロード性能」をミラー → `agents:build` / `agents:check` 一致 | 両方 `npm test` green |
+
+- 上流の本番（`database.numbertales-radiann.net`・その4 デプロイ後）を Claude の内蔵ブラウザで実測:
+  `characters.html?c=NumberTales/Primary` 2 回目以降 `🎉 Application initialization complete in` **675ms / 426ms**（1000ms 未満）。
+  `relations.html?r=NTS` 2 回目以降は `/pages/v1/bootstrap` が navigation から **437ms** で応答。
+- `AGENTS.md` は同期対象外（リポジトリの身元）なので手動ミラー。上流固有の参照（`NumberTales/Primary`・`r=NTS`・`_work_in_progress/` の経緯レポート）だけ
+  本リポジトリ向けに言い換え、下流はさらに相関図なし・Pages 未公開時はローカル配信、と言い換えた。
+- `git push origin develop` は中流 → 下流の順で実行済み。push 後の `sync:check`（GitHub 基準）は両方 0 件。

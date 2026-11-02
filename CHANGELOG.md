@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Synced (2026-11-02 その4) — 上流 `100BeautiesLab_CreationsDB` `0b26d82` → `52c1f24`
+
+- 1 ファイル（`lib/sw-common.js`）を取り込み（コンフリクト 0）。**53 ファイル 784 件 green**。
+- 上流から取り込んだ機能（下流へも波及）: **perf: `bootstrap` の作品 / DB 収集を並行化**（上流 `52c1f24`）。
+  `handleBootstrapEndpoint()` で作品ごと・作品内 DB ごとの収集を `Promise.all` に。`works` / `databases` の順序とレスポンス形状は不変。
+  上流の実測: Cache API が空の状態からの相関図 `bootstrap` 20.7 秒 → 数秒（開発環境 1056 → 578ms）。
+- `AGENTS.md` に上流の「GitHub Pages の軽量化・高速化（恒常対応）」節をミラー（性能予算 = 2 回目以降 1000ms 未満、`DataFetcher._fetchTextShared()` 経由の義務、
+  `readDBShared()` 読み取り専用、鮮度の約束）。本リポジトリ向けに対象 URL と経緯レポートの所在だけ言い換え。`.github/copilot-instructions.md` は `agents:build` で再生成。
+
 ### Synced (2026-11-02 その3) — 上流 `100BeautiesLab_CreationsDB` `b9197d8` → `0b26d82`
 
 - 7 ファイルを取り込み（コンフリクト 0。`tests/data-common.reference-resolver.test.js` 新規）。**53 ファイル 784 件 green**。
