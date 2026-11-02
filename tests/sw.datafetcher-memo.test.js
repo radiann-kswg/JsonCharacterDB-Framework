@@ -52,7 +52,7 @@ function createFetcher(options = {}) {
 		}
 	};
 
-	// Cache API の最小フェイク（match / put だけ。キーは絶対 URL 文字列）
+	// Cache API の最小フェイク（match / put / delete だけ。キーは絶対 URL 文字列）
 	const stored = new Map();
 	if (options.withCaches) {
 		for (const [pathname, text] of Object.entries(options.preCached || {})) {
@@ -60,7 +60,8 @@ function createFetcher(options = {}) {
 		}
 		const fakeCache = {
 			match: async (url) => (stored.has(url) ? { text: async () => stored.get(url) } : undefined),
-			put: async (url, res) => { stored.set(url, await res.text()); }
+			put: async (url, res) => { stored.set(url, await res.text()); },
+			delete: async (url) => stored.delete(url)
 		};
 		context.caches = { open: async () => fakeCache };
 	}
@@ -191,6 +192,22 @@ describe('DataFetcher の stale-while-revalidate（Cache API）', () => {
 		await flush();
 		expect(second.from).toBe('network');
 		expect(calls).toHaveLength(1);
+	});
+
+	it('裏の再取得が 404 ならキャッシュから消す（消した・改名したファイルが居座らない）', async () => {
+		const path = '/data/Works_NumberTales/DataBases/db_Removed.json';
+		const { calls, stored, fetcher } = createFetcher({
+			withCaches: true,
+			missing: new Set([path]),
+			preCached: { [path]: JSON.stringify({ from: 'cache' }) }
+		});
+
+		const first = await fetcher.fetchJSON(path);
+		expect(first.from).toBe('cache'); // 今回のロードは手元のキャッシュで動く
+
+		await flush();
+		expect(calls).toEqual([`GET ${path}`]);
+		expect(stored.has('https://example.invalid' + path)).toBe(false); // 次のロードからは 404 になる
 	});
 
 	it('fileExists は本文がキャッシュ済みなら HEAD を省略する', async () => {
