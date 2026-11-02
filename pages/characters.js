@@ -504,12 +504,25 @@ function isPlainObject(value) {
  * ここに残すのは `location` / `history` に依存する現在クエリの読み書きだけ。
  */
 
+/** `getQS()` の直近 1 件メモ（`location.search` が同じ間だけ有効） */
+let qsMemo = { search: null, value: null };
+
 /**
  * 現在のクエリ文字列パラメータをオブジェクトとして取得
  * 圧縮ロケータ（`c`）と旧形式の個別キーの双方を解釈し、個別キーがあればそちらを優先する
+ * `location.search` が変わらない限り前回の解釈結果を再利用する（一覧描画中にレコード数 × 言語判定の回数だけ
+ * 呼ばれ、`URLSearchParams` 生成とロケータ解析で 70ms 弱を使っていたため）。戻り値は呼び出しごとに新しい浅いコピー
  * @returns {Object} work, db, num, idx, idxKey, q, lang プロパティを持つオブジェクト
  */
 function getQS() {
+	if (qsMemo.search === location.search && qsMemo.value) return { ...qsMemo.value };
+	const value = parseQS();
+	qsMemo = { search: location.search, value };
+	return { ...value };
+}
+
+/** `getQS()` の実体（メモ化なし） */
+function parseQS() {
 	const p = new URLSearchParams(location.search);
 	const locator = parseViewerLocator(p.get(VIEWER_LOCATOR_PARAM) || '');
 
@@ -1429,6 +1442,9 @@ function getWorkIndexField(workKey, globalMeta, dbName) {
 	return workMeta.$DefType_Index || workMeta.$Def_Index || null;
 }
 
+/** `getWorkIndexAliasDefs()` の直近 1 件メモ（indexDef / workTypeDef / globalTypeDef の同一性で判定） */
+let aliasDefsMemo = null;
+
 /**
  * エイリアスIndex（$DefType 上の #Index 型 field のうち、現在の IndexDef の rootKey 以外）を収集
  * - lib/data-common.js の TypeDefUtils.collectIndexAliasDefs() と同じ思想の UI ミラー実装
@@ -1447,6 +1463,27 @@ function getWorkIndexAliasDefs(indexDef) {
 		const wtd = state?.workTypeDef || null;
 		const gtd = state?.globalTypeDef || null;
 
+		// 一覧描画でレコードごとに呼ばれるが、入力（indexDef / 両 typedef）は作品・DB が変わるまで同じ。
+		// 単一エントリのメモで十分（実測 105 件の一覧で 100ms 強を使っていた）
+		const memo = aliasDefsMemo;
+		if (memo && memo.indexDef === indexDef && memo.wtd === wtd && memo.gtd === gtd) return memo.out;
+		const out = computeWorkIndexAliasDefs(indexDef, rootKey, wtd, gtd);
+		aliasDefsMemo = { indexDef, wtd, gtd, out };
+		return out;
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * `getWorkIndexAliasDefs()` の実体（メモ化なし）
+ * @param {Object} indexDef
+ * @param {string} rootKey
+ * @param {Object|null} wtd - 作品別 typedef
+ * @param {Object|null} gtd - グローバル typedef
+ * @returns {Array<Object>}
+ */
+function computeWorkIndexAliasDefs(indexDef, rootKey, wtd, gtd) {
 		/** @type {Array<Object>} */
 		const defTypeEntries = [];
 		if (Array.isArray(wtd?.$DefType)) defTypeEntries.push(...wtd.$DefType);
@@ -1496,9 +1533,6 @@ function getWorkIndexAliasDefs(indexDef) {
 			});
 		}
 		return out;
-	} catch {
-		return [];
-	}
 }
 
 /**
@@ -5394,6 +5428,22 @@ function matchFilter(rec, q) {
 }
 
 /**
+ * メインスレッドへ制御を返す（長い描画ループの途中でローディング表示などを更新させる）
+ * `setTimeout(0)` はバックグラウンドタブで 1 秒単位に間引かれるため、間引き対象外の MessageChannel を使う
+ * @returns {Promise<void>}
+ */
+function yieldToMain() {
+	return new Promise((resolve) => {
+		if (typeof MessageChannel === 'function') {
+			const channel = new MessageChannel();
+			channel.port1.onmessage = () => resolve();
+			channel.port2.postMessage(null);
+			return;
+		}
+		setTimeout(resolve, 0);
+	});
+}
+
 /**
  * 動的画像解決を含む拡張リストビューレンダリング
  * @param {Array} records - キャラクターレコードの配列
@@ -5687,9 +5737,11 @@ async function renderList(records, workId, onOpen, imageFields = null) {
 		}
 		(currentGroup || list).appendChild(item);
 
-		// Progressive rendering: update UI every 5 items for better perceived performance
-		if (shouldShowProgress && i % 5 === 0) {
-			await new Promise(resolve => setTimeout(resolve, 0)); // Allow UI update
+		// Progressive rendering: 20 件ごとにメインスレッドへ制御を返す（ローディング表示の更新を通す）
+		// setTimeout(0) はバックグラウンドタブで 1 秒単位に間引かれ、105 件 × 5 件ごとの yield で
+		// 描画が 15〜20 秒かかっていた（本番実測）。MessageChannel は間引きの対象外
+		if (shouldShowProgress && i % 20 === 19) {
+			await yieldToMain();
 		}
 	}
 

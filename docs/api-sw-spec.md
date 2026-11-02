@@ -157,9 +157,14 @@
 リクエスト **2105 → 252（88.0% 減）**、転送 25.46 → 20.14 MiB。
 導入前は `Works_FLInvestigator78/DataBases/db_meta.json` を **39 回**読み直していました。
 
-> 残る 252 リクエストの多くはレコード本体の再読み込みで、`_DBLink` 解決に使う `resolveCache` が
-> `handleBootstrapEndpoint()` の **DB ごとのループ内で作り直されている**ことに由来します。
-> こちらは別途の最適化対象です（本メモ化の対象外）。
+> 残るリクエストの多くはレコード本体の再読み込みでした。`_DBLink` / `$enrich` の参照先ルックアップが
+> 参照元レコードごとに `readDB()` を呼ぶため、`db_Primary.json`（1.6MB）を 1 リクエストで 8 回パースしていました。
+> 2026-11-02 から参照先ルックアップは `DataFetcher.readDBShared()`（リクエストスコープでパース結果を共有する
+> **読み取り専用**の `readDB()`）を使い、照合して取り出した 1 件だけを `cloneLinkedRecord()` で切り離します。
+> `_Commons` を in-place 適用する主読込は従来どおり `readDB()`（非共有）です。
+> 同時に `ReferenceResolver.resolveAllInAny()` は、木に `#` 始まりキー × 文字列値の参照が無ければ
+> 深いコピーをせずそのまま返します（実データに該当キーは 0 件。await 付きの全フィールド再帰が CPU の主要コストでした）。
+> この 2 点で bootstrap の SW 内 CPU は約 1.0 秒 → 0.4 秒（Node 計測 1046 → 543ms）。
 
 ### 2.2 リクエストを跨いだフェッチの束ねと stale-while-revalidate（`DataFetcher._fetchTextShared`）
 
