@@ -127,3 +127,15 @@ git push                 # 中流 → その後 下流（下流は 3 ahead / beh
   Windows 側でまとめて削除すれば解消する（追跡ファイルではないので安全）
 - 上流 `100BeautiesLab_CreationsDB` に未コミットの staged 変更（`lib/sw-common.js` ほか）がある。
   点検は GitHub の `develop`（`2663133`）基準なので今回の結果には影響しないが、次回の同期対象になる
+
+## 5. その2（同日・上流 `b9197d8` = 「GitHub Pages高速化 その２」）
+
+| 順 | リポジトリ | 内容 | 結果 |
+| --- | --- | --- | --- |
+| 1 | 中流 | `sync:update`（`2663133` → `b9197d8`）→ `git merge upstream/creationsdb` | コンフリクト 0 / 3 files / 52 files 781 tests green |
+| 2 | 下流 | 中流ローカル `develop`（`9e64272`）を `--no-fetch --ref` で同期 → `git merge upstream/framework` | コンフリクト 0 / 3 files / 28 files 256 tests green |
+
+- 取り込んだ 3 件: `lib/sw-common.js` `tests/sw.datafetcher-memo.test.js` `docs/api-sw-spec.md`（Cache API の stale-while-revalidate。
+  上流 CHANGELOG の申し送りどおり `lib/` と `tests/` を対で取り込んだ）。
+- 鮮度の約束が変わる: `data/` push 後、最初のロードは旧データ（裏で更新）、次のロードから新データ。即時反映は UI の「キャッシュ/SWリセット」。
+- `git push origin develop` は中流 → 下流の順で実行済み。push 後の `sync:check`（GitHub 基準）は両方 0 件。

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Synced (2026-11-02 その2) — 上流 `100BeautiesLab_CreationsDB` `2663133` → `b9197d8`
+
+- 3 ファイルを取り込み（コンフリクト 0）。**52 ファイル 781 件 green**（`tests/sw.datafetcher-memo.test.js` の SWR 5 件増）。
+- 上流から取り込んだ機能（下流へも波及）: **perf: SW の `data/**` 取得を Cache API の stale-while-revalidate へ**（上流 `b9197d8`）。
+  - `DataFetcher._fetchTextShared()`: Cache API（既存の `CACHE_NAME`）に本文があれば即返し、無ければネットワーク → 200 を保存。
+    命中時は `_revalidateInBackground()` が裏で `fetch(url, { cache: 'no-cache' })` して差し替え（SW 生存中は URL ごとに 1 回）。
+  - `fileExists()`: 本文がキャッシュ済みなら `HEAD` を省く。`caches` が無い環境（Node / Vitest）では従来どおりネットワークだけ。
+  - 上流の実測: 10 分超の再訪で 304 が直列 45 本以上出て 10 秒へ戻っていたのを解消。warm リロードで JSON 要求 0 本。
+- **鮮度の約束が変わる**: `data/` push 後、最初のロードは旧データ（裏で更新）、次のロードから新データ。即時反映は UI の
+  「キャッシュ/SWリセット」（`caches` 全削除）。詳細は `docs/api-sw-spec.md` §2.2。
+
 ### Synced (2026-11-02) — 上流 `100BeautiesLab_CreationsDB` `e0dd24f` → `2663133`
 
 - 9 ファイルを取り込み（コンフリクト 0）。**52 ファイル 776 件 green**（前回 772 件）。
