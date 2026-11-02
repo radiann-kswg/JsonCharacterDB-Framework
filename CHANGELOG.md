@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Synced (2026-11-02) — 上流 `100BeautiesLab_CreationsDB` `e0dd24f` → `2663133`
+
+- 9 ファイルを取り込み（コンフリクト 0）。**52 ファイル 776 件 green**（前回 772 件）。
+- 上流から取り込んだ機能（下流へも波及）:
+  - **perf: GitHub Pages のページロード短縮**（上流 `76a58a5`）。SW の `DataFetcher.fetchJSON()` / `fileExists()` が
+    `cache: 'no-store'` をやめてブラウザ HTTP キャッシュに従い、進行中の同一 URL フェッチをモジュールレベル
+    `INFLIGHT_FETCH` で 1 本へ束ねる（`lib/sw-common.js` の `_fetchTextShared()`。共有は本文文字列まで、パースは利用側ごと）。
+    `ensureApiSW()` の `reg.update()` を await しない（`lib/page-api-bridge.js`）。`pages/characters.js` の
+    `page-api-bridge.js?v=` と `pages/characters.html` の `asset-version` を `2026.11.02.1` へ。`docs/api-sw-spec.md` §2.2 新設。
+    上流の本番実測: 2 回目以降 4〜11 秒 → 0.9 秒、初回 17 秒 → 2.4 秒。
+  - 相関図ファセットが `$IndexDef` 子要素の `$alt` を解釈（上流 `a141ed8`・2026-10-28。`lib/graph/graph-facets.js` / `pages/relations.js`）。
+- **挙動の変化**: `data/` を push した直後、最大 10 分は旧データが見える可能性がある（GitHub Pages の `max-age=600`。
+  HTML / JS と同じルール）。「キャッシュ/SWリセット」ボタンは HTTP キャッシュには触れない。
+
 ### Synced (2026-10-22) — 上流 `100BeautiesLab_CreationsDB` `3a645ff` → `2e8414d`
 
 - 18 ファイルを取り込み（コンフリクトは `tests/meta.catalog.schema.test.js` の 1 件のみ）。**52 ファイル 772 件 green**。
