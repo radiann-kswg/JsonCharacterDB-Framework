@@ -139,3 +139,15 @@ git push                 # 中流 → その後 下流（下流は 3 ahead / beh
   上流 CHANGELOG の申し送りどおり `lib/` と `tests/` を対で取り込んだ）。
 - 鮮度の約束が変わる: `data/` push 後、最初のロードは旧データ（裏で更新）、次のロードから新データ。即時反映は UI の「キャッシュ/SWリセット」。
 - `git push origin develop` は中流 → 下流の順で実行済み。push 後の `sync:check`（GitHub 基準）は両方 0 件。
+
+## 6. その3（同日・上流 `61101b8` + `0b26d82` = 「GitHub Pages高速化 その３」「同 続き」）
+
+| 順 | リポジトリ | 内容 | 結果 |
+| --- | --- | --- | --- |
+| 1 | 中流 | `sync:update`（`b9197d8` → `0b26d82`）→ `git merge upstream/creationsdb` | コンフリクト 0 / 7 files / 53 files 784 tests green |
+| 2 | 下流 | 中流ローカル `develop`（`89296d8`）を `--no-fetch --ref` で同期 → `git merge upstream/framework` | コンフリクト 0 / 7 files / 29 files 259 tests green |
+
+- 取り込んだ 7 件: `lib/sw-common.js` `lib/data-common.js` `lib/basic-renders/type-common.js` `pages/characters.js` `pages/characters.html`
+  `docs/api-sw-spec.md` と新規 `tests/data-common.reference-resolver.test.js`（SW / UI の CPU コスト削減。`readDBShared()` と各種メモ化）。
+  上流 CHANGELOG の申し送りどおり `lib/` 3 ファイルと新規テストを対で取り込んだ。`_DBLink` マージの出力は不変。
+- `git push origin develop` は中流 → 下流の順で実行済み。push 後の `sync:check`（GitHub 基準）は両方 0 件。

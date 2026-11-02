@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Synced (2026-11-02 その3) — 上流 `100BeautiesLab_CreationsDB` `b9197d8` → `0b26d82`
+
+- 7 ファイルを取り込み（コンフリクト 0。`tests/data-common.reference-resolver.test.js` 新規）。**53 ファイル 784 件 green**。
+- 上流から取り込んだ機能（下流へも波及）: **perf: SW / UI の CPU コスト削減**（上流 `61101b8` + `0b26d82`。相関図 bootstrap 1.0s → 0.4s、一覧描画 814ms → 270ms）。
+  - `lib/sw-common.js`: `DataFetcher.readDBShared(workId, dbName)` を追加（`readDB()` のリクエストスコープ・メモ化版。読み取り専用）。
+  - `lib/data-common.js`: `_DBLink` / `$enrich` の参照先ルックアップが `readDBShared()` 経由になり、取り出した 1 件は `structuredClone` で切り離す。
+    `ReferenceResolver.resolveAllInAny()` は `#` 参照キーが無ければ引数をそのまま返す。`_DBLink` マージの出力は不変。
+  - `lib/basic-renders/type-common.js`: `findNestedKey` / `findDictNameInSchema` を `WeakMap` でメモ化。
+  - `pages/characters.js`: `getQS()` / `getWorkIndexAliasDefs()` をメモ化。`pages/characters.html` の `asset-version` を `2026.11.02.2` へ。
+- `pkg/nodejs` は `readDBShared` を持たないため従来経路（`readDB`）へ自動フォールバック。
+
 ### Synced (2026-11-02 その2) — 上流 `100BeautiesLab_CreationsDB` `2663133` → `b9197d8`
 
 - 3 ファイルを取り込み（コンフリクト 0）。**52 ファイル 781 件 green**（`tests/sw.datafetcher-memo.test.js` の SWR 5 件増）。
