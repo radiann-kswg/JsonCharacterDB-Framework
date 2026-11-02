@@ -161,7 +161,7 @@
 > `handleBootstrapEndpoint()` の **DB ごとのループ内で作り直されている**ことに由来します。
 > こちらは別途の最適化対象です（本メモ化の対象外）。
 
-### 2.2 リクエストを跨いだフェッチの束ねと HTTP キャッシュ（`DataFetcher._fetchTextShared`）
+### 2.2 リクエストを跨いだフェッチの束ねと stale-while-revalidate（`DataFetcher._fetchTextShared`）
 
 §2.1 のメモ化は **1 API リクエストの内側**にしか効きません。キャラシートは 1 ページロードで
 `/works` → `/works/X/db` → `/db/Primary` ＋ `/meta` / `/deftype/global` / `/works/X/meta` … と
@@ -169,19 +169,30 @@ API を 8 本前後呼ぶため、各スコープが同じ辞書 JSON を取り�
 **1 ロードで SW 発のネットワーク要求が 149〜158 本**（辞書 21 本が各 4 回、1.6MB の `db_Primary.json` が 3 回）出ていました。
 `fetchJSON()` が `cache: 'no-store'` を付けていたため、ブラウザの HTTP キャッシュも一切使われていませんでした。
 
-2026-11-02 から `fetchJSON()` / `fileExists()` は次の 2 点で動きます。
+2026-11-02 から `fetchJSON()` / `fileExists()` は次の 3 層で動きます（すべて `DataFetcher._fetchTextShared(url)` に集約）。
 
-- **HTTP キャッシュに従う**（`cache` モード既定）。GitHub Pages は `Cache-Control: max-age=600` + ETag を返すため、
-  10 分以内の再訪はディスクキャッシュから、以降は条件付き要求（304）で本文を再送しません。
-  `data/` を push した直後は **最大 10 分**旧データが見える可能性がありますが、HTML / JS も同じ 10 分ルールで配信されているので挙動は揃います。
-  「キャッシュ/SWリセット」ボタンは SW と Cache API を消すだけで、HTTP キャッシュには触れません（JS からは消せないため）。
-- **進行中の同一 URL フェッチを 1 本へ束ねる**（モジュールレベルの `INFLIGHT_FETCH`）。リクエストスコープを跨いで共有し、
-  完了したら即座に外すので TTL による鮮度の後退はありません。共有するのは **Response 本文の文字列**までで、
-  パースは利用側ごとに行います（§2.1 のレコード本体 in-place 書き換え問題を再発させないため）。
+1. **進行中の同一 URL フェッチを 1 本へ束ねる**（モジュールレベル `INFLIGHT_FETCH`）。リクエストスコープを跨いで共有し、
+   完了したら即座に外します。共有するのは **Response 本文の文字列**までで、パースは利用側ごとに行います
+   （§2.1 のレコード本体 in-place 書き換え問題を再発させないため）。
+2. **Cache API の stale-while-revalidate**（キャッシュ名は `CACHE_NAME` = `100bl-api-v1`。`precache()` の `db_meta.json` と同じ箱）。
+   本文がキャッシュにあれば **即返し**、裏で `_revalidateInBackground()` が `fetch(url, { cache: 'no-cache' })`
+   （サーバーへ条件付き要求を必ず投げる。変更が無ければ 304 で本文は流れない）で差し替えます。
+   同じ URL の再取得は **SW の生存中 1 回だけ**（`REVALIDATED_URLS`）。無ければネットワークへ行き、200 なら保存します（404 は保存しない）。
+   `fileExists()` も本文がキャッシュ済みなら `HEAD` を省きます。
+3. **ブラウザ HTTP キャッシュ**（`cache` モード既定）。2. のミス時のネットワーク取得は GitHub Pages の
+   `Cache-Control: max-age=600` + ETag に従います。
 
-> 開発サーバーの注意: Live Server は `Cache-Control: public, max-age=0` + ETag を返すので編集は即座に反映されます。
-> `python -m http.server` のように `Cache-Control` を返さないサーバーだと、ブラウザの heuristic caching で
-> 編集直後の JSON が古いまま見えることがあります。開発時は `max-age=0` か `no-cache` を返すサーバーを使ってください。
+**なぜ 2. が要るか**: HTTP キャッシュだけだと、`max-age=600` を過ぎた再訪で SW が条件付き要求を **直列に 45 本以上**出し、
+ロードが 10 秒へ戻りました（2026-11-02 本番実測: `/works` だけで 4.4 秒）。SW 側に本文を持てば、経過時間に関係なく
+JSON のネットワーク要求は 0 本（初回の充填と、裏の再取得を除く）になります。
+
+**鮮度の約束**:
+
+- `data/` を push した後、**最初のロードは旧データ**（裏で再取得）、**次のロードから新データ**。
+  SW が生き続けている間（タブを開きっぱなし等）は再取得が 1 回しか走らないので、その場合も「一度閉じて開き直す」で反映されます。
+- 即時に効かせたいときは UI の「キャッシュ/SWリセット」ボタン（`caches` を全削除して SW を登録し直す）。
+- 開発サーバー（Live Server）は `max-age=0` + ETag を返すため、3. の層は毎回 304 再検証になります。2. の層は本番と同じ挙動です。
+  編集した JSON を即座に見たいときは同じくリセットボタンを使ってください。
 
 ---
 

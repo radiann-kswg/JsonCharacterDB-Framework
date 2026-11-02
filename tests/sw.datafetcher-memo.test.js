@@ -34,7 +34,9 @@ function loadText(relPath) {
  *
  * @param {Object} [options]
  * @param {Set<string>} [options.missing] - 404 を返させたいパス（`new URL()` 後の pathname で判定）
- * @returns {{ctx: Object, calls: string[], fetcher: Object}}
+ * @param {boolean} [options.withCaches] - SW の Cache API（`caches`）の最小フェイクを注入する
+ * @param {Record<string, string>} [options.preCached] - フェイク Cache に最初から入れておく { pathname: 本文 }
+ * @returns {{ctx: Object, calls: string[], inits: Object[], stored: Map<string,string>, fetcher: Object}}
  */
 function createFetcher(options = {}) {
 	const missing = options.missing || new Set();
@@ -50,6 +52,19 @@ function createFetcher(options = {}) {
 		}
 	};
 
+	// Cache API の最小フェイク（match / put だけ。キーは絶対 URL 文字列）
+	const stored = new Map();
+	if (options.withCaches) {
+		for (const [pathname, text] of Object.entries(options.preCached || {})) {
+			stored.set('https://example.invalid' + pathname, text);
+		}
+		const fakeCache = {
+			match: async (url) => (stored.has(url) ? { text: async () => stored.get(url) } : undefined),
+			put: async (url, res) => { stored.set(url, await res.text()); }
+		};
+		context.caches = { open: async () => fakeCache };
+	}
+
 	// fetch はコンテキストへ注入する（sw-common.js 内の `fetch(...)` がこれを拾う）
 	// 本文の受け渡しは `text()` 経由（DataFetcher._fetchTextShared が文字列だけを共有して利用側でパースする）
 	const inits = [];
@@ -59,11 +74,10 @@ function createFetcher(options = {}) {
 		calls.push(`${method} ${pathname}`);
 		inits.push(init);
 		const ok = !missing.has(pathname);
-		return {
-			ok,
-			status: ok ? 200 : 404,
-			text: async () => JSON.stringify({ path: pathname, marker: {} })
-		};
+		const body = JSON.stringify({ path: pathname, marker: {}, from: 'network' });
+		const res = { ok, status: ok ? 200 : 404, text: async () => body };
+		res.clone = () => ({ ...res });
+		return res;
 	};
 
 	vm.runInNewContext(loadText('lib/sw-common.js'), context, { filename: 'lib/sw-common.js' });
@@ -73,7 +87,7 @@ function createFetcher(options = {}) {
 		ORIGIN: 'https://example.invalid',
 		withRepoBase: (p) => p
 	};
-	return { ctx: context, calls, inits, fetcher: new DataFetcher(config) };
+	return { ctx: context, calls, inits, stored, fetcher: new DataFetcher(config) };
 }
 
 describe('DataFetcher のリクエストスコープ・メモ化', () => {
@@ -122,6 +136,71 @@ describe('DataFetcher のリクエストスコープ・メモ化', () => {
 		for (const init of inits) {
 			expect(['no-store', 'reload']).not.toContain(init?.cache);
 		}
+	});
+});
+
+describe('DataFetcher の stale-while-revalidate（Cache API）', () => {
+	const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+	it('Cache API が無い環境（Node / テスト）では従来どおりネットワークだけで動く', async () => {
+		const { calls, fetcher } = createFetcher();
+		const json = await fetcher.fetchJSON('/data/db_meta.json');
+		expect(calls).toEqual(['GET /data/db_meta.json']);
+		expect(json.from).toBe('network');
+	});
+
+	it('未キャッシュならネットワークから取り、200 本文を Cache API へ保存する', async () => {
+		const { calls, stored, fetcher } = createFetcher({ withCaches: true });
+
+		const json = await fetcher.fetchJSON('/data/db_meta.json');
+		await flush();
+
+		expect(calls).toEqual(['GET /data/db_meta.json']);
+		expect(json.from).toBe('network');
+		expect(stored.get('https://example.invalid/data/db_meta.json')).toContain('"from":"network"');
+	});
+
+	it('404 は Cache API へ保存しない', async () => {
+		const missing = new Set(['/data/Works_ShauErRiders/References/db_meta.json']);
+		const { stored, fetcher } = createFetcher({ withCaches: true, missing });
+
+		await expect(fetcher.fetchJSON('/data/Works_ShauErRiders/References/db_meta.json')).rejects.toThrow();
+		await flush();
+
+		expect(stored.size).toBe(0);
+	});
+
+	it('キャッシュ命中なら即返し、裏で 1 回だけ取り直して差し替える', async () => {
+		const path = '/data/Works_NumberTales/DataBases/db_Primary.json';
+		const { calls, inits, stored, fetcher } = createFetcher({
+			withCaches: true,
+			preCached: { [path]: JSON.stringify({ from: 'cache' }) }
+		});
+
+		const first = await fetcher.fetchJSON(path);
+		expect(first.from).toBe('cache'); // 手元のキャッシュを返す（ネットワーク待ちしない）
+
+		await flush();
+		expect(calls).toEqual([`GET ${path}`]); // 裏の revalidate が 1 回
+		// 再取得はサーバーへ条件付き要求を必ず投げる（HTTP キャッシュの旧コピーを保存し直さない）
+		expect(inits[0]?.cache).toBe('no-cache');
+		expect(stored.get('https://example.invalid' + path)).toContain('"from":"network"'); // 差し替わっている
+
+		// 同じ SW 生存中はもう取り直さない（2 回目は差し替え済みの本文が返る）
+		const second = await fetcher.fetchJSON(path);
+		await flush();
+		expect(second.from).toBe('network');
+		expect(calls).toHaveLength(1);
+	});
+
+	it('fileExists は本文がキャッシュ済みなら HEAD を省略する', async () => {
+		const path = '/data/Works_NumberTales/DataBases/db_Primary.json';
+		const { calls, fetcher } = createFetcher({ withCaches: true, preCached: { [path]: '[]' } });
+
+		expect(await fetcher.fileExists(path)).toBe(true);
+		expect(await fetcher.fileExists('/data/Works_NumberTales/DataBases/db_Nope.json')).toBe(true);
+
+		expect(calls).toEqual(['HEAD /data/Works_NumberTales/DataBases/db_Nope.json']);
 	});
 
 	it('スコープ内ではメタ JSON の逐次呼び出しが 1 回に合流する', async () => {
