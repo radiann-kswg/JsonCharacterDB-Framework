@@ -92,6 +92,26 @@ describe('collectFacets', () => {
 		expect(facets[0].key).toBe('Branch');                            // 宣言だけで軸が増える
 	});
 
+	it('`$IndexDef` 子要素の `$alt` は借り先を独立軸にせず、借り元の軸へ合流させる', () => {
+		const facets = collectFacets({}, {
+			'#Works_X': {
+				$IndexDef_Db: {
+					hashTag: 'Sign',
+					$type: [
+						{ hashTag: 'Zodiac', $dict: 'Zodiac', $alt: 'Planet', $display: { facet: { hierarchy: 15, codeFrom: 'Zodiac_Code' } } },
+						{ hashTag: 'Planet', $display: { facet: { codeFrom: 'Planet_Code' } } }
+					]
+				}
+			}
+		});
+		expect(facets.map(f => f.key)).toEqual(['Sign.Zodiac']);
+		const zodiac = facets[0];
+		expect(zodiac.alts).toEqual([{ path: 'Planet', dict: 'Planet', codeFrom: 'Planet_Code' }]);
+		expect(extractFacetValues({ Sign: { Planet: 'Earth' } }, zodiac)).toEqual(['Earth']);
+		// 借り元に値があれば借り先は見ない
+		expect(extractFacetValues({ Sign: { Zodiac: 'Aries', Planet: 'Mars' } }, zodiac)).toEqual(['Aries']);
+	});
+
 	it('宣言が無ければ空配列', () => {
 		expect(collectFacets({ $DefType: [{ hashTag: 'X' }] })).toEqual([]);
 		expect(collectFacets(null)).toEqual([]);

@@ -5,12 +5,15 @@
  * 各所から繰り返し呼ばれ、同一の `db_meta.json` を数十回フェッチし直していた
  * （実測: `Works_FLInvestigator78/DataBases/db_meta.json` が 39 回）。
  *
- * ここで守りたい性質は 2 つある。
+ * ここで守りたい性質は 3 つある。
  * 1. **速さ**: スコープ内では同一パスのメタ/型/辞書 JSON と HEAD 判定が 1 回に合流すること
  * 2. **正しさ**: レコード本体（`db_*.json` 等）は**決してメモ化しない**こと。
  *    `CommonsProcessor.applyCommonsToRecords()` はレコードを in-place で書き換える（`rec[k] = v`）ため、
  *    レコード配列を共有すると 2 番目以降の利用者が `_Commons` 適用済みの配列を受け取り、
  *    別 DB 文脈の値が混ざる。
+ * 3. **ロード全体の速さ**: スコープを跨いだ**進行中**フェッチは 1 本へ束ね、ブラウザ HTTP キャッシュを
+ *    無効化しないこと（`cache: 'no-store'` 時代は本番 1 ロードで 149 要求・辞書 21 本が各 4 回出ていた）。
+ *    束ねるのは本文文字列までで、パースは利用側ごとに行う（2. を壊さない）。
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -48,16 +51,18 @@ function createFetcher(options = {}) {
 	};
 
 	// fetch はコンテキストへ注入する（sw-common.js 内の `fetch(...)` がこれを拾う）
+	// 本文の受け渡しは `text()` 経由（DataFetcher._fetchTextShared が文字列だけを共有して利用側でパースする）
+	const inits = [];
 	context.fetch = async (url, init = {}) => {
 		const method = String(init.method || 'GET').toUpperCase();
 		const pathname = new URL(url).pathname;
 		calls.push(`${method} ${pathname}`);
+		inits.push(init);
 		const ok = !missing.has(pathname);
 		return {
 			ok,
 			status: ok ? 200 : 404,
-			// レコードは呼び出しごとに新しい配列であることを確かめたいので毎回生成する
-			json: async () => ({ path: pathname, marker: {} })
+			text: async () => JSON.stringify({ path: pathname, marker: {} })
 		};
 	};
 
@@ -68,7 +73,7 @@ function createFetcher(options = {}) {
 		ORIGIN: 'https://example.invalid',
 		withRepoBase: (p) => p
 	};
-	return { ctx: context, calls, fetcher: new DataFetcher(config) };
+	return { ctx: context, calls, inits, fetcher: new DataFetcher(config) };
 }
 
 describe('DataFetcher のリクエストスコープ・メモ化', () => {
@@ -79,6 +84,44 @@ describe('DataFetcher のリクエストスコープ・メモ化', () => {
 		await fetcher.fetchJSON('/data/db_meta.json');
 
 		expect(calls).toEqual(['GET /data/db_meta.json', 'GET /data/db_meta.json']);
+	});
+
+	it('進行中フェッチはスコープを跨いでも 1 本へ束ねる（本番で辞書が 4 回ずつ出ていた問題）', async () => {
+		const { calls, fetcher } = createFetcher();
+
+		// ページ側が /meta と /deftype/global を並行で投げた状況を模す（別々のリクエストスコープ）
+		const a = fetcher.fetchJSON('/data/Dictionaries/dict_Faction.json');
+		const b = fetcher.fetchJSON('/data/Dictionaries/dict_Faction.json');
+		await Promise.all([a, b]);
+
+		expect(calls).toEqual(['GET /data/Dictionaries/dict_Faction.json']);
+	});
+
+	it('束ねた進行中フェッチでもレコード本体は利用側ごとに別オブジェクトで返る', async () => {
+		const { calls, fetcher } = createFetcher();
+
+		const [a, b] = await Promise.all([
+			fetcher.fetchJSON('/data/Works_NumberTales/DataBases/db_Primary.json'),
+			fetcher.fetchJSON('/data/Works_NumberTales/DataBases/db_Primary.json')
+		]);
+
+		expect(calls).toHaveLength(1);
+		// 共有するのは本文文字列までなので、片方への _Commons in-place 適用は他方へ波及しない
+		expect(a).not.toBe(b);
+		a.marker.applied = true;
+		expect(b.marker.applied).toBeUndefined();
+	});
+
+	it('fetch にブラウザ HTTP キャッシュを無効化する cache モードを渡さない', async () => {
+		const { inits, fetcher } = createFetcher();
+
+		await fetcher.fetchJSON('/data/db_meta.json');
+		await fetcher.fileExists('/data/Works_NumberTales/DataBases/db_Primary.json');
+
+		// GitHub Pages の max-age=600 / ETag を活かすため、no-store / reload を指定しない
+		for (const init of inits) {
+			expect(['no-store', 'reload']).not.toContain(init?.cache);
+		}
 	});
 
 	it('スコープ内ではメタ JSON の逐次呼び出しが 1 回に合流する', async () => {

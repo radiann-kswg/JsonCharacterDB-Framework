@@ -161,6 +161,28 @@
 > `handleBootstrapEndpoint()` の **DB ごとのループ内で作り直されている**ことに由来します。
 > こちらは別途の最適化対象です（本メモ化の対象外）。
 
+### 2.2 リクエストを跨いだフェッチの束ねと HTTP キャッシュ（`DataFetcher._fetchTextShared`）
+
+§2.1 のメモ化は **1 API リクエストの内側**にしか効きません。キャラシートは 1 ページロードで
+`/works` → `/works/X/db` → `/db/Primary` ＋ `/meta` / `/deftype/global` / `/works/X/meta` … と
+API を 8 本前後呼ぶため、各スコープが同じ辞書 JSON を取りに行き、本番（GitHub Pages）では
+**1 ロードで SW 発のネットワーク要求が 149〜158 本**（辞書 21 本が各 4 回、1.6MB の `db_Primary.json` が 3 回）出ていました。
+`fetchJSON()` が `cache: 'no-store'` を付けていたため、ブラウザの HTTP キャッシュも一切使われていませんでした。
+
+2026-11-02 から `fetchJSON()` / `fileExists()` は次の 2 点で動きます。
+
+- **HTTP キャッシュに従う**（`cache` モード既定）。GitHub Pages は `Cache-Control: max-age=600` + ETag を返すため、
+  10 分以内の再訪はディスクキャッシュから、以降は条件付き要求（304）で本文を再送しません。
+  `data/` を push した直後は **最大 10 分**旧データが見える可能性がありますが、HTML / JS も同じ 10 分ルールで配信されているので挙動は揃います。
+  「キャッシュ/SWリセット」ボタンは SW と Cache API を消すだけで、HTTP キャッシュには触れません（JS からは消せないため）。
+- **進行中の同一 URL フェッチを 1 本へ束ねる**（モジュールレベルの `INFLIGHT_FETCH`）。リクエストスコープを跨いで共有し、
+  完了したら即座に外すので TTL による鮮度の後退はありません。共有するのは **Response 本文の文字列**までで、
+  パースは利用側ごとに行います（§2.1 のレコード本体 in-place 書き換え問題を再発させないため）。
+
+> 開発サーバーの注意: Live Server は `Cache-Control: public, max-age=0` + ETag を返すので編集は即座に反映されます。
+> `python -m http.server` のように `Cache-Control` を返さないサーバーだと、ブラウザの heuristic caching で
+> 編集直後の JSON が古いまま見えることがあります。開発時は `max-age=0` か `no-cache` を返すサーバーを使ってください。
+
 ---
 
 ## 3. 各定義ファイルの責務
