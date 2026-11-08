@@ -26,6 +26,6 @@ User 指示「上流の GitHub Pages の UI 改善を中流・下流へ適用す
 
 ## 3. push と確認
 
-- `git push origin develop` は **未実行**（上流 → 中流 → 下流の順で push する。User 確認待ち）。
-- push 後に `npm run sync:check`（GitHub 基準）が中流・下流とも 0 件になることを確認する。
+- `git push origin develop` は上流 → 中流 → 下流の順で **実行済み**（2026-11-08・User 承認）。
+- push 後の `npm run sync:check`（GitHub 基準）は中流 **差分なし**（下流は下流側レポートに記載）。
 - テストログは `.cache/test_sync_2026-11-08.txt`（Git 管轄外）。
