@@ -63,6 +63,18 @@
 	--shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4) /* 大シャドウ */
 	--shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.5) /* 最大シャドウ */
 
+	// モーショントークン（SF 風 UI の動きを統一するための基準値）
+	// - 減速カーブ（ease-out）を既定にし、ease-in は使わない
+	// - 300ms を超える UI トランジションは置かない
+	--ease-out: cubic-bezier(0.23, 1, 0.32, 1) /* 入場・ホバーなど大半の UI 変化 */
+	--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1) /* 開閉・位置移動など往復する変化 */
+	--dur-fast: 160ms /* 押下・ホバーの即時反応 */
+	--dur-base: 240ms /* カード入場・開閉 */
+
+	// SF 風フレームの装飾色（罫線・コーナーマーク・ラベル）
+	--frame-line: rgba(95, 214, 255, 0.35) /* 細い罫線 */
+	--frame-glow: rgba(95, 214, 255, 0.12) /* 面の薄い発光 */
+
 // ==================================================
 // 基本リセットとベーススタイル
 // ==================================================
@@ -277,18 +289,17 @@ a
 	font-weight: 500
 	text-decoration: none
 	cursor: pointer
-	transition: all 0.2s ease
+	// transition: all は色・影・transform を個別指定へ（不要な再計算を避ける）
+	transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out)
 	min-height: 40px
-
-	/* Primary button
-	/* Secondary button
-	/* Ghost button
-	/* Error button
-	/* Size variants
 
 	&:focus
 		outline: 2px solid var(--accent)
 		outline-offset: 2px
+
+	// 押下フィードバック（transform のみ・短時間）
+	&:active
+		transform: scale(0.97)
 
 	&.btn-primary
 		background: var(--accent)
@@ -335,12 +346,6 @@ a
 		padding: var(--spacing-md) var(--spacing-xl)
 		font-size: var(--font-size-base)
 		min-height: 48px
-		cursor: pointer
-		font-size: 14px
-		transition: background 0.2s ease
-
-	&:hover
-		background: #c0392b
 
 .site-header
 	padding: 16px 16px 8px
@@ -369,6 +374,10 @@ h1
 	margin: 0
 	font-size: 12px
 	color: var(--muted)
+
+// 導入文スロットは User が本文を入れるまで非表示（空のまま領域を取らない）
+.site-header__intro:empty
+	display: none
 
 .container
 	max-width: 1200px
@@ -446,7 +455,7 @@ select
 	padding: var(--spacing-sm) var(--spacing-md)
 	min-width: 180px
 	font-size: var(--font-size-sm)
-	transition: all 0.2s ease
+	transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)
 
 input
 	&[type=search], &[type=text]
@@ -457,7 +466,7 @@ input
 		padding: var(--spacing-sm) var(--spacing-md)
 		min-width: 180px
 		font-size: var(--font-size-sm)
-		transition: all 0.2s ease
+		transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)
 
 textarea
 	background: var(--card)
@@ -467,7 +476,7 @@ textarea
 	padding: var(--spacing-sm) var(--spacing-md)
 	min-width: 180px
 	font-size: var(--font-size-sm)
-	transition: all 0.2s ease
+	transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)
 
 @media (max-width: 640px)
 	select
@@ -588,6 +597,7 @@ textarea::placeholder
 			grid-template-columns: repeat(3, 1fr)
 
 .grid-item
+	position: relative
 	display: flex
 	flex-direction: column
 	gap: var(--spacing-sm)
@@ -595,12 +605,34 @@ textarea::placeholder
 	border: 1px solid var(--border)
 	border-radius: var(--border-radius-lg)
 	background: var(--card)
-	transition: all 0.2s ease
+	transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out)
 
-	&:hover
-		transform: translateY(-2px)
-		box-shadow: var(--shadow-md)
-		border-color: var(--accent)
+	// 浮き上がりはポインタ環境だけ（タッチでは hover が貼り付いて残るため）
+	@media (hover: hover) and (pointer: fine)
+		&:hover
+			transform: translateY(-2px)
+			box-shadow: var(--shadow-md)
+			border-color: var(--accent)
+
+	&:active
+		transform: scale(0.99)
+
+// インデックスバッジ（カード右上の管理番号風ラベル。値は JS 側が $IndexDef から渡す）
+.grid-item__badge
+	position: absolute
+	top: var(--spacing-sm)
+	right: var(--spacing-sm)
+	padding: 2px 8px
+	border: 1px solid var(--frame-line)
+	border-radius: var(--border-radius-sm)
+	background: var(--frame-glow)
+	color: var(--accent)
+	font-size: var(--font-size-xs)
+	font-weight: 600
+	letter-spacing: 0.08em
+	font-variant-numeric: tabular-nums
+	line-height: 1.4
+	pointer-events: none
 
 /* Enhanced Typography for Content
 
@@ -659,13 +691,14 @@ h3
 	font-weight: 500
 	white-space: normal
 	overflow-wrap: anywhere
-	transition: all 0.2s ease
+	transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)
 
-	&:hover
-		background: var(--accent)
-		color: white
-		transform: translateY(-1px)
-		box-shadow: var(--shadow-sm)
+	@media (hover: hover) and (pointer: fine)
+		&:hover
+			background: var(--accent)
+			color: white
+			transform: translateY(-1px)
+			box-shadow: var(--shadow-sm)
 
 	&.primary
 		background: var(--accent)
@@ -716,9 +749,13 @@ h3
 	padding: 6px 10px
 	border-radius: 8px
 	cursor: pointer
+	transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out)
 
 	&:hover
 		background: rgba(55, 183, 195, 0.1)
+
+	&:active
+		transform: scale(0.97)
 
 .detail-header__report
 	margin-left: auto
@@ -847,9 +884,34 @@ h3
 	font-size: 15px
 	color: #eaf5ff
 	overflow-wrap: anywhere
+	// 計器パネル風に桁幅を揃える（数値・コードが並ぶ項目のガタつき防止）
+	font-variant-numeric: tabular-nums
+	letter-spacing: 0.01em
 
 .section
 	margin: var(--spacing-md) 0
+
+// セクション番号（01 / 02 …）: JS からは番号もクラスも渡さず、構造セレクタ + CSS カウンターで振る。
+// lib/section-renders/*（dblink / relation / calling）も `.section > h3` を出すため、同じ規則で自動採番される。
+// counter-reset は .detail-body 側に置くので、詳細 1 件ごとに 01 から始まる。
+.detail-body .section > h3,
+.detail-body .section__summary > .section__title
+	counter-increment: section
+	display: flex
+	align-items: center
+	gap: var(--spacing-sm)
+	min-width: 0
+
+	&::before
+		content: counter(section, decimal-leading-zero)
+		flex: 0 0 auto
+		font-size: 11px
+		font-weight: 600
+		letter-spacing: 0.12em
+		color: var(--accent)
+		font-variant-numeric: tabular-nums
+		padding-right: var(--spacing-sm)
+		border-right: 1px solid var(--frame-line)
 
 .section--collapsible
 	border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border))
@@ -877,7 +939,7 @@ h3
 			color: var(--muted)
 			font-size: var(--font-size-sm)
 			line-height: 1
-			transition: transform 0.2s ease, color 0.2s ease
+			transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out)
 
 		&:hover::after
 			color: var(--accent)
@@ -960,13 +1022,14 @@ h4
 	border: 1px solid var(--border)
 	border-radius: var(--border-radius-md)
 	overflow: hidden
-	transition: all 0.3s ease
+	transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out)
 	background: var(--card)
 
-	&:hover
-		transform: translateY(-4px)
-		box-shadow: var(--shadow-lg)
-		border-color: var(--accent)
+	@media (hover: hover) and (pointer: fine)
+		&:hover
+			transform: translateY(-4px)
+			box-shadow: var(--shadow-lg)
+			border-color: var(--accent)
 
 	img
 		width: 100%
@@ -1207,6 +1270,7 @@ td
 	background: rgba(95, 214, 255, 0.08)
 	color: var(--accent-bright)
 	font-size: 12px
+	font-variant-numeric: tabular-nums
 
 // Index ルート単位の集約ピル（例: Logic / LogicAlt のサブフィールドを 1 ピルにまとめる）
 .pill--index-group
@@ -1298,11 +1362,12 @@ td
 	text-align: center
 	background: var(--card)
 
-/* Enhanced Animation System
+// Enhanced Animation System
+// 入場は 8px 以内の移動 + フェードに留める（大きく動かすと「ページが遅い」印象になるため）
 @keyframes fadeIn
 	from
 		opacity: 0
-		transform: translateY(20px)
+		transform: translateY(8px)
 
 	to
 		opacity: 1
@@ -1327,7 +1392,9 @@ td
 /* Animation classes
 
 .fade-in
-	animation: fadeIn 0.5s ease-out
+	animation: fadeIn var(--dur-base) var(--ease-out) backwards
+	// 一覧カードの初回描画だけ、JS が --i（表示順）を渡して 40ms ずつずらす
+	animation-delay: calc(min(var(--i, 0), 12) * 40ms)
 
 .slide-in
 	animation: slideIn 0.3s ease-out
@@ -1339,21 +1406,6 @@ td
 
 html
 	scroll-behavior: smooth
-
-/* Reduce motion for accessibility
-@media (prefers-reduced-motion: reduce)
-	*
-		animation-duration: 0.01ms !important
-		animation-iteration-count: 1 !important
-		transition-duration: 0.01ms !important
-
-		&::before, &::after
-			animation-duration: 0.01ms !important
-			animation-iteration-count: 1 !important
-			transition-duration: 0.01ms !important
-
-	html
-		scroll-behavior: auto
 
 /* Focus management for accessibility
 
@@ -1439,6 +1491,56 @@ body
 	flex: 0 1 auto
 	max-width: 100%
 	white-space: normal
+
+// 開発者向け操作（デバッグ / SW リセット / 参照解決 / 要望リンク）は既定で畳み、閲覧者の視線を一覧へ集中させる
+.controls__advanced
+	width: 100%
+
+	> summary
+		display: inline-flex
+		align-items: center
+		gap: 6px
+		border: 1px solid var(--border)
+		border-radius: 8px
+		padding: 6px 10px
+		font-size: 12px
+		color: var(--muted)
+		cursor: pointer
+		list-style: none
+		user-select: none
+		transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out)
+
+		&::-webkit-details-marker
+			display: none
+
+		&::before
+			content: "▸"
+			display: inline-block
+			color: var(--accent)
+			transition: transform var(--dur-fast) var(--ease-out)
+
+		&:focus-visible
+			outline: 2px solid var(--accent)
+			outline-offset: 2px
+
+		&:active
+			transform: scale(0.97)
+
+	&[open] > summary
+		color: var(--text)
+		border-color: var(--accent)
+		background: rgba(95, 214, 255, 0.08)
+
+		&::before
+			transform: rotate(90deg)
+
+	> .control-row.small
+		margin-top: var(--spacing-sm)
+
+@media (hover: hover) and (pointer: fine)
+	.controls__advanced > summary:hover
+		border-color: var(--accent)
+		color: var(--text)
 
 .controls .control-row.small .lang-toggle
 	min-width: 0
@@ -1692,8 +1794,17 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 	flex-wrap: wrap
 
 @media (max-width: 767px)
+	#detail-view
+		overflow: clip
+
+	// モバイルでは「← 一覧へ戻る」を常時到達可能にする（長い詳細をスクロールしても迷子にならない）
 	.detail-header
 		align-items: stretch
+		position: sticky
+		top: 0
+		z-index: 3
+		background: var(--card)
+		padding-block: var(--spacing-sm)
 
 	.detail-header .ghost
 		width: 100%
@@ -2008,19 +2119,9 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 	border: 1px solid var(--border)
 	border-radius: 16px
 	overflow: hidden
-	background: linear-gradient(180deg, rgba(95, 214, 255, 0.05), rgba(15, 24, 48, 0) 55%), var(--card)
+	// 上端アクセント線（2px）は背景レイヤーで描く。::before/::after は .detail-hero__frame のコーナーマークに譲る
+	background: linear-gradient(90deg, transparent, rgba(95, 214, 255, 0.7) 40%, transparent) top / 100% 2px no-repeat, linear-gradient(180deg, rgba(95, 214, 255, 0.05), rgba(15, 24, 48, 0) 55%), var(--card)
 	box-shadow: var(--shadow-md)
-
-	// 上端アクセントは細く控えめに
-	&::after
-		content: ""
-		position: absolute
-		left: 0
-		right: 0
-		top: 0
-		height: 2px
-		background: linear-gradient(90deg, transparent, var(--accent) 40%, transparent)
-		opacity: 0.7
 
 .detail-hero__portrait
 	position: relative
@@ -2066,9 +2167,49 @@ body[data-lang='en'] .lang-toggle .lang-toggle__opt[data-opt='en']
 	.detail-quickstats
 		margin: 6px 0 0
 
+// ヒーローの「資料カード」フレーム: 対角のコーナーマークと内側 1px の発光線だけで SF 風の枠を作る（画像・装飾 DOM を増やさない）
+// .detail-hero と同居する前提なので、カード影（--shadow-md）を潰さないよう合成して宣言する
+.detail-hero__frame
+	position: relative
+	box-shadow: var(--shadow-md), inset 0 0 0 1px var(--frame-glow)
+
+	&::before,
+	&::after
+		content: ""
+		position: absolute
+		width: 14px
+		height: 14px
+		border: 2px solid var(--frame-line)
+		pointer-events: none
+
+	&::before
+		top: 6px
+		left: 6px
+		border-right: 0
+		border-bottom: 0
+		border-top-left-radius: 4px
+
+	&::after
+		right: 6px
+		bottom: 6px
+		border-left: 0
+		border-top: 0
+		border-bottom-right-radius: 4px
+
+// 未選択・未取得時のプレースホルダ（インライン style の代替）
+.detail__placeholder
+	color: var(--muted)
+	border: 1px dashed var(--frame-line)
+	border-radius: 8px
+	padding: var(--spacing-sm) var(--spacing-md)
+	font-size: 12px
+	text-align: center
+
 .detail-body
 	display: block
 	min-width: 0
+	// セクション見出しの連番（`.section > h3::before` / `.section__summary > .section__title::before`）はここを起点に数える
+	counter-reset: section
 
 	.image-gallery
 		margin-top: 0
@@ -2242,11 +2383,14 @@ th
 	font-size: var(--font-size-sm)
 	font-weight: 600
 	cursor: pointer
-	transition: all 0.2s ease
+	transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out)
 
 	&:hover:not(:disabled)
 		border-color: var(--accent)
 		color: var(--accent-bright)
+
+	&:active:not(:disabled)
+		transform: scale(0.97)
 
 	&:disabled
 		cursor: wait
@@ -2300,3 +2444,41 @@ th
 	// 詳細ビュー共通の .image-item（4/3 固定）より正方形サムネイルを優先する
 	.image-item img
 		aspect-ratio: 1 / 1
+
+// Reduce motion for accessibility
+// 動きを「消す」のではなく「移動を消してフェードだけ残す」。全停止だと状態変化が見えなくなる
+@media (prefers-reduced-motion: reduce)
+	@keyframes fadeIn
+		from
+			opacity: 0
+		to
+			opacity: 1
+
+	.fade-in
+		animation-delay: 0s
+
+	.grid-item, .image-item, .chip, .ghost, .btn, .model-viewer__launch-btn, .controls__advanced > summary, .image-lightbox__close
+		transition-property: background-color, border-color, color, box-shadow, opacity
+
+	.grid-item:hover, .grid-item:active, .image-item:hover, .image-item:active, .chip:hover, .chip:active, .ghost:hover, .ghost:active, .btn:hover, .btn:active, .btn.btn-primary:hover, .btn.btn-secondary:hover, .btn.btn-error:hover, .model-viewer__launch-btn:hover:not(:disabled), .model-viewer__launch-btn:active:not(:disabled), .controls__advanced > summary:hover, .controls__advanced > summary:active, .image-lightbox__close:hover
+		transform: none
+
+	.image-item:hover img
+		transform: none
+
+	.section--collapsible:not([open]) > summary::after,
+	.controls__advanced[open] > summary::before
+		transform: none
+
+	.section--collapsible > summary::after
+		transition: color var(--dur-fast) var(--ease-out)
+
+	// 開閉マーク（▸ → 回転）は状態だけ即時に切り替える
+	.controls__advanced > summary::before
+		transition: none
+
+	.slide-in, .pulse, .loading-spinner
+		animation: none
+
+	html
+		scroll-behavior: auto

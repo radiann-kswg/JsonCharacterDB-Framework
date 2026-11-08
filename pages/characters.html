@@ -8,7 +8,7 @@
 	<meta
 		name="description"
 		content="/data の創作データベースを クライアント内API (/pages/v1 ほか) 経由で取得し、キャラシートとして表示します。" />
-	<meta name="asset-version" content="2026.11.02.2" />
+	<meta name="asset-version" content="2026.11.08.1" />
 	<!-- メインスタイルシート（SASS から自動生成） -->
 	<script>
 		(() => {
@@ -44,14 +44,11 @@
 </head>
 
 <body>
-	<!-- サイトヘッダー：アプリケーションタイトルと説明 -->
+	<!-- サイトヘッダー：アプリケーションタイトルと導入文スロット -->
 	<header class="site-header">
 		<h1 id="page-title">創作キャラ・キャラシート</h1>
-		<p id="page-lead" class="lead">
-			本ページはクライアント内API（Service
-			Worker）<code>/pages/v1/*</code>（優先）、<code>/svc/v1/*</code>（別名）、<code>/api/v1/*</code>（レガシー）のいずれかを用い、<code>/data/**</code>
-			の情報からキャラシートを生成します。
-		</p>
+		<!-- 導入文は User が本文を書き込むまで空のまま（CSS の :empty で非表示）。技術説明は README / docs に寄せた -->
+		<p id="page-lead" class="lead site-header__intro"></p>
 	</header>
 
 	<!-- メインアプリケーションコンテナ -->
@@ -78,12 +75,8 @@
 						placeholder="例: ツグ / 2 / Unitta" />
 				</label>
 			</div>
-			<!-- オプション設定行 -->
+			<!-- 閲覧者向けの常時表示行：相関図リンクと表示言語 -->
 			<div class="control-row small">
-				<label><input id="chk-resolve" type="checkbox" checked />
-					<span id="label-resolve">参照解決を有効化（推奨）</span></label>
-				<label><input id="chk-debug" type="checkbox" />
-					<span id="label-debug">デバッグ情報</span></label>
 				<a id="btn-open-relations" class="ghost" href="./relations.html">相関図を開く</a>
 				<button
 					id="btn-lang-toggle"
@@ -93,20 +86,30 @@
 					<span class="lang-toggle__label">言語/Language</span>
 					<span class="lang-toggle__opts" aria-hidden="true"><span class="lang-toggle__opt" data-opt="jp">JP</span><span class="lang-toggle__sep">/</span><span class="lang-toggle__opt" data-opt="en">EN</span></span>
 				</button>
-				<button
-					id="btn-reset-sw"
-					class="ghost"
-					type="button"
-					title="キャッシュとService Workerをリセットしてリロードします">
-					キャッシュ/SWリセット
-				</button>
-				<a
-					id="btn-feature-issue"
-					class="ghost control-row__issue-link"
-					href="#"
-					target="_blank"
-					rel="noopener noreferrer">⚙ サイト機能を提案</a>
 			</div>
+			<!-- 開発・保守向けの設定は既定で畳む（閲覧者の初見ノイズを減らす）。ID は characters.js の参照先なので変えない -->
+			<details class="controls__advanced">
+				<summary id="label-advanced">詳細設定</summary>
+				<div class="control-row small">
+					<label><input id="chk-resolve" type="checkbox" checked />
+						<span id="label-resolve">参照解決を有効化（推奨）</span></label>
+					<label><input id="chk-debug" type="checkbox" />
+						<span id="label-debug">デバッグ情報</span></label>
+					<button
+						id="btn-reset-sw"
+						class="ghost"
+						type="button"
+						title="キャッシュとService Workerをリセットしてリロードします">
+						キャッシュ/SWリセット
+					</button>
+					<a
+						id="btn-feature-issue"
+						class="ghost control-row__issue-link"
+						href="#"
+						target="_blank"
+						rel="noopener noreferrer">⚙ サイト機能を提案</a>
+				</div>
+			</details>
 		</section>
 
 		<section id="meta-overview" class="card meta-overview" hidden>

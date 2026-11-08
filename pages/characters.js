@@ -4787,7 +4787,7 @@ function getUiCopyByLanguage(lang) {
 	if (lang === 'en') {
 		return {
 			title: 'Character Sheet Viewer',
-			lead: 'This page builds character sheets from /data/** through the in-browser Service Worker APIs: /pages/v1/* (primary), /svc/v1/* (alias), and /api/v1/* (legacy).',
+			advanced: 'Advanced settings',
 			work: 'Works',
 			db: 'DB',
 			search: 'Filter (name/index substring)',
@@ -4826,7 +4826,7 @@ function getUiCopyByLanguage(lang) {
 
 	return {
 		title: '創作キャラ・キャラシート',
-		lead: '本ページはクライアント内API（Service Worker）/pages/v1/*（優先）、/svc/v1/*（別名）、/api/v1/*（レガシー）のいずれかを用い、/data/** の情報からキャラシートを生成します。',
+		advanced: '詳細設定',
 		work: '作品（Works）',
 		db: 'DB',
 		search: '絞り込み（名前/番号 など 部分一致）',
@@ -4880,7 +4880,7 @@ function applyStaticTextLanguage() {
 	};
 
 	setText('#page-title', copy.title);
-	setText('#page-lead', copy.lead);
+	setText('#label-advanced', copy.advanced);
 	setText('#label-work', copy.work);
 	setText('#label-db', copy.db);
 	setText('#label-search', copy.search);
@@ -5468,6 +5468,10 @@ function yieldToMain() {
  * @param {Function} onOpen - キャラクターが選択された時のコールバック関数
  * @param {Array} imageFields - 動的解決用の抽出された画像フィールド（オプション）
  */
+// 一覧カードのフェード＋スタガーは「初回描画のみ」。検索・言語切替などの再描画で毎回動くと
+// 操作のたびに待たされる感覚になるため、2 回目以降はアニメーション無しで即時表示する
+let listPaintedOnce = false;
+
 async function renderList(records, workId, onOpen, imageFields = null) {
 	const list = $('#list');
 	list.textContent = '';
@@ -5694,13 +5698,15 @@ async function renderList(records, workId, onOpen, imageFields = null) {
 
 		// Index chip (schema-driven via typedef $IndexDef)
 		const indexChipItems = buildIndexChipItems(r, indexDef, metaForLookup, globalDefType, 'list');
+		const mainRootKey = String(indexDef?.hashTag || '').trim();
+		// カード角のバッジ: 主Index のテキスト（無ければ先頭チップ）。チップ側の表示はそのまま残す
+		const badgeText = (indexChipItems.find(it => String(it?.rootKey || '') === mainRootKey) || indexChipItems[0])?.text || '';
 		if (indexChipItems.length) {
 			const cur = getQS();
 			const db = window?.__CHAR_STATE__?.db || cur.db || 'Primary';
 			// 主Index のチップは「レコードを一意に特定できる識別子」でリンクする。
 			// 複合Index では単一サブフィールド（例: Letter.AlphaGen）だけでは別レコードへ飛ぶため。
 			const recordIdentifier = getIndexIdentifierFromRecord(r, indexDef, records);
-			const mainRootKey = String(indexDef?.hashTag || '').trim();
 			for (const item of indexChipItems) {
 				const isMainRoot = !!mainRootKey && String(item?.rootKey || '') === mainRootKey;
 				const linkTarget = (isMainRoot && recordIdentifier) ? recordIdentifier : item;
@@ -5729,13 +5735,15 @@ async function renderList(records, workId, onOpen, imageFields = null) {
 		}
 
 		const item = el('article', {
-			class: 'grid-item fade-in',
+			class: listPaintedOnce ? 'grid-item' : 'grid-item fade-in',
 			role: 'button',
 			tabindex: 0,
-			style: `animation-delay: ${Math.min(i * 0.05, 1)}s`,
+			// スタガー遅延は CSS 側（.fade-in の --i）で算出・上限制御する。再描画時は .fade-in が外れるので --i は無害
+			style: `--i: ${i}`,
 			onkeydown: (ev) => { if (ev.key === 'Enter') onOpen(r); },
 			onclick: () => onOpen(r)
 		}, [
+			badgeText ? el('span', { class: 'grid-item__badge' }, [badgeText]) : null,
 			img ? el('img', {
 				class: 'thumb',
 				alt: `${title} thumbnail`,
@@ -5761,6 +5769,7 @@ async function renderList(records, workId, onOpen, imageFields = null) {
 			await yieldToMain();
 		}
 	}
+	listPaintedOnce = true;
 
 	if (shouldShowProgress) {
 		hideLoadingIndicator();
@@ -5964,9 +5973,7 @@ export async function renderDetail(workId, rec) {
 		$('#detail-title').textContent = ui().privateTitle;
 		const mount = $('#detail');
 		mount.textContent = '';
-		mount.appendChild(el('div', {
-			style: 'padding: 20px; text-align: center; color: var(--muted);'
-		}, [ui().privateBody]));
+		mount.appendChild(el('div', { class: 'detail__placeholder' }, [ui().privateBody]));
 		if (btnReportIssue) btnReportIssue.hidden = true;
 		return;
 	}
@@ -5992,9 +5999,7 @@ export async function renderDetail(workId, rec) {
 	try {
 		// 詳細ビューの最小限のローディング表示
 		mount.textContent = '';
-		mount.appendChild(el('div', {
-			style: 'padding: 20px; text-align: center; color: var(--muted);'
-		}, [ui().loadingDetail]));
+		mount.appendChild(el('div', { class: 'detail__placeholder' }, [ui().loadingDetail]));
 
 		// 描画に必要な typedef / meta / 各種マップをまとめて解決する（DOM 非依存・前段）
 		const renderCtx = await loadDetailRenderContext(workId, dbName, {
@@ -7864,7 +7869,7 @@ export async function renderDetail(workId, rec) {
 
 		// ヒーローバナー（縦長ポートレート＋情報）を組み、その下に本文を全幅で配置
 		const heroPortrait = el('div', { class: 'detail-hero__portrait' }, [posterEl].filter(Boolean));
-		const hero = el('div', { class: 'detail-hero' }, [heroPortrait, heroMain]);
+		const hero = el('div', { class: 'detail-hero detail-hero__frame' }, [heroPortrait, heroMain]);
 		mount.appendChild(el('div', { class: 'detail' }, [hero, body]));
 
 		// デバッグ: 画面内に「生コード（例: FemaleNeutral）」が残っている箇所を自動検出
