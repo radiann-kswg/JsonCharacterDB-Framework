@@ -26,7 +26,7 @@ DeepL は **既存ローカライズルールを置き換えるものではな�
 |---|---|---|
 | Localization 翻訳辞書 | `data/Localization/trans_*.json` | `Term_JP` / `Term_EN`（+ `Aliases`） |
 | References 資料 | `data/References/ref_*.json` | `Term_JP` / `Term_EN`（+ `Aliases`） |
-| Dictionaries 辞書 | `data/Dictionaries/dict_*.json` | `X` / `X_EN` または `X` / `X_JP`（型はファイル依存・自動判定） |
+| Dictionaries 辞書 | `data/Dictionaries/**/dict_*.json` | `X` / `X_EN` または `X` / `X_JP`（型はファイル依存・自動判定） |
 
 これらから JP↔EN の短い対訳だけを抽出して、DeepL の用語集を **双方向** で登録する。
 
@@ -171,7 +171,7 @@ cp .env.example .env
 |---|---|
 | 和英ローカライズ規則 | [`localization-en-rules.md`](localization-en-rules.md) |
 | 和文記法規則 | [`jp-notation-rules.md`](jp-notation-rules.md) |
-| 翻訳辞書ソース | `data/Localization/trans_*.json` / `data/References/ref_*.json` / `data/Dictionaries/dict_*.json` |
+| 翻訳辞書ソース | `data/Localization/trans_*.json` / `data/References/ref_*.json` / `data/Dictionaries/**/dict_*.json` |
 | スクリプト（Node） | `tools/deepl/`（`build-glossary-source` / `sync-glossary` / `evaluate-translations` / `draft-translate` / `deepl-client`） |
 | スクリプト（Python） | [`tools/deepl_py/`](../tools/deepl_py/README.md)（`draft_translate.py` / `deepl_client.py` / `pronoun_normalize.py`） |
 | Claude Skill（`field_EN` 新規挿入・少数レコードの丁寧な翻訳） | [`.claude/skills/localize-en-draft/SKILL.md`](../.claude/skills/localize-en-draft/SKILL.md) |

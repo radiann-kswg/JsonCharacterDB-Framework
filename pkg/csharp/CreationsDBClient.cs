@@ -530,7 +530,11 @@ namespace CreationsDB
                 var compatKey = !string.IsNullOrWhiteSpace(compatKeyRaw)
                     ? compatKeyRaw! : $"#List_{dictName}";
 
-                var rows = await fetcher.ReadArrayAsync($"{basePath}/dict_{dictName}.json");
+                // dictFile 宣言（別名・サブフォルダ。例: Class/dict_Mikhail.json）を尊重する（lib/sw-common.js と同じ規則）
+                var dictFileRaw = Utils.GetString(info, "dictFile");
+                var fileName = !string.IsNullOrWhiteSpace(dictFileRaw)
+                    ? dictFileRaw!.Trim() : $"dict_{dictName}.json";
+                var rows = await fetcher.ReadArrayAsync($"{basePath}/{fileName}");
                 if (rows == null) continue;
 
                 vars[dictKey] = rows;

@@ -219,6 +219,7 @@
 
 - `#DictIndex` は「辞書参照である」という宣言を typedef 側に寄せるための型名です。
 - `Area` / `Faction` のような共通辞書は、実体を `data/Dictionaries/dict_*.json` へ置き、SW/UI が runtime で `General.$VarsDef` へ合流して使います。
+- 辞書ファイルの場所は `Dictionaries/db_meta.json` の `#Dict_*` エントリの `dictFile`（`Dictionaries/` からの相対パス）で宣言でき、未宣言なら `dict_<辞書名>.json` です。同じフィールド向けの辞書が複数ある場合はサブフォルダへまとめます（例: `Class` 用 12 本 → `data/Dictionaries/Class/dict_*.json` + `"dictFile": "Class/dict_Mikhail.json"`。2026-11-15）。SW（`readDictionaryBundle`）/ UI（`pages/characters.js`）/ `pkg/` の Node.js・Python・C# クライアントが同じ規則で読みます。
 - runtime 合流時には `#Dict_*` を正としつつ、既存実装の互換用に `#List_*` も同じ内容で補完します。
 - `#PNGFileName` / `#PNGFilePath` 系フィールドは `$subfolder`（2026-07-10 新設）で画像フォルダの相対パスを明示宣言できます（例: `"$subfolder": "attr/tailsUnit"` → `Images/DB_<DbName>/attr/tailsUnit/`）。未指定の場合は従来通り `TypeDefUtils.inferFolderHintFromKey()` がフィールド名の `_PNG` 接頭辞から推測しますが、`$subfolder` を宣言すればそちらが優先されます。同じ親フォルダ配下を参照フィールドごとにサブフォルダで分けたい場合（`attr/tailsUnit`, `attr/earShape` のように）に使います。
 - `#PNGFilePath` / `#PNGFileName` フィールドの値としてDB/Work横断で他の画像フォルダを参照したい場合は、`$Def_DBCrossLinkPath`（2026-07-11 新設、`data/db_type.json` グローバル宣言）を使います。従来の `../../DB_SemiPrimary/...` のような手書き相対パス（ブラウザのURL正規化に依存した非公式な回避策）を廃止し、`{ "_DBCrossLinkPath": { "_DB": "SemiPrimary", "_IsoPath": "..." } }` の形で宣言的に参照します。`_DBLink`（レコード参照機構）とは異なり対象レコードの検索を行わない、パス参照専用の軽量な機構です。詳細は `docs/api-sw-spec.md` §8.3 を参照してください。
@@ -318,9 +319,11 @@
   "#Dict_SymphonyXVI": {
     "keyField": "Class",
     "compatListKey": "#List_Class",
-    "scopeField": { "Belonging": "シンフォニー.XVI" }
+    "scopeField": { "Belonging": { "Faction": "シンフォニー.XVI" } }
   }
   ```
+- `scopeField` の値は、**対象フィールドの型に合わせた構造化形式**（`Belonging` が `$Def_Faction[]` なら `{ "Faction": "…" }`）を正とします。スカラー文字列（`"Belonging": "シンフォニー.XVI"`）も引き続き読めます（作品別 `Dictionaries/db_meta.json` の既存宣言向け）。比較時はレコード側・辞書行側の双方を配下のスカラーへ展開して突き合わせるため（`lib/basic-renders/type-common.js` の `scopeValueCandidates()`）、どちらの形式でも同じ行に解決されます。構造化値に複数のスカラーが含まれる場合は、そのすべてがレコード側に含まれることを要求します。
+- `scopeField.Belonging` に書く値は、グローバル辞書 `dict_Faction.json` の `Faction` と**同じ文字列**にしてください（表記ゆれ・異体字（例: 錬 / 練）があると一致せず、その辞書の全行が解決されません）。
 - 辞書本体（`dict_*.json`）側には行ごとにタグを書きません。`scopeField` の内容は、読み込み時（`lib/sw-common.js` の `readDictionaryBundle()` / `pages/characters.js` の `fetchDirectDictionaryBundle()` / テストの `loadDictionaryBundle()`）に辞書の全行へ自動合成されます（行が同名キーを既に持つ場合は行の値を優先）。
 - `scopeField` を持たない辞書（大多数）の行は「スコープを問わない共通行」として扱われます。
 - 解決順（`pages/characters.js` の `resolveVarsDefLabelPack()`）は「同一レコードの対応フィールド値と `scopeField` が一致する辞書由来の行 → 一致が無ければ `scopeField` を持たない共通行」です。呼び出し元が `recordContext`（対象レコード自体）を渡さない場合は従来通りスコープを無視して全行から探索するため、既存の呼び出し元への後方互換があります。
