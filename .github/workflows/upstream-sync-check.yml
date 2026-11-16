@@ -56,6 +56,7 @@ jobs:
       - name: Open or update tracking issue
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}  # gh が upstream リモートへ誤解決しないよう自リポジトリへ固定
           DRIFT: ${{ steps.check.outputs.drift }}
         run: |
           set -euo pipefail
