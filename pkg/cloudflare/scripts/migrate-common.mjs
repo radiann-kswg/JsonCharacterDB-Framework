@@ -18,6 +18,7 @@ import { readFileSync, readdirSync, statSync, existsSync, writeFileSync, mkdirSy
 import { resolve, join, relative, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
+import { parseArgs } from "node:util";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -35,6 +36,22 @@ export const WRANGLER_BASE_ARGS = ["wrangler"];
 /** Windows では shell: true が必要（.cmd 解決 + パスのスペース対応） */
 export const SPAWN_OPTS_BASE = process.platform === "win32" ? { shell: true } : {};
 
+/** AI 向け許可表を先に無効化し、同期途中・失敗時に古い許可を使わせない。 */
+export function invalidateAIImagePolicy({ repoRoot, bucket, dryRun }) {
+  if (!/^[a-z0-9-]+$/.test(bucket)) throw new Error("Invalid R2 bucket name");
+  const key = "policy/ai-image-policy.json";
+  if (dryRun) {
+    console.log(`[R2 dry-run] invalidate ${bucket}/${key}`);
+    return;
+  }
+  const file = ".cache/cloudflare/ai-image-policy-invalid.json";
+  mkdirSync(join(repoRoot, ".cache/cloudflare"), { recursive: true });
+  writeFileSync(join(repoRoot, file), JSON.stringify({ version: 1, complete: false, paths: [], references: [], records: {} }));
+  execFileSync(WRANGLER_CMD, [...WRANGLER_BASE_ARGS, "r2", "object", "put", `${bucket}/${key}`,
+    "--file", file, "--content-type", "application/json", "--remote"],
+    { stdio: "pipe", cwd: repoRoot, ...SPAWN_OPTS_BASE });
+}
+
 /** D1 操作時に wrangler.toml の場所を明示するための相対パス（repoRoot 基準）。
  *  cwd を repoRoot に固定しているため wrangler が pkg/cloudflare/ を自動探索できず、
  *  database_id（UUID）を解決できない問題を防ぐ。 */
@@ -50,25 +67,41 @@ const DEFAULT_D1_BATCH_SIZE = 10;
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * 両スクリプトが共通で解釈する CLI 引数をパースする。
- * 固有オプション（`--r2-only` / `--bucket` 等）は返却した `getArg` で呼び出し側が読む。
+ * D1 同期と許可表の更新が別の環境を指していれば、書き込み前に停止する。
  *
  * @param {string[]} argv - `process.argv.slice(2)` 相当
- * @returns {{getArg: (name: string) => string|undefined, dryRun: boolean, clean: boolean, dbId: string, repoRoot: string}}
+ * @param {{allowPartialSync?: boolean}} options - R2 のみ・D1 のみを実装する呼出元だけが指定する
  */
-export function parseCommonArgs(argv) {
-  /** @param {string} name @returns {string|undefined} */
-  const getArg = (name) => {
-    const idx = argv.indexOf(name);
-    return idx !== -1 ? argv[idx + 1] : undefined;
-  };
+export function parseCommonArgs(argv, { allowPartialSync = false } = {}) {
+  const { values } = parseArgs({ args: argv, options: {
+    "dry-run": { type: "boolean" }, clean: { type: "boolean" },
+    "repo-root": { type: "string" }, "db-id": { type: "string" }, bucket: { type: "string" },
+    ...(allowPartialSync && { "r2-only": { type: "boolean" }, "d1-only": { type: "boolean" } }),
+  } });
+  const r2Only = values["r2-only"] === true;
+  const d1Only = values["d1-only"] === true;
+  if (r2Only && d1Only) throw new Error("--r2-only と --d1-only は同時に指定できません");
+
+  // wrangler.toml の本番 D1 は名前・binding・UUID のいずれで指定しても同じ同期先。
+  const productionDb = "creationsdb-d1";
+  const productionBucket = "creationsdb-data";
+  const dbId = values["db-id"] ?? productionDb;
+  const bucket = values.bucket ?? productionBucket;
+  if (!/^[A-Za-z0-9_][A-Za-z0-9_-]*$/.test(dbId)) throw new Error("--db-id の値が不正です");
+  if (!/^[a-z0-9-]+$/.test(bucket)) throw new Error("--bucket の値が不正です");
+  if (dbId.toLowerCase() === productionDb && dbId !== productionDb) {
+    throw new Error(`本番 --db-id の表記は ${productionDb} です`);
+  }
+  const isProductionDb = dbId === "DB" || dbId === productionDb ||
+    dbId.toLowerCase() === "b8bf7187-1966-4831-88d2-2b8906cfa745";
+  if (!r2Only && isProductionDb !== (bucket === productionBucket)) {
+    throw new Error("D1 と R2 の環境が一致しません。検証用の --db-id と --bucket は対で指定してください");
+  }
   return {
-    getArg,
-    dryRun: argv.includes("--dry-run"),
-    clean: argv.includes("--clean"),
-    dbId: getArg("--db-id") ?? "creationsdb-d1",
-    // リポジトリルート: --repo-root 引数 → scripts/ の 3 階層上
-    repoRoot: resolve(getArg("--repo-root") ?? join(__dirname, "../../..")),
+    getArg: name => values[name.slice(2)], // addon-ai-tag の呼出元でも同じ解析結果を使う
+    dryRun: values["dry-run"] === true, clean: values.clean === true,
+    r2Only, d1Only, dbId, bucket,
+    repoRoot: resolve(values["repo-root"] ?? join(__dirname, "../../..")),
   };
 }
 
