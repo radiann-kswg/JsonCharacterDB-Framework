@@ -29,6 +29,10 @@
 公開 URL は `https://<ユーザー名>.github.io/<リポジトリ名>/pages/characters.html`。
 デプロイ前に `npm test` が走るため、データ整合性が壊れていると公開されません。
 
+公開されるのは `index.html` `README.md` `LICENSE` `api/` `docs/` `pages/` `lib/` `svc/` `data/` だけです
+（`pages.yml` の `Stage site` で `_site/` に集めてからアップロードする）。`node_modules/`・作業ログ・テスト・ツールは公開しません。
+サイトが新しいトップレベルのファイルやディレクトリを参照するようにしたら、`Stage site` の一覧に足してください。
+
 CLI で設定する場合:
 
 ```bash

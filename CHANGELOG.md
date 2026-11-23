@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed (2026-11-23) — GitHub Pages の公開物をサイトに必要なファイルだけに絞る
+
+- `.github/workflows/pages.yml` に `Stage site` ステップを追加し、`index.html` `README.md` `LICENSE` `api/` `docs/` `pages/` `lib/` `svc/` `data/` だけを `_site/` に集めて配信する（`upload-pages-artifact` の `path: .` → `path: _site`）。
+- 理由: `path: .` では `node_modules/`（約 92 MB）・`tests/`・`tools/`・`_work_in_progress/`・`package.json`・`AGENTS.md` まで公開サイトから配信されていた（2026-11-23 の定期点検で HTTP 200 を確認）。`docs/` と `README.md` / `LICENSE` は `index.html` からリンクしているので残す。
+- フォークして使う場合も、サイトが新しいトップレベルのファイルやディレクトリを参照するようになったら `Stage site` の一覧に足すこと（`docs/deploy-howto.md` にも記載）。
+- `.github/` と `docs/deploy-howto.md` は同期対象外なので、下流への波及はない（下流 `RadianNs_SecondaryWorksDB` は同日に同じ方式へ変更済み）。
+
 ### Synced (2026-11-02 その5) — 上流 `100BeautiesLab_CreationsDB` `52c1f24` → `dc5e513`
 
 - 5 ファイルを取り込み（コンフリクト 0。`tests/enrich.dblink-clone.test.js` 新規）。**54 ファイル 787 件 green**。
