@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Synced (2026-11-24) — 上流 `100BeautiesLab_CreationsDB` `4f48192` → `aeb8833`
+
+- 19 ファイルを取り込み（コンフリクト 0）。**55 ファイル 790 件 green**。上流 CHANGELOG の 11-15〜11-24 の各エントリに対応。
+- **fix: キャラシートの初期表示作品**（上流 `aeb8833`）: `pages/characters.js` の `populateWorks()` で、作品指定なしのとき `endsWith('')` が全作品に一致して末尾の作品が選ばれていた。指定なしなら `data/db_meta.json` の `CreationWorks` で最初に宣言された創作タイトル（`Works_Shared` を除く）を表示する。下流へも波及。
+- そのほか: 構造化 `scopeField` の解決 fix、`pkg/*` クライアントの `dictFile` 宣言準拠、外見の着脱タグ表示（`appearanceDetail.js`）、画像単位の AI 除外の検証モジュール（`pkg/ai-image-policy.mjs`）、Cloudflare 同期先の取り違えガード（`migrate-common.mjs` / `migrate.mjs`）、関連 docs。
+- `.sync/upstream.json` の `exclude` に 5 件を追加: NumberTales 固有の `tools/inventory-numbertales-art.mjs` とその対のテスト、上流の実データや `Detachable` 宣言を前提とする `tests/ai-image-policy.test.js` / `tests/appearance-state-data.test.js` / `tests/appearance-detail-detachable.test.js`。
+
 ### Changed (2026-11-23) — GitHub Pages の公開物をサイトに必要なファイルだけに絞る
 
 - `.github/workflows/pages.yml` に `Stage site` ステップを追加し、`index.html` `README.md` `LICENSE` `api/` `docs/` `pages/` `lib/` `svc/` `data/` だけを `_site/` に集めて配信する（`upload-pages-artifact` の `path: .` → `path: _site`）。
