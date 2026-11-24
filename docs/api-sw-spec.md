@@ -337,6 +337,8 @@ UI と enrich/search は、可能な限りこの `db_type.json($DefType)` に追
 
 `db_meta.json` の `Databases.#DB_<DbName>` に `"DB_Hidden": true` を設定すると、そのDB全体がAPIから非公開になります。
 
+DB 単位の AI 利用は `DB_Hidden` と `AI_Optout` のどちらかが `true` なら除外します。JSON 原本のアクセス権はリポジトリと静的配信先の設定で管理します。
+
 挙動:
 
 - `GET .../works/{work}/db` — リスト応答に当該DBエントリが含まれません

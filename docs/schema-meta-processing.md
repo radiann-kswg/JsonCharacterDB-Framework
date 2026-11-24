@@ -219,6 +219,7 @@
 
 - `#DictIndex` は「辞書参照である」という宣言を typedef 側に寄せるための型名です。
 - `Area` / `Faction` のような共通辞書は、実体を `data/Dictionaries/dict_*.json` へ置き、SW/UI が runtime で `General.$VarsDef` へ合流して使います。
+- 辞書ファイルの場所は `Dictionaries/db_meta.json` の `#Dict_*` エントリの `dictFile`（`Dictionaries/` からの相対パス）で宣言でき、未宣言なら `dict_<辞書名>.json` です。同じフィールド向けの辞書が複数ある場合はサブフォルダへまとめます（例: `Class` 用 12 本 → `data/Dictionaries/Class/dict_*.json` + `"dictFile": "Class/dict_Mikhail.json"`。2026-11-15）。SW（`readDictionaryBundle`）/ UI（`pages/characters.js`）/ `pkg/` の Node.js・Python・C# クライアントが同じ規則で読みます。
 - runtime 合流時には `#Dict_*` を正としつつ、既存実装の互換用に `#List_*` も同じ内容で補完します。
 - `#PNGFileName` / `#PNGFilePath` 系フィールドは `$subfolder`（2026-07-10 新設）で画像フォルダの相対パスを明示宣言できます（例: `"$subfolder": "attr/tailsUnit"` → `Images/DB_<DbName>/attr/tailsUnit/`）。未指定の場合は従来通り `TypeDefUtils.inferFolderHintFromKey()` がフィールド名の `_PNG` 接頭辞から推測しますが、`$subfolder` を宣言すればそちらが優先されます。同じ親フォルダ配下を参照フィールドごとにサブフォルダで分けたい場合（`attr/tailsUnit`, `attr/earShape` のように）に使います。
 - `#PNGFilePath` / `#PNGFileName` フィールドの値としてDB/Work横断で他の画像フォルダを参照したい場合は、`$Def_DBCrossLinkPath`（2026-07-11 新設、`data/db_type.json` グローバル宣言）を使います。従来の `../../DB_SemiPrimary/...` のような手書き相対パス（ブラウザのURL正規化に依存した非公式な回避策）を廃止し、`{ "_DBCrossLinkPath": { "_DB": "SemiPrimary", "_IsoPath": "..." } }` の形で宣言的に参照します。`_DBLink`（レコード参照機構）とは異なり対象レコードの検索を行わない、パス参照専用の軽量な機構です。詳細は `docs/api-sw-spec.md` §8.3 を参照してください。
@@ -318,9 +319,11 @@
   "#Dict_SymphonyXVI": {
     "keyField": "Class",
     "compatListKey": "#List_Class",
-    "scopeField": { "Belonging": "シンフォニー.XVI" }
+    "scopeField": { "Belonging": { "Faction": "シンフォニー.XVI" } }
   }
   ```
+- `scopeField` の値は、**対象フィールドの型に合わせた構造化形式**（`Belonging` が `$Def_Faction[]` なら `{ "Faction": "…" }`）を正とします。スカラー文字列（`"Belonging": "シンフォニー.XVI"`）も引き続き読めます（作品別 `Dictionaries/db_meta.json` の既存宣言向け）。比較時はレコード側・辞書行側の双方を配下のスカラーへ展開して突き合わせるため（`lib/basic-renders/type-common.js` の `scopeValueCandidates()`）、どちらの形式でも同じ行に解決されます。構造化値に複数のスカラーが含まれる場合は、そのすべてがレコード側に含まれることを要求します。
+- `scopeField.Belonging` に書く値は、グローバル辞書 `dict_Faction.json` の `Faction` と**同じ文字列**にしてください（表記ゆれ・異体字（例: 錬 / 練）があると一致せず、その辞書の全行が解決されません）。
 - 辞書本体（`dict_*.json`）側には行ごとにタグを書きません。`scopeField` の内容は、読み込み時（`lib/sw-common.js` の `readDictionaryBundle()` / `pages/characters.js` の `fetchDirectDictionaryBundle()` / テストの `loadDictionaryBundle()`）に辞書の全行へ自動合成されます（行が同名キーを既に持つ場合は行の値を優先）。
 - `scopeField` を持たない辞書（大多数）の行は「スコープを問わない共通行」として扱われます。
 - 解決順（`pages/characters.js` の `resolveVarsDefLabelPack()`）は「同一レコードの対応フィールド値と `scopeField` が一致する辞書由来の行 → 一致が無ければ `scopeField` を持たない共通行」です。呼び出し元が `recordContext`（対象レコード自体）を渡さない場合は従来通りスコープを無視して全行から探索するため、既存の呼び出し元への後方互換があります。
@@ -597,6 +600,41 @@ UI 側は厳密構造より `about_JP` / `about_EN` を優先して整形表示�
 - `$Def_AppearanceAttr` — `AttrLabel` + 規約駆動フィールド（`vdict_*` / `value_*` / `about_*`）を持つ属性行
 - `$Def_BaseArea` — `Area`（`#DictIndex` / `$dict: "Area"`）+ `BaseAreaAbout_JP/EN` を持つ活動地域エントリ（`$display.wrapper: "baseAreaSummary"`）
 - `$Def_Faction`（2026-07-29 新設）— `Faction`（`#DictIndex` / `$dict: "Faction"`）と、そこから参照解決する `FactionsBaseArea`（`$Def_BaseArea`）を持つ所属エントリ
+
+`AppearanceDetail.Attrs` の形状辞書（`$EnumDef_EarShapeType` / `$EnumDef_TailShapeType`）は作品別の `$VarsDef` に置かれています。SAR は猫・爬虫類系に加え、鼠・兎・馬の耳／尾と羊の耳を宣言しています。リウロンとカミツには User が宣言した鱗耳（`#EarShapeType_Reptile`）を使い、リウロンの「龍の角」の形状説明も保持します。長さ・垂れ方などの個体差は、耳属性の `about_JP/EN` や別の形状属性に残します。SCG は形状辞書を持たず、`#DesignAttr_Shape` の `value_JP` / `value_EN` で表現します。`vdict_*` を持つ属性行はその辞書ラベルを正式な表示値とするため、未定義コードと自由記述を併記しても自由記述へのフォールバックにはなりません。NTS 固有の `TailsUnit` は別の専用構造型です。
+
+`AppearanceDetail` のように `$display.sectionWrapper` を持つフィールドは、作品の `$DetailLayout.subFields` に登録されている場合に表示されます。この登録は別作品からの `$enrich: true` 参照の許可範囲にも関係します。SCG-N / USE は生データ側の `AppearanceDetail` を省略し、既存の `AnotherRegions_DBLink` を通じて NTS-0 / 00 の外見本文を継承します。画像は既存の `Images.*._DBCrossLinkPath` による明示参照を維持します。継承元にしか無い `DesignElement`（NTS の番号印字など）の未解決コードはタグ表示を省き、属性本文はそのまま表示します。
+
+SAR のハッカとネゝコは、制服共通色の代わりに使う衣装色を `#ColorRole_CommonOverride` で記録しています。色名は上書き対象の `$EnumDef_CommonColor` のラベルを使用し、HEX と適用部位は個別パレットに保持します。同じ色を瞳と衣装で兼用している行は、衣装の上書きだけを理由に役割を変えていません。
+
+SAR の制服共通色は赤・黄・青・灰・黄土色・白・薄灰色の7色です。ハネゝカの通常制服の設定画にある黄土色の差も個別の上書きとして保持します。外見は `Costume: usual / private` で制服と私服を区別します。配色の既存 `Note_JP/EN` にある通常制服への限定も保持します。
+
+#### 外見の形態・衣装・着脱（Issue #60）
+
+- `Formation` は作品の形態辞書、`Costume` は衣装辞書を参照します。null は各軸で共通する特徴です。両方ある項目は両条件を満たすときに適用します。
+- `Detachable: true`（`#Boolean|#Null`）は、その項目を衣装全体とは独立に着脱できる宣言です。未指定/null は未宣言、false は着脱可能と宣言していない状態です。実際の着用有無は利用側の選択であり、true を「非着用」と読みません。
+- フードは頭にかぶる部分、マントは肩に残る部分のように、独立に変わる特徴を別項目へ分けます。別 Costume を作って他の `usual` 項目まで消すことを避けます。
+- 作者確認に従い SCG 三春の膨体は `afterChanged`、ユノの人型は `afterChanged`・球体は既存辞書の `beforeChange`、小里の左目の豹変後特徴は `afterChanged` です。小里のジャケット差分は Costume で分離します。
+- 入力・校正手順は [AppearanceDetail 補助ツール](appearance-detail-tools.md) を参照してください。
+
+#### 画像フィールド・ファイルの AI 除外（Issue #62）
+
+画像の文字列/配列形式は維持します。`Images` の子フィールド宣言へ `AI_Optout: true` を付けると全値を除外し、レコードの `Images_AIOptout`（`#Object|#Null`）ではフィールドごとに元の文字列と完全一致する値を列挙します。拡張子や大文字小文字を補正しません。
+
+```json
+"Images_AIOptout": {
+  "designAlt_PNGPath": ["catalog/chr-dsgn-alt_wipNTS-61-idol"],
+  "corefolder_PNGPath": ["61/emstk_corefolderNTS-61-idol1", "61/emstk_corefolderNTS-61-idol2"]
+}
+```
+
+`Images_AIOptout` は `$enrich: false` / `$display.auto: false` です。別レコードの画像指定と切り離して継承・表示しません。未宣言フィールド、元の Images にない値、文字列配列でない値、非 boolean の AI_Optout は `pkg/ai-image-policy.mjs` の検証で拒否します。
+
+上位（作品/DB/カテゴリ/レコード）の不許可・typedef・個別ファイルのどれかが拒否すれば除外します。false は上位の拒否を解除しません。実ファイルへ解決したあと、別レコード・別フィールド・`_DBCrossLinkPath` からの参照も同じ画像として合流し、一つでも拒否があれば全体で除外します。未解決の画像は AI 向け許可集合へ入れません。
+
+衣装辞書の行の `AI_Optout: true` は、その `Costume` を持つ AppearanceDetail と当該衣装を記述する AIHints を除外します。レコードの `AI_Optout: true`（`#Boolean`、任意）は公開を維持した AI 利用除外で、`$enrich: false` により他の人物へ持ち込みません。既存の DB/カテゴリ44指定は許否を変えず develop へ移管しました。これら権利 JSON と typedef は develop を正典とし、AIHints 本文・API・`AI_Unready`・`AI_TextRP_Allowed` は従来の addon 側の責務を維持します。
+
+サイトの表示と `$palette` による配色抽出は対象外です。CreationsAI は manifest の各画像参照・原データの Images・AIHints・image-index を同じ許可集合で絞り、通常衣装と確認できない designAlt を共通代表画像の fallback にしません。AI API の実装は `addon-ai-tag` で管理し、develop に AIHints のエンドポイントを追加しません。権利上の運用は [第三者運用方針](third-party-policy.md) §3.2 を参照してください。
 
 `$Def_Faction` で導入した宣言（他の `$Def_*` でも同じ意味で使えます）:
 

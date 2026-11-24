@@ -133,12 +133,16 @@ function extractPairs(rec, sourceFile) {
   return out;
 }
 
-/** data 配下の対象ディレクトリから `prefix_*.json` を読み、全レコードを返す。 */
+/** data 配下の対象ディレクトリ（サブフォルダ含む）から `prefix_*.json` を読み、全レコードを返す。 */
 function collectFromDir(subdir, prefix) {
   const dir = join(DATA_DIR, subdir);
   let files = [];
   try {
-    files = readdirSync(dir).filter((f) => f.startsWith(prefix) && f.endsWith(".json"));
+    // サブフォルダ（例: Dictionaries/Class/dict_*.json）も拾うため再帰で列挙し、区切りは `/` に揃える
+    files = readdirSync(dir, { recursive: true })
+      .map((f) => String(f).replace(/\\/g, "/"))
+      .filter((f) => f.split("/").pop().startsWith(prefix) && f.endsWith(".json"))
+      .sort();
   } catch {
     console.warn(`[skip] ディレクトリ未検出: ${subdir}`);
     return [];

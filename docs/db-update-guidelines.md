@@ -140,6 +140,10 @@
 `#Enum` 相当の候補値（実質的には `#List_*`）は、作品別 `DataBases/db_meta.json` に直書きし続けるのではなく、
 可能な限り `data/Works_<作品>/Dictionaries/dict_*.json` へ分離する運用を推奨します。
 
+同じフィールド向けの辞書ファイルが複数になる場合（例: グローバルの `Class` は所属組織ごとに 1 本）は、
+`Dictionaries/<フィールド名>/` サブフォルダへまとめ、`Dictionaries/db_meta.json` の該当エントリに
+`"dictFile": "<フィールド名>/dict_<辞書名>.json"` を書きます（書き忘れるとその辞書は読み込まれません）。
+
 - 目的:
   - 作品別 enum/list 辞書を独立管理し、差分を追いやすくする
   - 他タイトルでも同じ仕組みを再利用しやすくする
@@ -272,6 +276,25 @@ npm run dict:export-enums:prune
 - DB 個別画像は `Images/DB_<DbName>/`、References 画像は `Images/Ref_<RefName>/`、作品共通画像は `Images/General/` を使います
 - 画像の抽出/表示は `db_type.json` の `$image` 定義や型定義を参照します
 - 画像を増やすだけであれば、必ずしも `db_meta.json` 更新は不要です（ただし型定義の設計次第）
+
+### 7.1 NumberTales の完成イラストを公開するとき
+
+1. 完成絵は該当 DB の `arts/` に置き、作者が登場を確認した各キャラクターの `Images.arts_PNGPath` から同じ実ファイルを参照します。同じ DB ではフォルダ相対・拡張子なし、別 DB からは既存の `_DBCrossLinkPath` を使います。正規のコアフォルダ原画は `Images.corefolder_PNGPath` で登録できます。キャラデザ表は従来の `catalog/chr-dsgn_catalogNTS-<バッジ>.png` に原寸で置きます。
+2. 画像登録と一緒に作品・DB・カテゴリ・レコード・画像の利用条件を確認します。合同絵は全参照元の除外指定が効きます。画像形式、原寸、DB からの参照を確認してから公開します。[画像のAI利用条件](third-party-policy.md#画像ごとの-ai-利用除外)
+3. `addon-ai-tag` に取り込むと、構造的再同期がギャラリー参照・画像名・確認済みの原画から、各人の `Images_Appearance` を生成します。CreationsAI が同じ実パスでの登場人物をまとめます。単一形態は `form`、同じ子の複数形態は `forms` に入ります。
+4. データセットの更新後、CreationsAI の `validate-dataset.js` が成功した出力で下記を実行します。
+
+```powershell
+node tools/inventory-numbertales-art.mjs ../100BeautiesLab_CreationsAI/ai-dataset
+```
+
+集計対象は `manifest-training.jsonl` の許可済みキャラクター、許可済み DB、同じビルドの `image-index.json` に実パスが載った画像です。言語差分を除き、`arts` と `corefolder` の両方を数えます。両方が空の子は手元の原画を先に探し、あれば登録、なければ制作候補にします。`sharedArts` には合同絵の参照元、`confirmedCharacters` には登場を確認できた人物のレコード ID が出ます。[今回の制作候補](../_work_in_progress/2026-11-22_progress_issue28-art.md)
+
+### 7.2 作品ごとの形態名
+
+球体化姿やそれに相当する形態には、作品ごとの呼び名があります。ナンバーテールズでは「コアフォルダ」、運命線狐の記録では「弱体球体化」、ハンカクライブでは「キーキャッパー」です。
+
+今後ほかの作品に形態を追加するときも、その作品で作者が定めた名称を使います。形態と AI 利用の可否は別々に扱い、AI 向けの出力には既存の利用条件を適用します。
 
 ---
 

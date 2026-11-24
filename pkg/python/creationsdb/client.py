@@ -529,7 +529,10 @@ def _read_dictionary_bundle(fetcher: _FsFetcher, base_path: str) -> tuple[dict, 
         dict_key = raw_key if str(raw_key).startswith('#Dict_') else f'#Dict_{dict_name}'
         compat_key_raw = info.get('compatListKey')
         compat_key = str(compat_key_raw).strip() if compat_key_raw else f'#List_{dict_name}'
-        rows = fetcher.try_read_json(f'{base_path}/dict_{dict_name}.json')
+        # dictFile 宣言（別名・サブフォルダ。例: Class/dict_Mikhail.json）を尊重する（lib/sw-common.js と同じ規則）
+        dict_file_raw = info.get('dictFile')
+        file_name = dict_file_raw.strip() if isinstance(dict_file_raw, str) and dict_file_raw.strip() else f'dict_{dict_name}.json'
+        rows = fetcher.try_read_json(f'{base_path}/{file_name}')
         if not isinstance(rows, list):
             continue
         vars_out[dict_key] = [dict(r) if isinstance(r, dict) else r for r in rows]

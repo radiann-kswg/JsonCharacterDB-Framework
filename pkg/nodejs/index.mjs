@@ -525,8 +525,11 @@ async function readDictionaryBundle(repoRoot, basePath) {
     const dictKey = rawKey.startsWith('#Dict_') ? rawKey.trim() : `#Dict_${dictName}`;
     const compatKey = typeof info.compatListKey === 'string' && info.compatListKey.trim()
       ? info.compatListKey.trim() : `#List_${dictName}`;
+    // dictFile 宣言（別名・サブフォルダ。例: Class/dict_Mikhail.json）を尊重する（lib/sw-common.js と同じ規則）
+    const fileName = typeof info.dictFile === 'string' && info.dictFile.trim()
+      ? info.dictFile.trim() : `dict_${dictName}.json`;
     try {
-      const rows = await fetchJSON(repoRoot, `${basePath}/dict_${dictName}.json`);
+      const rows = await fetchJSON(repoRoot, `${basePath}/${fileName}`);
       if (!Array.isArray(rows)) continue;
       vars[dictKey] = rows.map((r) => (isObject(r) ? { ...r } : r));
       if (compatKey && !vars[compatKey]) {

@@ -2,7 +2,7 @@
 
 > **対象**: Claude Code / GitHub Copilot / その他 AI 補完ツール  
 > **目的**: 100BeautiesLab. Creations DB の全作品における JP フィールドの書式・記法を定義する基準書  
-> **最終更新**: 2026-06-14  
+> **最終更新**: 2026-11-19\
 > **関連ドキュメント**: [`localization-en-rules.md`](localization-en-rules.md)（英訳ルール）
 
 ---
@@ -133,6 +133,14 @@ EN 対応: `~-kun`、`~-san`、`~-dono`、`~-senpai`、`~-chan`（チルダは E
 | `定義不能` | `Undefineble` |
 | `本人すら把握されていない` | `Not Aware` |
 | `不定` | `Indefinite` |
+
+---
+
+### 1-8. 身体を基準にした左右（`Laterality`）
+
+`#Lat_Left` と `#Lat_Right` はキャラクター本人の左右を表す。`BodyPart` と組み合わせ、日英の位置説明も「左肩 / left shoulder」「右腕 / right arm」のように書く。形態やポーズが変わっても同じ基準を使う。
+
+着用品の位置は、着けた状態で身体のどちら側に来るかを書く。たとえば腰に巻いた服の袖は「腰の左側に垂れる袖」と書く。文字や模様の内部にだけ左右がある場合は、それが付く身体上の位置と区別する。
 
 ---
 
