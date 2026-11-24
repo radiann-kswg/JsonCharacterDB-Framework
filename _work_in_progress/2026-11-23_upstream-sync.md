@@ -251,3 +251,10 @@ CI でも `npm test` はアップロード前に走るので、公開物の `nod
 
 - `tests/ai-image-policy.test.js` はファイルごと除外した。そのため、再点検で「中流でも通る」とした純粋関数のテスト 15 件も中流では走らない。上流で実データ依存の 1 件を別ファイルへ分ければ、その 1 ファイルだけの除外に戻せる。
 - `tests/inventory-numbertales-art.test.js` は再点検では中流でも通る（自己完結）と確認していた。今回は「NumberTales 固有の CLI は対で除外する」方針を優先して、CLI とあわせて除外した。
+
+### 追記: 上の論点のうち ai-image-policy は解消（2026-11-24）
+
+- 上流 PR #71（`2b57c09`）で、実データを読む 1 件を `tests/data.ai-image-policy-numbertales.test.js` へ分離した。
+- 中流は除外をこの新ファイルへ差し替え（`.sync/upstream.json`）、`tests/ai-image-policy.test.js` を取り込んだ。純粋関数テスト 15 件が中流でも走るようになり、**56 ファイル 805 件 green**。
+- 下流は `pkg/` を持たないので、`tests/ai-image-policy.test.js` は下流側で除外している。
+- `inventory-numbertales-art` の対の除外は、方針どおりそのまま。

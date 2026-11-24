@@ -8,6 +8,7 @@
 - **fix: キャラシートの初期表示作品**（上流 `aeb8833`）: `pages/characters.js` の `populateWorks()` で、作品指定なしのとき `endsWith('')` が全作品に一致して末尾の作品が選ばれていた。指定なしなら `data/db_meta.json` の `CreationWorks` で最初に宣言された創作タイトル（`Works_Shared` を除く）を表示する。下流へも波及。
 - そのほか: 構造化 `scopeField` の解決 fix、`pkg/*` クライアントの `dictFile` 宣言準拠、外見の着脱タグ表示（`appearanceDetail.js`）、画像単位の AI 除外の検証モジュール（`pkg/ai-image-policy.mjs`）、Cloudflare 同期先の取り違えガード（`migrate-common.mjs` / `migrate.mjs`）、関連 docs。
 - `.sync/upstream.json` の `exclude` に 5 件を追加: NumberTales 固有の `tools/inventory-numbertales-art.mjs` とその対のテスト、上流の実データや `Detachable` 宣言を前提とする `tests/ai-image-policy.test.js` / `tests/appearance-state-data.test.js` / `tests/appearance-detail-detachable.test.js`。
+- 同日の続き（上流 `aeb8833` → `2b57c09`）: 上流で `tests/ai-image-policy.test.js` から NumberTales の実データ検証 1 件が `tests/data.ai-image-policy-numbertales.test.js` へ分離された。除外をその新ファイルへ差し替え、`pkg/ai-image-policy.mjs` の純粋関数テスト 15 件を取り込んだ。**56 ファイル 805 件 green**。
 
 ### Changed (2026-11-23) — GitHub Pages の公開物をサイトに必要なファイルだけに絞る
 
