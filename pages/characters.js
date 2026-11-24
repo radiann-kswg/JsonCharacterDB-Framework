@@ -8442,7 +8442,8 @@ async function populateWorks(initialWork) {
 
 	const appendWorkOption = (parent, w) => {
 		const opt = el('option', { value: w.key }, [humanWorkLabel(w)]);
-		if (w.key === normalizeWorkKey(initialWork) || w.key.endsWith(initialWork)) opt.selected = true;
+		// 空文字の endsWith('') は全件 true になり末尾の作品が選ばれてしまうため、指定がある時だけ照合する
+		if (initialWork && (w.key === normalizeWorkKey(initialWork) || w.key.endsWith(initialWork))) opt.selected = true;
 		parent.appendChild(opt);
 	};
 
@@ -8460,7 +8461,9 @@ async function populateWorks(initialWork) {
 		sel.appendChild(group);
 	}
 
-	if (!sel.value && items[0]) sel.value = items[0].key;
+	// リンク指定なし: db_meta.json(CreationWorks) で最初に宣言された創作タイトル（共通資料は除く）
+	const fallback = regularWorks[0] || items[0];
+	if (!sel.value && fallback) sel.value = fallback.key;
 	return sel.value;
 }
 
