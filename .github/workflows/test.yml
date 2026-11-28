@@ -1,0 +1,41 @@
+# develop への push と PR で Vitest を回す。
+#
+# pages.yml の Test ステップは公開前の門番で、ENABLE_PAGES を設定した環境の push でしか動かない。
+# こちらはオプトイン無しで常に動き、PR の段階で壊れたデータ・コードを止める。
+# 指示書の生成物ズレ（agents:check）とデータのキー順（data:order:check）も npm test 内のテストが検出する。
+name: Test
+
+on:
+  push:
+    branches: ["develop"]
+  pull_request:
+    branches: ["develop"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同じブランチ/PR の古い実行は打ち切る。
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # package.json の engines（>=22.19.0）と揃える。片方だけ下げないこと。
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test

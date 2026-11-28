@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added (2026-11-28) — テスト用 CI（`.github/workflows/test.yml`）
+
+- `develop` への push と `develop` 向け PR で `npm ci` → `npm test` を実行する。`pages.yml` の Test ステップは `ENABLE_PAGES` を設定した環境の push でしか動かず、PR ではテストが回っていなかったため。
+- `.github/**` は同期対象外なので、上流・下流への波及はない。
+
 ### Synced (2026-11-28) — 上流 `100BeautiesLab_CreationsDB` `2b57c09` → `4a0534a`
 
 - 2 ファイルを取り込み（コンフリクト 0）。**56 ファイル 805 件 green**。Issue #21（上流同期チェック）への対応。
