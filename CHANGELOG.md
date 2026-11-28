@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed (2026-11-28) — Claude Code Review を develop への直接 push でも実行する
+
+- `.github/workflows/claude-code-review.yml` に `review-push` ジョブを追加。`develop` への push ごとに、push 前の先端から push 後の先端までの差分を Claude がレビューし、結果を実行サマリーとそのコミットへのコメントに出す。PR では従来どおり行ごとのインラインコメント。
+- PR のマージコミット（`Merge pull request` で始まる push）は PR 側でレビュー済みなので飛ばす。Secret `CLAUDE_CODE_OAUTH_TOKEN` が未登録なら従来どおり何もしない。
+- エージェントに渡すツールは `git diff` / `git log` / `git show` と読み取り・`claude-review.md` の書き出しだけ。コメント投稿は後続のステップが `GITHUB_TOKEN` で行い、checkout には認証情報を残さない（`persist-credentials: false`）。
+
 ### Added (2026-11-28) — テスト用 CI（`.github/workflows/test.yml`）
 
 - `develop` への push と `develop` 向け PR で `npm ci` → `npm test` を実行する。`pages.yml` の Test ステップは `ENABLE_PAGES` を設定した環境の push でしか動かず、PR ではテストが回っていなかったため。
