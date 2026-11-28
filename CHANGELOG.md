@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Synced (2026-11-28) — 上流 `100BeautiesLab_CreationsDB` `2b57c09` → `4a0534a`
+
+- 2 ファイルを取り込み（コンフリクト 0）。**56 ファイル 805 件 green**。Issue #21（上流同期チェック）への対応。
+- 上流から取り込んだ機能（下流へも波及）: **ロールプレイプロンプトに関係キャラへの一言を載せる**（上流 Issue #72）。`tools/build-roleplay-prompts.mjs` の `buildVars()` が `Relation.*[].Comments` から「」で始まる台詞だけを合成変数 `@RelationComments` に集める。相手の名前・関係性タグ・`Reply`・（※…）の地の文・`hideText` は載せない。`docs/roleplay-prompt-generation.md` に例外として追記。
+
 ### Synced (2026-11-24) — 上流 `100BeautiesLab_CreationsDB` `4f48192` → `aeb8833`
 
 - 19 ファイルを取り込み（コンフリクト 0）。**55 ファイル 790 件 green**。上流 CHANGELOG の 11-15〜11-24 の各エントリに対応。
