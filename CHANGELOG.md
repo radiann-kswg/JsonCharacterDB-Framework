@@ -6,7 +6,8 @@
 
 - `.github/workflows/claude-code-review.yml` に `review-push` ジョブを追加。`develop` への push ごとに、push 前の先端から push 後の先端までの差分を Claude がレビューし、結果を実行サマリーとそのコミットへのコメントに出す。PR では従来どおり行ごとのインラインコメント。
 - PR のマージコミット（`Merge pull request` で始まる push）は PR 側でレビュー済みなので飛ばす。Secret `CLAUDE_CODE_OAUTH_TOKEN` が未登録なら従来どおり何もしない。
-- エージェントに渡すツールは `git diff` / `git log` / `git show` と読み取り・`claude-review.md` の書き出しだけ。コメント投稿は後続のステップが `GITHUB_TOKEN` で行い、checkout には認証情報を残さない（`persist-credentials: false`）。
+- `anthropics/claude-code-action@v1` は push イベント非対応（`Unsupported event type: push`）のため、push 側は Claude Code の CLI（`claude -p`）をヘッドレス実行し、最終応答をそのままレビュー結果にする。
+- エージェントに渡すツールは `git diff` / `git log` / `git show` と読み取り系（Read / Grep / Glob）だけで、書き込みはできない。コメント投稿は後続のステップが `GITHUB_TOKEN` で行い、checkout には認証情報を残さない（`persist-credentials: false`）。
 
 ### Added (2026-11-28) — テスト用 CI（`.github/workflows/test.yml`）
 
