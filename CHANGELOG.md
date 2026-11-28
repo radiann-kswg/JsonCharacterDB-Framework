@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed (2026-11-28) — Claude Code Review の失敗で失敗通知を流さない
+
+- `.github/workflows/claude-code-review.yml` の `review` / `review-push` ジョブに `continue-on-error: true` を付け、レビューが API 障害・トークン切れ等で落ちても run は成功扱いにする（レビューは参考情報で、失敗しても取り込みを止める理由にならないため）。代わりに `::warning::` の注記を残す。
+- テスト（`test.yml`）・Pages デプロイ・CodeQL は本当に直すべき失敗なので、従来どおり失敗として通知する。
+
 ### Changed (2026-11-28) — Claude Code Review を develop への直接 push でも実行する
 
 - `.github/workflows/claude-code-review.yml` に `review-push` ジョブを追加。`develop` への push ごとに、push 前の先端から push 後の先端までの差分を Claude がレビューし、結果を実行サマリーとそのコミットへのコメントに出す。PR では従来どおり行ごとのインラインコメント。
